@@ -20,7 +20,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # Input
 HEADERS += GreenVision/pch.h
 SOURCES += GreenVision/pch.cpp \
-    GreenVision/GreenVision_Live.cpp
+    GreenVision/GreenVision_Offline.cpp
 INCLUDEPATH += /usr/local/include/opencv4
 LIBS += -L/usr/local/lib64 -lopencv_core -lopencv_imgcodecs -lopencv_highgui -lopencv_imgproc -lopencv_videoio
 
