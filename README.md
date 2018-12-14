@@ -41,3 +41,18 @@ In order to use OpenCV with Qt Creator, you must build OpenCV from source. The s
 `sudo make install`
 
 6. That's it! Now open the GreenVision.pro file in Qt Creator and it should work! Remember to only open one main cpp at a time.
+
+## Visual Studio - Windows
+
+1. Download OpenCV - We will not be building from source for windows to head to [OpenCV](https://opencv.org/releases.html) and download the latest release. Click on the self extracting archive, and move the files to where you want your libraries to be stored. I suggest the root of the C drive, so C:\opencv.
+
+2. Next, you are going to want to add the bin directory to your system path. On Windows, go to Advanced System Settings > Enviroment Variables > System Variables > Path. Click "Edit", and then click "New". In the following prompt copy and paste the path to the bin folder in OpenCV.  For example, if you installed to C:\opencv, it would be C:\opencv\build\x64\vc14\bin
+
+3. Open the project in Visual Studio. You should get some errors, that's normal.
+
+4. Include OpenCV in Visual Studio. 
+* First, make sure the solution platforn reads x64, not x86. 
+* Next, open the project properties. Go to C/C++ > General, and copy and paste the path to the OpenCV include folder into the "Additional Library Directories" box, and click apply. For me, the path looks like C:\opencv\build\include.
+* Now go to Linker > General in the properties pane. Copy and paste the path to the OpenCV lib folder in the "Additional Library Directories" box and hit apply.
+* Finally, go to Input. Open your OpenCV directory and navigate to the lib folder. Inside there should be a .lib file that is similar to opencv_world341d.lib. Make sure to pick the one that ends in "d".
+5. That's it! If you did everything correctly and rebuild, GreenVision should run!
