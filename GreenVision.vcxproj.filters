@@ -15,10 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\Github\FRC\GreenVision\GreenVision\GreenVision_Live.cpp">
+    <ClCompile Include="GreenVision_Live.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Github\FRC\GreenVision\GreenVision\GreenVision_Offline.cpp">
+    <ClCompile Include="GreenVision_Offline.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
