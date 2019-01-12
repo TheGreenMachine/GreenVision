@@ -9,33 +9,44 @@ using namespace cv;
 
 int main()
 {
-	Mat image1 = imread("/home/ianmcvann/Documents/Github/FRC/GreenVision/GreenVision/light.jpg");
-	Mat image2 = imread("/home/ianmcvann/Documents/Github/FRC/GreenVision/GreenVision/nolight.jpg");
-	Mat finalimage;
+	Mat image = imread("C:/Users/night/Desktop/images/light.png");
 	Mat mask;
 	vector<vector<Point>> Contours;
 	vector<Vec4i> hier;
-	Mat contourimg = image1.clone();
-	double maxArea = 0.0;
-	int savedContour = -1;
-	cvtColor(image1, image1, COLOR_BGR2GRAY);
-	cvtColor(image2, image2, COLOR_BGR2GRAY);
-	GaussianBlur(image1, image1, Size(5, 5), 0);
-	GaussianBlur(image2, image2, Size(5, 5), 0);
-	absdiff(image1, image2, finalimage);
+	Mat contourimg = image.clone();
+	Rect large;
+	Rect secondLarge;
+	int largestIndex = 0;
+	int largestContour = 0;
+	int secondLargestIndex = 0;
+	int secondLargestContour = 0;
+	cvtColor(image, image, COLOR_BGR2HSV);
+	GaussianBlur(image, image, Size(5, 5), 0);
+	namedWindow("absolute", WINDOW_AUTOSIZE);
+	imshow("absolute", image);
 	//threshold(finalimage, mask, 40, 255, THRESH_BINARY);
-	inRange(finalimage, Scalar(50.0, 55.03597122302158, 174.28057553956833), Scalar(90.60606060606061, 255, 255), mask);
+	inRange(image, Scalar(45, 20, 205), Scalar(255, 255, 255), mask);
+	imshow("Imaage1", mask);
 	erode(mask, mask, 1);
-	findContours(mask, Contours, hier, RETR_TREE, CHAIN_APPROX_SIMPLE);
+	findContours(mask, Contours, hier, RETR_CCOMP, CHAIN_APPROX_SIMPLE);
 	//Might need to loop through here to check for size
-	for (int i = 0; i < Contours.size(); i++) {
-		double area = contourArea(Contours[i]);
-		if (area > maxArea) {
-			maxArea = area;
-			savedContour = i;
+	for (int i = 0; i < Contours.size(); i++)
+	{
+		if (Contours[i].size() > largestContour) {
+			secondLargestContour = largestContour;
+			secondLargestIndex = largestIndex;
+			largestContour = Contours[i].size();
+			largestIndex = i;
+		}
+		else if (Contours[i].size() > secondLargestContour) {
+			secondLargestContour = Contours[i].size();
+			secondLargestIndex = i;
 		}
 	}
-	drawContours(contourimg, Contours, savedContour, Scalar(70, 237, 54), 3, 8, hier);
+	large = boundingRect(Contours[largestIndex]);
+	secondLarge = boundingRect(Contours[secondLargestIndex]);
+	drawContours(contourimg, Contours, largestIndex, Scalar(232, 12, 122), 3, 8, hier);
+	drawContours(contourimg, Contours, secondLargestIndex, Scalar(232, 12, 122), 3, 8, hier);
 
 	namedWindow("Image", WINDOW_AUTOSIZE);
 	imshow("Image", contourimg);
