@@ -1,11 +1,12 @@
 # GreenVision
-Hello, and welcome to GreenVision, team 1816's Open Source C++ Vision Code. 
+Hello, and welcome to GreenVision, Team 1816's Open Source C++ Vision Code. 
 
 ## Setup
 In order to get setup with GreenVision, install one of the following:
 
 * [Visual Studio Community](https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=Community&rel=15)
 * [Qt Creator](https://www.qt.io/download-qt-installer?hsCtaTracking=9f6a2170-a938-42df-a8e2-a9f0b1d6cdce%7C6cb0de4f-9bb5-4778-ab02-bfb62735f3e5)
+* [Clion](https://www.jetbrains.com/clion/)
 
 Then, follow each IDE's own guide below for setting up OpenCV.
 ## Qt Creator - Linux
@@ -56,3 +57,18 @@ In order to use OpenCV with Qt Creator, you must build OpenCV from source. The s
 * Now go to Linker > General in the properties pane. Copy and paste the path to the OpenCV lib folder in the "Additional Library Directories" box and hit apply.
 * Finally, go to Input. Open your OpenCV directory and navigate to the lib folder. Inside there should be a .lib file that is similar to opencv_world341d.lib. Make sure to pick the one that ends in "d".
 5. That's it! If you did everything correctly and rebuild, GreenVision should run!
+
+## Clion - Windows
+Clion with windows uses cmake to manage it's dependancies, for this you will need to build the WPI dependancies with gradle and import them into the project
+
+1. [Clone or download allwpilib](https://github.com/wpilibsuite/allwpilib)
+
+2. open your terminal of choice in the allwpilib root then run:
+
+`./gradlew build` or `gradle build` depending on if you have gradle installed on your system. THE BUILD WILL TAKE TIME. Unfortinately there doesn't seem to be a way to individually build the wpiutil and ntcore, which are the two things you need.
+
+3. After the build go into the `wpiutil/build/libs/wpiutil/static/x86-x64/release` folder and copy `wpiutil.lib` into `GreenVision/libs/wpiutil`
+
+4. Do the same for ntcore: `ntcore/build/libs/ntcore/static/x86-x64/release` copy `ntcore.lib` into `GreenVision/libs/networktables`
+
+5. Sync the project and build
