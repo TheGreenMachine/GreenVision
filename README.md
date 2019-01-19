@@ -69,4 +69,6 @@ Clion with windows uses cmake to manage it's dependancies, for this you will nee
 
 4. Do the same for ntcore: `ntcore/build/libs/ntcore/static/x86-x64/release` copy `ntcore.lib` into `GreenVision/libs/networktables`
 
-5. Sync the project and build
+5. Change the `OpenCV_DIR` in the `CMakeLists.txt` to your OpenCV lib directory. If you are having trouble I recommend using [Mingw](http://www.mingw.org/) and the [OpenCV for Mingw](https://github.com/huihut/OpenCV-MinGW-Build)
+
+6. Sync the project and build
