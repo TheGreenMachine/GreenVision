@@ -63,9 +63,7 @@ Clion with windows uses cmake to manage it's dependancies, for this you will nee
 
 1. [Clone or download allwpilib](https://github.com/wpilibsuite/allwpilib)
 
-2. open your terminal of choice in the allwpilib root then run:
-
-`./gradlew build` or `gradle build` depending on if you have gradle installed on your system. THE BUILD WILL TAKE TIME. Unfortinately there doesn't seem to be a way to individually build the wpiutil and ntcore, which are the two things you need.
+2. open your terminal of choice in the allwpilib root then run: `./gradlew build` or `gradle build` depending on if you have gradle installed on your system. THE BUILD WILL TAKE TIME. Unfortinately there doesn't seem to be a way to individually build the wpiutil and ntcore, which are the two things you need.
 
 3. After the build go into the `wpiutil/build/libs/wpiutil/static/x86-x64/release` folder and copy `wpiutil.lib` into `GreenVision/libs/wpiutil`
 
