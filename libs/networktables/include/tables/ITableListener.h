@@ -1,5 +1,5 @@
 /*----------------------------------------------------------------------------*/
-/* Copyright (c) FIRST 2017-2018. All Rights Reserved.                        */
+/* Copyright (c) 2017-2018 FIRST. All Rights Reserved.                        */
 /* Open Source Software - may be modified and shared by FRC teams. The code   */
 /* must be accompanied by the FIRST BSD license file in the root directory of */
 /* the project.                                                               */
@@ -10,8 +10,8 @@
 
 #include <memory>
 
-#include <llvm/StringRef.h>
-#include <support/deprecated.h>
+#include <wpi/StringRef.h>
+#include <wpi/deprecated.h>
 
 #include "networktables/NetworkTableValue.h"
 
@@ -38,7 +38,7 @@ class WPI_DEPRECATED(
    * @param isNew true if the key did not previously exist in the table,
    * otherwise it is false
    */
-  virtual void ValueChanged(ITable* source, llvm::StringRef key,
+  virtual void ValueChanged(ITable* source, wpi::StringRef key,
                             std::shared_ptr<nt::Value> value, bool isNew) = 0;
 
   /**
@@ -51,7 +51,7 @@ class WPI_DEPRECATED(
    * @param flags update flags; for example, NT_NOTIFY_NEW if the key did not
    * previously exist in the table
    */
-  virtual void ValueChangedEx(ITable* source, llvm::StringRef key,
+  virtual void ValueChangedEx(ITable* source, wpi::StringRef key,
                               std::shared_ptr<nt::Value> value,
                               unsigned int flags);
 };

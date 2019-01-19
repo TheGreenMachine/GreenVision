@@ -1,32 +1,19 @@
 /*----------------------------------------------------------------------------*/
-/* Copyright (c) 2015-2018 FIRST. All Rights Reserved.                        */
+/* Copyright (c) 2016-2018 FIRST. All Rights Reserved.                        */
 /* Open Source Software - may be modified and shared by FRC teams. The code   */
 /* must be accompanied by the FIRST BSD license file in the root directory of */
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
 
-#ifndef WPIUTIL_TCPSOCKETS_NETWORKACCEPTOR_H_
-#define WPIUTIL_TCPSOCKETS_NETWORKACCEPTOR_H_
+#pragma once
 
-#include <memory>
+// clang-format off
+#ifdef _MSC_VER
+#pragma message "warning: tcpsockets/NetworkAcceptor.h is deprecated; include wpi/NetworkAcceptor.h instead"
+#else
+#warning "tcpsockets/NetworkAcceptor.h is deprecated; include wpi/NetworkAcceptor.h instead"
+#endif
 
-#include "tcpsockets/NetworkStream.h"
+// clang-format on
 
-namespace wpi {
-
-class NetworkAcceptor {
- public:
-  NetworkAcceptor() = default;
-  virtual ~NetworkAcceptor() = default;
-
-  virtual int start() = 0;
-  virtual void shutdown() = 0;
-  virtual std::unique_ptr<NetworkStream> accept() = 0;
-
-  NetworkAcceptor(const NetworkAcceptor&) = delete;
-  NetworkAcceptor& operator=(const NetworkAcceptor&) = delete;
-};
-
-}  // namespace wpi
-
-#endif  // WPIUTIL_TCPSOCKETS_NETWORKACCEPTOR_H_
+#include "wpi/NetworkAcceptor.h"

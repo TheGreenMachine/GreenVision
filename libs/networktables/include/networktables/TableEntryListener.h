@@ -1,5 +1,5 @@
 /*----------------------------------------------------------------------------*/
-/* Copyright (c) FIRST 2017-2018. All Rights Reserved.                        */
+/* Copyright (c) 2017-2018 FIRST. All Rights Reserved.                        */
 /* Open Source Software - may be modified and shared by FRC teams. The code   */
 /* must be accompanied by the FIRST BSD license file in the root directory of */
 /* the project.                                                               */
@@ -11,7 +11,7 @@
 #include <functional>
 #include <memory>
 
-#include <llvm/StringRef.h>
+#include <wpi/StringRef.h>
 
 namespace nt {
 
@@ -19,7 +19,7 @@ class NetworkTable;
 class NetworkTableEntry;
 class Value;
 
-using llvm::StringRef;
+using wpi::StringRef;
 
 /**
  * A listener that listens to changes in values in a NetworkTable.
@@ -32,6 +32,8 @@ using llvm::StringRef;
  * @param value the new value
  * @param flags update flags; for example, EntryListenerFlags.kNew if the key
  * did not previously exist
+ *
+ * @ingroup ntcore_cpp_api
  */
 typedef std::function<void(NetworkTable* table, StringRef name,
                            NetworkTableEntry entry,

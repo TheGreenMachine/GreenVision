@@ -1,57 +1,19 @@
-/*
-   TCPAcceptor.h
+/*----------------------------------------------------------------------------*/
+/* Copyright (c) 2016-2018 FIRST. All Rights Reserved.                        */
+/* Open Source Software - may be modified and shared by FRC teams. The code   */
+/* must be accompanied by the FIRST BSD license file in the root directory of */
+/* the project.                                                               */
+/*----------------------------------------------------------------------------*/
 
-   TCPAcceptor class interface. TCPAcceptor provides methods to passively
-   establish TCP/IP connections with clients.
+#pragma once
 
-   ------------------------------------------
+// clang-format off
+#ifdef _MSC_VER
+#pragma message "warning: tcpsockets/TCPAcceptor.h is deprecated; include wpi/TCPAcceptor.h instead"
+#else
+#warning "tcpsockets/TCPAcceptor.h is deprecated; include wpi/TCPAcceptor.h instead"
+#endif
 
-   Copyright (c) 2013 [Vic Hargrave - http://vichargrave.com]
+// clang-format on
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-*/
-
-#ifndef WPIUTIL_TCPSOCKETS_TCPACCEPTOR_H_
-#define WPIUTIL_TCPSOCKETS_TCPACCEPTOR_H_
-
-#include <atomic>
-#include <memory>
-#include <string>
-
-#include "tcpsockets/NetworkAcceptor.h"
-#include "tcpsockets/TCPStream.h"
-
-namespace wpi {
-
-class Logger;
-
-class TCPAcceptor : public NetworkAcceptor {
-  int m_lsd;
-  int m_port;
-  std::string m_address;
-  bool m_listening;
-  std::atomic_bool m_shutdown;
-  Logger& m_logger;
-
- public:
-  TCPAcceptor(int port, const char* address, Logger& logger);
-  ~TCPAcceptor();
-
-  int start() override;
-  void shutdown() override;
-  std::unique_ptr<NetworkStream> accept() override;
-};
-
-}  // namespace wpi
-
-#endif  // WPIUTIL_TCPSOCKETS_TCPACCEPTOR_H_
+#include "wpi/TCPAcceptor.h"

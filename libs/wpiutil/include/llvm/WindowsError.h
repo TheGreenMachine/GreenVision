@@ -1,19 +1,20 @@
-//===-- WindowsError.h - Support for mapping windows errors to posix-------===//
-//
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
-//
-//===----------------------------------------------------------------------===//
+/*----------------------------------------------------------------------------*/
+/* Copyright (c) 2016-2018 FIRST. All Rights Reserved.                        */
+/* Open Source Software - may be modified and shared by FRC teams. The code   */
+/* must be accompanied by the FIRST BSD license file in the root directory of */
+/* the project.                                                               */
+/*----------------------------------------------------------------------------*/
 
-#ifndef LLVM_SUPPORT_WINDOWSERROR_H
-#define LLVM_SUPPORT_WINDOWSERROR_H
+#pragma once
 
-#include <system_error>
-
-namespace llvm {
-std::error_code mapWindowsError(unsigned EV);
-}
-
+// clang-format off
+#ifdef _MSC_VER
+#pragma message "warning: llvm/WindowsError.h is deprecated; include wpi/WindowsError.h instead"
+#else
+#warning "llvm/WindowsError.h is deprecated; include wpi/WindowsError.h instead"
 #endif
+// clang-format on
+
+#include "wpi/WindowsError.h"
+
+namespace llvm = wpi;

@@ -5,38 +5,15 @@
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
 
-#ifndef WPIUTIL_SUPPORT_RAW_SOCKET_OSTREAM_H_
-#define WPIUTIL_SUPPORT_RAW_SOCKET_OSTREAM_H_
+#pragma once
 
-#include "llvm/raw_ostream.h"
+// clang-format off
+#ifdef _MSC_VER
+#pragma message "warning: support/raw_socket_ostream.h is deprecated; include wpi/raw_socket_ostream.h instead"
+#else
+#warning "support/raw_socket_ostream.h is deprecated; include wpi/raw_socket_ostream.h instead"
+#endif
 
-namespace wpi {
+// clang-format on
 
-class NetworkStream;
-
-class raw_socket_ostream : public llvm::raw_ostream {
- public:
-  raw_socket_ostream(NetworkStream& stream, bool shouldClose)
-      : m_stream(stream), m_shouldClose(shouldClose) {}
-  ~raw_socket_ostream();
-
-  void close();
-
-  bool has_error() const { return m_error; }
-  void clear_error() { m_error = false; }
-
- protected:
-  void error_detected() { m_error = true; }
-
- private:
-  void write_impl(const char* data, size_t len) override;
-  uint64_t current_pos() const override;
-
-  NetworkStream& m_stream;
-  bool m_error = false;
-  bool m_shouldClose;
-};
-
-}  // namespace wpi
-
-#endif  // WPIUTIL_SUPPORT_RAW_SOCKET_OSTREAM_H_
+#include "wpi/raw_socket_ostream.h"

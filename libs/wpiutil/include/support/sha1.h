@@ -1,56 +1,19 @@
-/*
-    sha1.hpp - header of
+/*----------------------------------------------------------------------------*/
+/* Copyright (c) 2016-2018 FIRST. All Rights Reserved.                        */
+/* Open Source Software - may be modified and shared by FRC teams. The code   */
+/* must be accompanied by the FIRST BSD license file in the root directory of */
+/* the project.                                                               */
+/*----------------------------------------------------------------------------*/
 
-    ============
-    SHA-1 in C++
-    ============
+#pragma once
 
-    100% Public Domain.
+// clang-format off
+#ifdef _MSC_VER
+#pragma message "warning: support/sha1.h is deprecated; include wpi/sha1.h instead"
+#else
+#warning "support/sha1.h is deprecated; include wpi/sha1.h instead"
+#endif
 
-    Original C Code
-        -- Steve Reid <steve@edmweb.com>
-    Small changes to fit into bglibs
-        -- Bruce Guenter <bruce@untroubled.org>
-    Translation to simpler C++ Code
-        -- Volker Grabsch <vog@notjusthosting.com>
-    Safety fixes
-        -- Eugene Hopkinson <slowriot at voxelstorm dot com>
-*/
+// clang-format on
 
-#ifndef WPIUTIL_SUPPORT_SHA1_H_
-#define WPIUTIL_SUPPORT_SHA1_H_
-
-#include <stdint.h>
-
-#include <string>
-
-#include "llvm/StringRef.h"
-
-namespace llvm {
-template <typename T>
-class SmallVectorImpl;
-}  // namespace llvm
-
-namespace wpi {
-
-class raw_istream;
-
-class SHA1 {
- public:
-  SHA1();
-  void Update(llvm::StringRef s);
-  void Update(raw_istream& is);
-  std::string Final();
-  llvm::StringRef Final(llvm::SmallVectorImpl<char>& buf);
-  static std::string FromFile(llvm::StringRef filename);
-
- private:
-  uint32_t digest[5];
-  unsigned char buffer[64];
-  size_t buf_size;
-  uint64_t transforms;
-};
-
-}  // namespace wpi
-
-#endif  // WPIUTIL_SUPPORT_SHA1_H_
+#include "wpi/sha1.h"

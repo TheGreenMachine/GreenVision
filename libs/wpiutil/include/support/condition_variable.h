@@ -1,5 +1,5 @@
 /*----------------------------------------------------------------------------*/
-/* Copyright (c) 2017-2018 FIRST. All Rights Reserved.                        */
+/* Copyright (c) 2016-2018 FIRST. All Rights Reserved.                        */
 /* Open Source Software - may be modified and shared by FRC teams. The code   */
 /* must be accompanied by the FIRST BSD license file in the root directory of */
 /* the project.                                                               */
@@ -7,16 +7,13 @@
 
 #pragma once
 
-#include <condition_variable>
-
-#include "priority_condition_variable.h"
-
-namespace wpi {
-
-#ifdef WPI_HAVE_PRIORITY_CONDITION_VARIABLE
-using condition_variable = priority_condition_variable;
+// clang-format off
+#ifdef _MSC_VER
+#pragma message "warning: support/condition_variable.h is deprecated; include wpi/condition_variable.h instead"
 #else
-using condition_variable = ::std::condition_variable;
+#warning "support/condition_variable.h is deprecated; include wpi/condition_variable.h instead"
 #endif
 
-}  // namespace wpi
+// clang-format on
+
+#include "wpi/condition_variable.h"

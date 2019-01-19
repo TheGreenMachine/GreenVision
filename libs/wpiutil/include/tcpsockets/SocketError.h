@@ -1,25 +1,19 @@
 /*----------------------------------------------------------------------------*/
-/* Copyright (c) 2015-2018 FIRST. All Rights Reserved.                        */
+/* Copyright (c) 2016-2018 FIRST. All Rights Reserved.                        */
 /* Open Source Software - may be modified and shared by FRC teams. The code   */
 /* must be accompanied by the FIRST BSD license file in the root directory of */
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
 
-#ifndef WPIUTIL_TCPSOCKETS_SOCKETERROR_H_
-#define WPIUTIL_TCPSOCKETS_SOCKETERROR_H_
+#pragma once
 
-#include <string>
+// clang-format off
+#ifdef _MSC_VER
+#pragma message "warning: tcpsockets/SocketError.h is deprecated; include wpi/SocketError.h instead"
+#else
+#warning "tcpsockets/SocketError.h is deprecated; include wpi/SocketError.h instead"
+#endif
 
-namespace wpi {
+// clang-format on
 
-int SocketErrno();
-
-std::string SocketStrerror(int code);
-
-static inline std::string SocketStrerror() {
-  return SocketStrerror(SocketErrno());
-}
-
-}  // namespace wpi
-
-#endif  // WPIUTIL_TCPSOCKETS_SOCKETERROR_H_
+#include "wpi/SocketError.h"
