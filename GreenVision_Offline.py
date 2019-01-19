@@ -52,6 +52,7 @@ center2y = int((topLeft2y + bottomRight2y) / 2)
 averagedCenterx = int((center1x + center2x) / 2)
 averagedCentery = int((center1y + center2y) / 2)
 
+
 #Draw a mask
 cv2.line(maskCopy, (center1x, center1y), (center1x, center1y), (255, 0, 0), 8)
 cv2.line(maskCopy, (center2x, center2y), (center2x, center2y), (255, 0, 0), 8)
