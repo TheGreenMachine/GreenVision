@@ -1,104 +1,103 @@
-import cv2
-import networktables
 import numpy as np
+import cv2
+import sys
+import networktables as nt
 
-cap = cv2.VideoCapture(0)
-def nothing(x):
-    pass
-networktables.NetworkTables.initialize(server='10.18.16.2')
-table = networktables.NetworkTables.getTable("SmartDashboard")
+cap = cv2.VideoCapture('test2.mp4')
+nt.NetworkTables.initialize(server='10.18.16.2')
+
+table = nt.NetworkTables.getTable("SmartDashboard")
 if table:
-    print("Table OK")
-table.putNumber("center1", 2)
-table.putNumber("center2", 2)
-table.putNumber("averagedCenter", 1)
-threshold = 40
-cv2.namedWindow("yo", cv2.WINDOW_AUTOSIZE)
-cv2.createTrackbar("Threshold", "yo", 0, 255, nothing)
-lowercolor = [0, 0, 231]
-uppercolor = [180, 35, 255]
+    print("table OK")
+table.putNumber("visionX", -1)
+table.putNumber("visionY", -1)
 
-erodesize = np.ones((5,5),np.uint8)
-size = 0
-maxsize = 400
-while (True):
-    retr, image = cap.read()
-    threshold = cv2.getTrackbarPos("Threshold", "yo")
-    lowerbound = (lowercolor[0] - threshold, lowercolor[1] - threshold, lowercolor[2] - threshold)
-    upperbound = (uppercolor[0] + threshold, uppercolor[1] + threshold, uppercolor[2] + threshold)
-    print(threshold)
-    maskCopy = image.copy()
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    image = cv2.GaussianBlur(image, (5,5), 0)
-    mask = cv2.inRange(image, lowerbound, upperbound)
-    mask = cv2.erode(mask, erodesize,iterations = 1)
-    secondlargestcontouridx = 0
-    largestcontouridx = 0
-    largestarea = 0
-    secondlargestarea = 0
-    isLargestContour = False
-    isSecondLargestContour = False
-    contours, _ = cv2.findContours(mask, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
-    for c in contours:
-        area = cv2.contourArea(c)
-        if (area > largestarea):
-            largestarea = area
-            largestcontouridx = c
-            if (secondlargestarea > size and maxsize > largestarea):
-                isLargestContour = True
+visionFlag = True
+debugFlag = True
+if len(sys.argv) > 1:
+    visionFlag = sys.argv[1] == "-v" or sys.argv[2] == "-v"
+    debugFlag = sys.argv[1] == "-d" or sys.argv[2] == "-d"
+    print("Vision flag is: {};  debug flag: {}".format(visionFlag, debugFlag))
 
-        elif (area > secondlargestarea):
-            secondlargestarea = area
-            secondlargestcontouridx = c
-            if (largestarea > size and maxsize > secondlargestarea):
-                isSecondLargestContour = True
-    if isLargestContour:
-        x, y, w, h = cv2.boundingRect(largestcontouridx)
-        if isSecondLargestContour:
-            x1, y1, w1, h1 = cv2.boundingRect(secondlargestcontouridx)
+lower_color = np.array([50.0, 55.03597122302158, 174.28057553956833])
+upper_color = np.array([90.60606060606061, 255, 255])
 
+while True:
+    _, frame = cap.read()
 
-            #Find cordinates of first rectangle top left bottom corner
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    mask = cv2.inRange(hsv, lower_color, upper_color)
+    if visionFlag:
+        cv2.imshow('Mask', mask)
 
+    contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    ncontours = []
+    for contour in contours:
+        if cv2.contourArea(contour) > 400:
+            ncontours.append(contour)
+    print("Number of contours: ", len(ncontours))
+    rectangles = []
+    for c in ncontours:
+        cv2.drawContours(frame, [c], -1, (0, 0, 255), 3)
+        rectangles.append(cv2.boundingRect(c))
+    if (len(rectangles)) > 0:
+        x = rectangles[0][0]
+        y = rectangles[0][1]
+        w = rectangles[0][2]
+        h = rectangles[0][3]
+        if (len(rectangles) > 1):
+            x1 = rectangles[1][0]
+            y1 = rectangles[1][1]
+            w1 = rectangles[1][2]
+            h1 = rectangles[1][3]
             topLeft1x = x
             topLeft1y = y
             topLeft2x = x1
             topLeft2y = y1
 
-            #Find cordinates of first rectangle bottom corner
+            # Find cordinates of first rectangle bottom corner
 
             bottomRight1x = x + w
             bottomRight1y = y + h
             bottomRight2x = x1 + w1
             bottomRight2y = y1 + h1
 
-            #Calculate Centers
+            # Calculate Centers
 
             center1x = int((topLeft1x + bottomRight1x) / 2)
             center1y = int((topLeft1y + bottomRight1y) / 2)
             center2x = int((topLeft2x + bottomRight2x) / 2)
             center2y = int((topLeft2y + bottomRight2y) / 2)
-            averagedCenterx = int((center1x + center2x) / 2)
-            averagedCentery = int((center1y + center2y) / 2)
+            averagedCenterX = int((center1x + center2x) / 2)
+            averagedCenterY = int((center1y + center2y) / 2)
+            cv2.line(frame, (center1x, center1y), (center1x, center1y), (255, 0, 0), 8)
+            cv2.line(frame, (center2x, center2y), (center2x, center2y), (255, 0, 0), 8)
+            cv2.line(frame, (averagedCenterX, averagedCenterY), (averagedCenterX, averagedCenterY), (255, 0, 0), 8)
+    if len(ncontours) == 0:
+        table.putNumber("rec1X", -1)
+        table.putNumber("rec1Y", -1)
+        table.putNumber("rec2X", -1)
+        table.putNumber("rec2Y", -1)
+        table.putNumber("averageX", -1)
+        table.putNumber("averageY", -1)
+        if debugFlag:
+            print("TARGET NOT FOUND")
+    else:
+        table.putNumber("center1X", center1x)
+        table.putNumber("center1Y", center1y)
+        table.putNumber("center2X", center2x)
+        table.putNumber("center2Y", center2y)
+        table.putNumber("averagedCenterX", averagedCenterX)
+        table.putNumber("averagedCenterY", averagedCenterY)
+        if debugFlag:
             print("center1X", center1x)
             print("center1Y", center1y)
             print("center2X", center2x)
             print("center2Y", center2y)
-            print("averagedCenterX", averagedCenterx)
-            print("averagedCenterY", averagedCentery)
-            table.putNumber("center1X", center1x)
-            table.putNumber("center1Y", center1y)
-            table.putNumber("center2X", center2x)
-            table.putNumber("center2Y", center2y)
-            table.putNumber("averagedCenterX", averagedCenterx)
-            table.putNumber("averagedCenterY", averagedCentery)
-            #Draw a mask
-            cv2.line(maskCopy, (center1x, center1y), (center1x, center1y), (255, 0, 0), 8)
-            cv2.line(maskCopy, (center2x, center2y), (center2x, center2y), (255, 0, 0), 8)
-            cv2.line(maskCopy, (averagedCenterx, averagedCentery), (averagedCenterx, averagedCentery), (255, 0, 0), 8)
+            print("averagedCenterX", averagedCenterX)
+            print("averagedCenterY", averagedCenterY)
+    if visionFlag:
+        cv2.imshow('Contour Window', frame)
+    if cv2.waitKey(10) & 0xFF == ord('q'):
+        break
 
-            cv2.drawContours(maskCopy, [largestcontouridx], -1, (255, 0, 0), 3)
-            cv2.drawContours(maskCopy, [secondlargestcontouridx], -1, (0, 255, 0), 3)
-    cv2.namedWindow("yo", cv2.WINDOW_AUTOSIZE)
-    cv2.imshow("yo", maskCopy)
-    cv2.waitKey(15)
