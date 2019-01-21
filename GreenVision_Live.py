@@ -3,7 +3,7 @@ import cv2
 import sys
 import networktables as nt
 
-cap = cv2.VideoCapture('test2.mp4')
+cap = cv2.VideoCapture(0)
 nt.NetworkTables.initialize(server='10.18.16.2')
 
 table = nt.NetworkTables.getTable("SmartDashboard")
@@ -12,12 +12,17 @@ if table:
 table.putNumber("visionX", -1)
 table.putNumber("visionY", -1)
 
-visionFlag = True
-debugFlag = True
-if len(sys.argv) > 1:
+visionFlag = False
+debugFlag = False
+
+if len(sys.argv) == 2:
+    visionFlag = sys.argv[1] == "-v"
+    debugFlag = sys.argv[1] == "-d"
+elif len(sys.argv) == 3:
     visionFlag = sys.argv[1] == "-v" or sys.argv[2] == "-v"
     debugFlag = sys.argv[1] == "-d" or sys.argv[2] == "-d"
-    print("Vision flag is: {};  debug flag: {}".format(visionFlag, debugFlag))
+if debugFlag:
+    print("Vision flag is:",visionFlag,"debug flag:",debugFlag)
 
 lower_color = np.array([50.0, 55.03597122302158, 174.28057553956833])
 upper_color = np.array([90.60606060606061, 255, 255])
@@ -30,7 +35,7 @@ while True:
     if visionFlag:
         cv2.imshow('Mask', mask)
 
-    contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    _, contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     ncontours = []
     for contour in contours:
         if cv2.contourArea(contour) > 400:
@@ -73,29 +78,29 @@ while True:
             cv2.line(frame, (center1x, center1y), (center1x, center1y), (255, 0, 0), 8)
             cv2.line(frame, (center2x, center2y), (center2x, center2y), (255, 0, 0), 8)
             cv2.line(frame, (averagedCenterX, averagedCenterY), (averagedCenterX, averagedCenterY), (255, 0, 0), 8)
-    if len(ncontours) == 0:
-        table.putNumber("rec1X", -1)
-        table.putNumber("rec1Y", -1)
-        table.putNumber("rec2X", -1)
-        table.putNumber("rec2Y", -1)
-        table.putNumber("averageX", -1)
-        table.putNumber("averageY", -1)
-        if debugFlag:
-            print("TARGET NOT FOUND")
-    else:
-        table.putNumber("center1X", center1x)
-        table.putNumber("center1Y", center1y)
-        table.putNumber("center2X", center2x)
-        table.putNumber("center2Y", center2y)
-        table.putNumber("averagedCenterX", averagedCenterX)
-        table.putNumber("averagedCenterY", averagedCenterY)
-        if debugFlag:
-            print("center1X", center1x)
-            print("center1Y", center1y)
-            print("center2X", center2x)
-            print("center2Y", center2y)
-            print("averagedCenterX", averagedCenterX)
-            print("averagedCenterY", averagedCenterY)
+            if len(ncontours) == 0:
+                table.putNumber("center1X", -1)
+                table.putNumber("center1Y", -1)
+                table.putNumber("center2X", -1)
+                table.putNumber("center2Y", -1)
+                table.putNumber("averagedCenterX", -1)
+                table.putNumber("averagedCenterY", -1)
+                if debugFlag:
+                    print("TARGET NOT FOUND")
+            else:
+                table.putNumber("center1X", center1x)
+                table.putNumber("center1Y", center1y)
+                table.putNumber("center2X", center2x)
+                table.putNumber("center2Y", center2y)
+                table.putNumber("averagedCenterX", averagedCenterX)
+                table.putNumber("averagedCenterY", averagedCenterY)
+                if debugFlag:
+                    print("center1X", center1x)
+                    print("center1Y", center1y)
+                    print("center2X", center2x)
+                    print("center2Y", center2y)
+                    print("averagedCenterX", averagedCenterX)
+                    print("averagedCenterY", averagedCenterY)
     if visionFlag:
         cv2.imshow('Contour Window', frame)
     if cv2.waitKey(10) & 0xFF == ord('q'):
