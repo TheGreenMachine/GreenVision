@@ -26,7 +26,22 @@ if debugFlag:
 
 lower_color = np.array([50.0, 55.03597122302158, 174.28057553956833])
 upper_color = np.array([90.60606060606061, 255, 255])
+def defineRecs(rectangle):
+    topleftX = rectangle[0]
+    topleftY = rectangle[1]
+    width = rectangle[2]
+    height= rectangle[3]
+    bottomrightX = topleftX + width
+    bottomrightY = topleftY + height
+    centerX = int((topleftX + bottomrightX) / 2)
+    centerY = int((topleftY + bottomrightY) / 2)
+    
+    return topleftX, topleftY, bottomrightX, bottomrightY, centerX, centerY
+def getAverage(center1x, center2x, center1y, center2y):
+    averagedCenterX = int((center1x + center2x) / 2)
+    averagedCenterY = int((center1y + center2y) / 2)
 
+    return averagedCenterX, averagedCenterY
 while True:
     _, frame = cap.read()
 
@@ -38,7 +53,8 @@ while True:
     _, contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     ncontours = []
     for contour in contours:
-        if cv2.contourArea(contour) > 400:
+        if cv2.contourArea(contour) > 75:
+            print('Contour area:',cv2.contourArea(contour))
             ncontours.append(contour)
     print("Number of contours: ", len(ncontours))
     rectangles = []
@@ -46,35 +62,13 @@ while True:
         cv2.drawContours(frame, [c], -1, (0, 0, 255), 3)
         rectangles.append(cv2.boundingRect(c))
     if (len(rectangles)) > 0:
-        x = rectangles[0][0]
-        y = rectangles[0][1]
-        w = rectangles[0][2]
-        h = rectangles[0][3]
-        if (len(rectangles) > 1):
-            x1 = rectangles[1][0]
-            y1 = rectangles[1][1]
-            w1 = rectangles[1][2]
-            h1 = rectangles[1][3]
-            topLeft1x = x
-            topLeft1y = y
-            topLeft2x = x1
-            topLeft2y = y1
-
-            # Find cordinates of first rectangle bottom corner
-
-            bottomRight1x = x + w
-            bottomRight1y = y + h
-            bottomRight2x = x1 + w1
-            bottomRight2y = y1 + h1
-
-            # Calculate Centers
-
-            center1x = int((topLeft1x + bottomRight1x) / 2)
-            center1y = int((topLeft1y + bottomRight1y) / 2)
-            center2x = int((topLeft2x + bottomRight2x) / 2)
-            center2y = int((topLeft2y + bottomRight2y) / 2)
-            averagedCenterX = int((center1x + center2x) / 2)
-            averagedCenterY = int((center1y + center2y) / 2)
+        
+        topLeft1x, topLeft1y, bottomRight1x, bottomRight1y, center1x, center1y = defineRecs(rectangles[0])
+        if (len(rectangles)) > 1:
+            
+            topLeft2x, topLeft2y, bottomRight2x, bottomRight2y, center2x, center2y = defineRecs(rectangles[1])
+            averagedCenterX, averagedCenterY = getAverage(center1x, center2x, center1y, center2y)
+            
             cv2.line(frame, (center1x, center1y), (center1x, center1y), (255, 0, 0), 8)
             cv2.line(frame, (center2x, center2y), (center2x, center2y), (255, 0, 0), 8)
             cv2.line(frame, (averagedCenterX, averagedCenterY), (averagedCenterX, averagedCenterY), (255, 0, 0), 8)
