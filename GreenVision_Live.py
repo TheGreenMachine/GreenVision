@@ -90,6 +90,10 @@ while True:
             topLeft2x, topLeft2y, bottomRight2x, bottomRight2y, center2x, center2y = defineRec(rectangles[1])
             averagedCenterX, averagedCenterY = getAverage(center1x, center2x, center1y, center2y)
             updateNetTable(1, center1x, center1y, center2x, center2y, averagedCenterX, averagedCenterY)
+            cv2.line(frame, (center1x, center1y), (center1x, center1y), (255, 0, 0), 8)
+            cv2.line(frame, (center2x, center2y), (center2x, center2y), (255, 0, 0), 8)
+            cv2.line(frame, (averagedCenterX, averagedCenterY), (averagedCenterX, averagedCenterY), (255, 0, 0), 8)
+
 
             if len(rectangles) > 2:
                 topLeft3x, topLeft3y, bottomRight3x, bottomRight3y, center3x, center3y = defineRec(rectangles[2])
@@ -97,16 +101,21 @@ while True:
                     topLeft4x, topLeft4y, bottomRight4x, bottomRight4y, center4x, center4y = defineRec(rectangles[3])
                     averagedCenter1X, averagedCenter1Y = getAverage(center3x, center4x, center3y, center4y)
                     updateNetTable(2, center3x, center3y, center4x, center4y, averagedCenter1X, averagedCenter1Y)
+                    cv2.line(frame, (center3x, center3y), (center3x, center3y), (255, 0, 0), 8)
+                    cv2.line(frame, (center4x, center4y), (center4x, center4y), (255, 0, 0), 8)
+                    cv2.line(frame, (averagedCenter1X, averagedCenter1Y), (averagedCenter1X, averagedCenter1Y), (255, 0, 0), 8)
+
                     if len(rectangles) > 4:
                         topLeft5x, topLeft5y, bottomRight5x, bottomRight5y, center5x, center5y = defineRec(rectangles[4])
                         if len(rectangles) > 5:
                             topLeft6x, topLeft6y, bottomRight6x, bottomRight6y, center6x, center6y = defineRec(rectangles[5])
                             averagedCenter2X, averagedCenter2Y = getAverage(center5x, center6x, center5y, center6y)
                             updateNetTable(3, center5x, center5y, center6x, center6y, averagedCenter2X, averagedCenter2Y)
+                            cv2.line(frame, (center4x, center4y), (center4x, center4y), (255, 0, 0), 8)
+                            cv2.line(frame, (center5x, center5y), (center5x, center5y), (255, 0, 0), 8)
+                            cv2.line(frame, (averagedCenter2X, averagedCenter2Y), (averagedCenter2X, averagedCenter2Y), (255, 0, 0), 8)
 
-                            cv2.line(frame, (center1x, center1y), (center1x, center1y), (255, 0, 0), 8)
-                            cv2.line(frame, (center2x, center2y), (center2x, center2y), (255, 0, 0), 8)
-                            cv2.line(frame, (averagedCenterX, averagedCenterY), (averagedCenterX, averagedCenterY), (255, 0, 0), 8)
+
 
     if visionFlag:
         cv2.imshow('Contour Window', frame)
