@@ -1,53 +1,108 @@
-// OpenCV.cpp : This file contains the 'main' function. Program execution begins and ends there.
-
 #include <iostream>
 #include <opencv2/opencv.hpp>
+#include "RectCoordinates.h"
 
-int main() {
-    cv::Mat image = cv::imread("test_images/light.png");
-    cv::Mat mask;
+using namespace cv;
 
-    std::vector<std::vector<cv::Point>> Contours;
-    std::vector<cv::Vec4i> hier;
+std::string help();
 
-    cv::Mat contourimg = image.clone();
-    cv::Rect large;
-    cv::Rect secondLarge;
-    int largestIndex = 0;
-    int largestContour = 0;
-    int secondLargestIndex = 0;
-    int secondLargestContour = 0;
-    cvtColor(image, image, cv::COLOR_BGR2HSV);
-    GaussianBlur(image, image, cv::Size(5, 5), 0);
-    namedWindow("absolute", cv::WINDOW_AUTOSIZE);
-    imshow("absolute", image);
-    //threshold(finalimage, mask, 40, 255, THRESH_BINARY);
-    inRange(image, cv::Scalar(45, 20, 205), cv::Scalar(255, 255, 255), mask);
-    imshow("Imaage1", mask);
-    erode(mask, mask, 1);
-    findContours(mask, Contours, hier, cv::RETR_CCOMP, cv::CHAIN_APPROX_SIMPLE);
-    //Might need to loop through here to check for size
-    for (int i = 0; i < Contours.size(); i++) {
-        if (Contours[i].size() > largestContour) {
-            secondLargestContour = largestContour;
-            secondLargestIndex = largestIndex;
-            largestContour = Contours[i].size();
-            largestIndex = i;
-        } else if (Contours[i].size() > secondLargestContour) {
-            secondLargestContour = Contours[i].size();
-            secondLargestIndex = i;
+void parseArguments(int argc, char **argv);
+
+RectCoordinates defineRec(Rect rectangle);
+
+bool debug = false;
+bool vision = false;
+
+int main(int argc, char **argv) {
+    parseArguments(argc, argv);
+
+    VideoCapture capture;
+    double lower[3] = {50.0, 55.03597122302158, 174.28057553956833};
+    double upper[3] = {90.60606060606061, 255, 255};
+
+    if (!capture.open(0)) {
+        std::cout << "Failed to open video stream";
+        return 1;
+    }
+
+    if (vision) {
+        const std::string source_window = "Filter";
+        namedWindow(source_window);
+    }
+
+    while (capture.isOpened()) {
+        Mat frame;
+        capture >> frame;
+
+        if (frame.empty()) {
+            std::cout << "Frame is empty, breaking";
+            break;
+        }
+
+        cvtColor(frame, frame, COLOR_BGR2HSV);
+        inRange(frame, (InputArray) lower, (InputArray) upper, frame);
+
+        if (vision)
+            imshow("Mask", frame);
+
+        std::vector<std::vector<Point>> contours;
+        std::vector<std::vector<Point>> fContours;
+        findContours(frame, contours, RETR_TREE, CHAIN_APPROX_SIMPLE);
+
+        for (const auto &contour : contours) {
+            if (contourArea(contour) > 75)
+                fContours.push_back(contour);
+        }
+
+        if (debug)
+            std::cout << "number of contours: " << fContours.size();
+
+        std::vector<Rect> rectangles;
+        for (const auto &contour : fContours) {
+            Scalar scalar = Scalar(0, 0, 255);
+
+            drawContours(frame, contour, -1, scalar, 2);
+            rectangles.push_back(boundingRect(contour));
+        }
+
+        switch (rectangles.size()) {
+            case 2:
+                auto firstCoordinates = defineRec(rectangles.at(0));
+                auto secondCoordinates = defineRec(rectangles.at(1));
+
+                break;
+            case 4:
+                break;
+            case 6:
+                break;
         }
     }
-    large = boundingRect(Contours[largestIndex]);
-    secondLarge = boundingRect(Contours[secondLargestIndex]);
-    drawContours(contourimg, Contours, largestIndex, cv::Scalar(232, 12, 122), 3, 8, hier);
-    drawContours(contourimg, Contours, secondLargestIndex, cv::Scalar(232, 12, 122), 3, 8, hier);
-
-    namedWindow("Image", cv::WINDOW_AUTOSIZE);
-    imshow("Image", contourimg);
-    cv::waitKey(0);
 };
 
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
+String help() {
+    return "Flag options: -d for debugging information, -v to show the windows";
+}
 
+void parseArguments(int argc, char **argv) {
+    if (argc > 2) {
+        std::cout << help();
+    } else if (argc == 1 && argv[0][1] == 'h')
+        help();
+    else if (argc == 1) {
+        debug = argv[0][1] == 'd';
+        vision = argv[0][1] == 'v';
+    } else if (argc == 2) {
+        debug = argv[0][1] == 'd' || argv[1][1] == 'd';
+        vision = argv[0][1] == 'v' || argv[1][1] == 'v';
+    }
+}
+
+RectCoordinates defineRec(Rect rectangle) {
+    float bottomRightX = rectangle.x + rectangle.width;
+    float bottomRightY = rectangle.y + rectangle.width;
+    int centerX = int((rectangle.x + bottomRightX) / 2);
+    int centerY = int((rectangle.y + bottomRightY) / 2);
+
+    return RectCoordinates(rectangle.x, rectangle.y, rectangle.width, rectangle.height, bottomRightX, bottomRightY,
+                           centerX, centerY);
+}
