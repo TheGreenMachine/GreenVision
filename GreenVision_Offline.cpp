@@ -21,8 +21,8 @@ int main(int argc, char **argv) {
     parseArguments(argc, argv);
 
     VideoCapture capture;
-    double lower[3] = {50.0, 55.03597122302158, 174.28057553956833};
-    double upper[3] = {90.60606060606061, 255, 255};
+    std::vector<double> lower = {50.0, 55.03597122302158, 174.28057553956833};
+    std::vector<double> upper = {90.60606060606061, 255, 255};
 
     if (!capture.open(0)) {
         std::cout << "Failed to open video stream";
@@ -33,20 +33,20 @@ int main(int argc, char **argv) {
         Mat frame;
         capture >> frame;
 
+        if (vision)
+            imshow("Raw", frame);
         if (frame.empty()) {
-            std::cout << "Frame is empty, breaking";
-            break;
+            std::cout << "Frame is empty, continuing";
+            continue;
         }
 
-        cvtColor(frame, frame, COLOR_BGR2HSV);
-        inRange(frame, (InputArray) lower, (InputArray) upper, frame);
-
-        if (vision)
-            imshow("Mask", frame);
+        Mat convert;
+        cvtColor(frame, convert, COLOR_BGR2HSV);
+        inRange(convert, lower, upper, convert);
 
         std::vector<std::vector<Point>> contours;
         std::vector<std::vector<Point>> fContours;
-        findContours(frame, contours, RETR_TREE, CHAIN_APPROX_SIMPLE);
+        findContours(convert, contours, RETR_TREE, CHAIN_APPROX_SIMPLE);
 
         for (const auto &contour : contours) {
             if (contourArea(contour) > 75)
@@ -57,10 +57,11 @@ int main(int argc, char **argv) {
             std::cout << "number of contours: " << fContours.size();
 
         std::vector<Rect> rectangles;
+
         for (const auto &contour : fContours) {
             Scalar scalar = Scalar(0, 0, 255);
 
-            drawContours(frame, contour, -1, scalar, 2);
+            drawContours(convert, contours, -1, scalar, 2);
             rectangles.push_back(boundingRect(contour));
         }
 
@@ -77,11 +78,12 @@ int main(int argc, char **argv) {
                 int averageCenterX = getAverageX(firstCoordinates.getCenterX(), secondCoordinates.getCenterY());
                 int averageCenterY = getAverageY(firstCoordinates.getCenterY(), secondCoordinates.getCenterY());
 
-                line(frame, Point(firstCoordinates.getCenterX(), firstCoordinates.getCenterY()),
+                line(convert, Point(firstCoordinates.getCenterX(), firstCoordinates.getCenterY()),
                      Point(firstCoordinates.getCenterX(), firstCoordinates.getCenterY()), center, 8);
-                line(frame, Point(secondCoordinates.getCenterX(), secondCoordinates.getCenterY()),
+                line(convert, Point(secondCoordinates.getCenterX(), secondCoordinates.getCenterY()),
                      Point(secondCoordinates.getCenterX(), secondCoordinates.getCenterY()), center, 8);
-                line(frame, Point(averageCenterX, averageCenterY), Point(averageCenterX, averageCenterY), center, 8);
+                line(convert, Point(averageCenterX, averageCenterY), Point(averageCenterX, averageCenterY), center,
+                     8);
                 break;
             }
             case 4: {
@@ -95,16 +97,19 @@ int main(int argc, char **argv) {
                 int averageCenterX1 = getAverageX(thirdCoordinates.getCenterX(), fourthCoordinates.getCenterY());
                 int averageCenterY1 = getAverageY(thirdCoordinates.getCenterY(), fourthCoordinates.getCenterY());
 
-                line(frame, Point(firstCoordinates.getCenterX(), firstCoordinates.getCenterY()),
+                line(convert, Point(firstCoordinates.getCenterX(), firstCoordinates.getCenterY()),
                      Point(firstCoordinates.getCenterX(), firstCoordinates.getCenterY()), center, 8);
-                line(frame, Point(secondCoordinates.getCenterX(), secondCoordinates.getCenterY()),
+                line(convert, Point(secondCoordinates.getCenterX(), secondCoordinates.getCenterY()),
                      Point(secondCoordinates.getCenterX(), secondCoordinates.getCenterY()), center, 8);
-                line(frame, Point(thirdCoordinates.getCenterX(), thirdCoordinates.getCenterY()),
+                line(convert, Point(thirdCoordinates.getCenterX(), thirdCoordinates.getCenterY()),
                      Point(thirdCoordinates.getCenterX(), thirdCoordinates.getCenterY()), center, 8);
-                line(frame, Point(fourthCoordinates.getCenterX(), fourthCoordinates.getCenterY()),
+                line(convert, Point(fourthCoordinates.getCenterX(), fourthCoordinates.getCenterY()),
                      Point(fourthCoordinates.getCenterX(), fourthCoordinates.getCenterY()), center, 8);
-                line(frame, Point(averageCenterX, averageCenterY), Point(averageCenterX, averageCenterY), center, 8);
-                line(frame, Point(averageCenterX1, averageCenterY1), Point(averageCenterX1, averageCenterY1), center, 8);
+                line(convert, Point(averageCenterX, averageCenterY), Point(averageCenterX, averageCenterY), center,
+                     8);
+                line(convert, Point(averageCenterX1, averageCenterY1), Point(averageCenterX1, averageCenterY1),
+                     center,
+                     8);
                 break;
             }
             case 6: {
@@ -122,21 +127,26 @@ int main(int argc, char **argv) {
                 int averageCenterX2 = getAverageX(fifthCoordinates.getCenterX(), sixthCoordinates.getCenterY());
                 int averageCenterY2 = getAverageY(fifthCoordinates.getCenterY(), sixthCoordinates.getCenterY());
 
-                line(frame, Point(firstCoordinates.getCenterX(), firstCoordinates.getCenterY()),
+                line(convert, Point(firstCoordinates.getCenterX(), firstCoordinates.getCenterY()),
                      Point(firstCoordinates.getCenterX(), firstCoordinates.getCenterY()), center, 8);
-                line(frame, Point(secondCoordinates.getCenterX(), secondCoordinates.getCenterY()),
+                line(convert, Point(secondCoordinates.getCenterX(), secondCoordinates.getCenterY()),
                      Point(secondCoordinates.getCenterX(), secondCoordinates.getCenterY()), center, 8);
-                line(frame, Point(thirdCoordinates.getCenterX(), thirdCoordinates.getCenterY()),
+                line(convert, Point(thirdCoordinates.getCenterX(), thirdCoordinates.getCenterY()),
                      Point(thirdCoordinates.getCenterX(), thirdCoordinates.getCenterY()), center, 8);
-                line(frame, Point(fourthCoordinates.getCenterX(), fourthCoordinates.getCenterY()),
+                line(convert, Point(fourthCoordinates.getCenterX(), fourthCoordinates.getCenterY()),
                      Point(fourthCoordinates.getCenterX(), fourthCoordinates.getCenterY()), center, 8);
-                line(frame, Point(fifthCoordinates.getCenterX(), fifthCoordinates.getCenterY()),
+                line(convert, Point(fifthCoordinates.getCenterX(), fifthCoordinates.getCenterY()),
                      Point(fifthCoordinates.getCenterX(), fifthCoordinates.getCenterY()), center, 8);
-                line(frame, Point(sixthCoordinates.getCenterX(), sixthCoordinates.getCenterY()),
+                line(convert, Point(sixthCoordinates.getCenterX(), sixthCoordinates.getCenterY()),
                      Point(sixthCoordinates.getCenterX(), sixthCoordinates.getCenterY()), center, 8);
-                line(frame, Point(averageCenterX, averageCenterY), Point(averageCenterX, averageCenterY), center, 8);
-                line(frame, Point(averageCenterX1, averageCenterY1), Point(averageCenterX1, averageCenterY1), center, 8);
-                line(frame, Point(averageCenterX2, averageCenterY2), Point(averageCenterX2, averageCenterY2), center, 8);
+                line(convert, Point(averageCenterX, averageCenterY), Point(averageCenterX, averageCenterY), center,
+                     8);
+                line(convert, Point(averageCenterX1, averageCenterY1), Point(averageCenterX1, averageCenterY1),
+                     center,
+                     8);
+                line(convert, Point(averageCenterX2, averageCenterY2), Point(averageCenterX2, averageCenterY2),
+                     center,
+                     8);
                 break;
             }
             default:
@@ -145,10 +155,10 @@ int main(int argc, char **argv) {
         }
 
         if (vision)
-            imshow("Contour Window", frame);
+            imshow("Contour Window", convert);
 
         char c = (char) waitKey(10);
-        if (c == 27)
+        if (c == 113)
             break;
     }
 
