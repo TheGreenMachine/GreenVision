@@ -14,6 +14,7 @@ table.putNumber("visionY", -1)
 
 visionFlag = False
 debugFlag = False
+thresholdFlag = False
 
 if len(sys.argv) == 2:
     visionFlag = sys.argv[1] == "-v"
@@ -21,11 +22,23 @@ if len(sys.argv) == 2:
 elif len(sys.argv) == 3:
     visionFlag = sys.argv[1] == "-v" or sys.argv[2] == "-v"
     debugFlag = sys.argv[1] == "-d" or sys.argv[2] == "-d"
-if debugFlag:
-    print("Vision flag is:", visionFlag, "debug flag:", debugFlag)
+    thresholdFlag = sys.argv[1] == "-t" or sys.argv[2] == "-t"
 
-lower_color = np.array([50.0, 55.03597122302158, 174.28057553956833])
-upper_color = np.array([90.60606060606061, 255, 255])
+elif len(sys.argv) == 4:
+    visionFlag = sys.argv[1] == "-v" or sys.argv[2] == "-v" or sys.argv[3] == "-v"
+    debugFlag = sys.argv[1] == "-d" or sys.argv[2] == "-d" or sys.argv[3] == "-d"
+    thresholdFlag = sys.argv[1] == "-t" or sys.argv[2] == "-t" or sys.argv[3] == "-t"
+
+if debugFlag:
+    print("Vision flag is:", visionFlag, "Debug flag is:", debugFlag, "Threshold flag is:", thresholdFlag)
+threshold = 20
+lower_color = np.array([50.0 - threshold, 55.03597122302158-threshold, 174.28057553956833-threshold])
+upper_color = np.array([90.60606060606061+threshold, 255, 255])
+
+def drawPoints(frame, center1x, center1y, center2x,center2y, averagedCenterX, averagedCenterY):
+    cv2.line(frame, (center1x, center1y), (center1x, center1y), (255, 0, 0), 8)
+    cv2.line(frame, (center2x, center2y), (center2x, center2y), (255, 0, 0), 8)
+    cv2.line(frame, (averagedCenterX, averagedCenterY), (averagedCenterX, averagedCenterY), (255, 0, 0), 8)
 
 
 def defineRec(rectangle):
@@ -47,6 +60,14 @@ def getAverage(center1x, center2x, center1y, center2y):
 
     return averagedCenterX, averagedCenterY
 
+
+def isPair(topLeftX, topLeftX1, bottomRightX, bottomRightX1):
+    topDiff = abs(topLeftX - topLeftX1)
+    bottomDiff = abs(bottomRightX - bottomRightX1)
+    if (topDiff < 120):
+        return bottomDiff > topDiff
+        
+    
 def updateNetTable(n, center1x = -1, center1y = -1, center2x = -1, center2y = -1, averagedCenterX = -1, averagedCenterY = -1, debugFlag = False):
         table.putNumber("center{n}X".format(n=n), center1x)
         table.putNumber("center{n}Y".format(n=n), center1y)
@@ -68,8 +89,6 @@ while True:
 
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(hsv, lower_color, upper_color)
-    if visionFlag:
-        cv2.imshow('Mask', mask)
 
     _, contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     ncontours = []
@@ -82,42 +101,33 @@ while True:
     for c in ncontours:
         cv2.drawContours(frame, [c], -1, (0, 0, 255), 3)
         rectangles.append(cv2.boundingRect(c))
-    if len(rectangles) > 0:
-
-        topLeft1x, topLeft1y, bottomRight1x, bottomRight1y, center1x, center1y = defineRec(rectangles[0])
         if len(rectangles) > 1:
+            topLeft1X, topLeft1Y, bottomRight1X, bottomRight1Y, center1X, center1Y = defineRec(rectangles[0])
+            topLeft2X, topLeft2Y, bottomRight2X, bottomRight2Y, center2X, center2Y = defineRec(rectangles[1])
+            averagedCenterX, averagedCenterY = getAverage(center1X, center2X, center1Y, center2Y)
+            if (isPair(topLeft1X, topLeft2X, bottomRight1X, bottomRight2X)):
+                updateNetTable(1, center1X, center1Y, center2X, center2Y, averagedCenterX, averagedCenterY,debugFlag)
+                drawPoints(frame, center1X, center1Y, center2X,center2Y, averagedCenterX, averagedCenterY)
 
-            topLeft2x, topLeft2y, bottomRight2x, bottomRight2y, center2x, center2y = defineRec(rectangles[1])
-            averagedCenterX, averagedCenterY = getAverage(center1x, center2x, center1y, center2y)
-            updateNetTable(1, center1x, center1y, center2x, center2y, averagedCenterX, averagedCenterY,debugFlag)
-            cv2.line(frame, (center1x, center1y), (center1x, center1y), (255, 0, 0), 8)
-            cv2.line(frame, (center2x, center2y), (center2x, center2y), (255, 0, 0), 8)
-            cv2.line(frame, (averagedCenterX, averagedCenterY), (averagedCenterX, averagedCenterY), (255, 0, 0), 8)
+            if len(rectangles) > 3:
+                topLeft3X, topLeft3Y, bottomRight3X, bottomRight3Y, center3X, center3Y = defineRec(rectangles[2])
+                topLeft4X, topLeft4Y, bottomRight4X, bottomRight4Y, center4X, center4Y = defineRec(rectangles[3])
+                averagedCenter1X, averagedCenter1Y = getAverage(center3X, center4X, center3Y, center4Y)
+                if (isPair(topLeft3X, topLeft4X, bottomRight3X, bottomRight4X)):
+                    updateNetTable(2, center3X, center3Y, center4X, center4Y, averagedCenter1X, averagedCenter1Y,debugFlag)
+                    drawPoints(frame, center3X, center3Y, center4X,center4Y, averagedCenter1X, averagedCenter1Y)
 
-
-            if len(rectangles) > 2:
-                topLeft3x, topLeft3y, bottomRight3x, bottomRight3y, center3x, center3y = defineRec(rectangles[2])
-                if len(rectangles) > 3:
-                    topLeft4x, topLeft4y, bottomRight4x, bottomRight4y, center4x, center4y = defineRec(rectangles[3])
-                    averagedCenter1X, averagedCenter1Y = getAverage(center3x, center4x, center3y, center4y)
-                    updateNetTable(2, center3x, center3y, center4x, center4y, averagedCenter1X, averagedCenter1Y,debugFlag)
-                    cv2.line(frame, (center3x, center3y), (center3x, center3y), (255, 0, 0), 8)
-                    cv2.line(frame, (center4x, center4y), (center4x, center4y), (255, 0, 0), 8)
-                    cv2.line(frame, (averagedCenter1X, averagedCenter1Y), (averagedCenter1X, averagedCenter1Y), (255, 0, 0), 8)
-
-                    if len(rectangles) > 4:
-                        topLeft5x, topLeft5y, bottomRight5x, bottomRight5y, center5x, center5y = defineRec(rectangles[4])
-                        if len(rectangles) > 5:
-                            topLeft6x, topLeft6y, bottomRight6x, bottomRight6y, center6x, center6y = defineRec(rectangles[5])
-                            averagedCenter2X, averagedCenter2Y = getAverage(center5x, center6x, center5y, center6y)
-                            updateNetTable(3, center5x, center5y, center6x, center6y, averagedCenter2X, averagedCenter2Y, debugFlag)
-                            cv2.line(frame, (center4x, center4y), (center4x, center4y), (255, 0, 0), 8)
-                            cv2.line(frame, (center5x, center5y), (center5x, center5y), (255, 0, 0), 8)
-                            cv2.line(frame, (averagedCenter2X, averagedCenter2Y), (averagedCenter2X, averagedCenter2Y), (255, 0, 0), 8)
-
+                if len(rectangles) > 5:
+                    topLeft5X, topLeft5Y, bottomRight5X, bottomRight5Y, center5X, center5Y = defineRec(rectangles[4])
+                    topLeft6X, topLeft6Y, bottomRight6X, bottomRight6Y, center6X, center6Y = defineRec(rectangles[5])
+                    averagedCenter2X, averagedCenter2Y = getAverage(center5X, center6X, center5Y, center6Y)
+                    if (isPair(topLeft5X, topLeft6X, bottomRight5X, bottomRight6X)):
+                        updateNetTable(3, center5X, center5Y, center6X, center6Y, averagedCenter2X, averagedCenter2Y, debugFlag)
+                        drawPoints(frame, center4X, center4Y, center5X,center5Y, averagedCenter2X, averagedCenter2Y)
 
 
     if visionFlag:
         cv2.imshow('Contour Window', frame)
+        cv2.imshow('Mask', mask)
     if cv2.waitKey(10) & 0xFF == ord('q'):
         break
