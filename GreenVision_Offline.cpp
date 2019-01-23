@@ -21,8 +21,8 @@ int main(int argc, char **argv) {
     parseArguments(argc, argv);
 
     VideoCapture capture;
-    std::vector<double> lower = {50.0, 55.03597122302158, 174.28057553956833};
-    std::vector<double> upper = {90.60606060606061, 255, 255};
+    const std::vector<double> lower = {50.0, 55.03597122302158, 174.28057553956833};
+    const std::vector<double> upper = {90.60606060606061, 255, 255};
 
     if (!capture.open(0)) {
         std::cout << "Failed to open video stream";

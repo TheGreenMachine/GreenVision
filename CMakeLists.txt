@@ -11,7 +11,8 @@ find_package(OpenCV REQUIRED)
 
 include_directories(${wpiutil_DIR}/include ${ntcore_DIR}/include)
 
-add_executable(GreenVision GreenVision_Offline.cpp RectCoordinates.cpp RectCoordinates.h)
+#add_executable(GreenVision GreenVision_Offline.cpp RectCoordinates.cpp RectCoordinates.h)
+add_executable(GreenVision GreenVision_Live.cpp RectCoordinates.cpp RectCoordinates.h)
 
 set(OpenCV_LIBS opencv_core opencv_imgproc opencv_highgui opencv_imgcodecs)
 

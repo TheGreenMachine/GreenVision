@@ -1,5 +1,6 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
+#include <networktables/NetworkTableInstance.h>
 #include "RectCoordinates.h"
 
 using namespace cv;
@@ -7,6 +8,8 @@ using namespace cv;
 std::string help();
 
 void parseArguments(int argc, char **argv);
+
+void updateNetTables(RectCoordinates coordinates, std::shared_ptr<nt::NetworkTable> &table);
 
 RectCoordinates defineRec(Rect rectangle);
 
@@ -19,11 +22,21 @@ bool vision = false;
 
 int main(int argc, char **argv) {
 	parseArguments(argc, argv);
-
 	VideoCapture capture;
 
-	std::vector<double> lower = {50.0, 55.03597122302158, 174.28057553956833};
-	std::vector<double> upper = {90.60606060606061, 255, 255};
+	const std::vector<double> lower = {50.0, 55.03597122302158, 174.28057553956833};
+	const std::vector<double> upper = {90.60606060606061, 255, 255};
+
+	auto inst = nt::NetworkTableInstance::GetDefault();
+	auto table = inst.GetTable("SmartDashboard");
+
+	if (inst.IsConnected()) {
+	    if (debug)
+	        std::cout << "Successfully connected to network tables server: " << inst.GetConnections().at(0).remote_ip;
+
+	    table->PutNumber("visionX", -1);
+	    table->PutNumber("visionY", -1);
+	}
 
 	if (!capture.open(0)) {
 		std::cout << "Failed to open video stream";
@@ -203,4 +216,8 @@ int getAverageX(int center1, int center2) {
 
 int getAverageY(int center1, int center2) {
 	return (center1 + center2) / 2;
+}
+
+void updateNetTables(RectCoordinates coordinates, std::shared_ptr<nt::NetworkTable> &table) {
+    table->PutNumber()
 }
