@@ -2,8 +2,9 @@ import numpy as np
 import cv2
 import sys
 import networktables as nt
+from imutils.video import WebcamVideoStream
 
-cap = cv2.VideoCapture(0)
+cap = WebcamVideoStream(src=0).start()
 nt.NetworkTables.initialize(server='10.18.16.2')
 
 table = nt.NetworkTables.getTable("SmartDashboard")
@@ -85,7 +86,7 @@ def updateNetTable(n, center1x = -1, center1y = -1, center2x = -1, center2y = -1
 
 
 while True:
-    _, frame = cap.read()
+    frame = cap.read()
 
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(hsv, lower_color, upper_color)
