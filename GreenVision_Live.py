@@ -32,10 +32,10 @@ lower_color = np.array(data["lower-color-list-thresh"]) if threshold_flag else n
 upper_color = np.array(data["upper-color-list-thresh"]) if threshold_flag else np.array(data["upper-color-list"])
 
 
-def draw_points(center1x, center1y, center2x, center2y, averagedCenterX, averagedCenterY):
-    cv2.line(frame, (center1x, center1y), (center1x, center1y), (255, 0, 0), 8)
-    cv2.line(frame, (center2x, center2y), (center2x, center2y), (255, 0, 0), 8)
-    cv2.line(frame, (averagedCenterX, averagedCenterY), (averagedCenterX, averagedCenterY), (255, 0, 0), 8)
+def draw_points(center1_x, center1_y, center2_x, center2_y, avg_center_x, avg_center_y):
+    cv2.line(frame, (center1_x, center1_y), (center1_x, center1_y), (255, 0, 0), 8)
+    cv2.line(frame, (center2_x, center2_y), (center2_x, center2_y), (255, 0, 0), 8)
+    cv2.line(frame, (avg_center_x, avg_center_y), (avg_center_x, avg_center_y), (255, 0, 0), 8)
 
 
 def def_rec(rectangle):
