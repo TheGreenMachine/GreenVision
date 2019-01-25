@@ -15,14 +15,7 @@ with open('values.json') as json_file:
     data = json.load(json_file)
 
 cap = WebcamVideoStream(src=0).start() if multithreadFlag else cv2.VideoCapture(0)
-'''
-if multithreadFlag:
-    cap = WebcamVideoStream(src=0).start()
-else:
-    cap = cv2.VideoCapture(0)
-'''
 
-# nt.NetworkTables.initialize(server='10.18.16.2')
 nt.NetworkTables.initialize(server=data['server-ip'])
 table = nt.NetworkTables.getTable("SmartDashboard")
 if table:
@@ -31,23 +24,10 @@ table.putNumber("visionX", -1)
 table.putNumber("visionY", -1)
 
 if debugFlag:
-    #print("Vision flag is:", visionFlag, "Debug flag is:", debugFlag, "Threshold flag is:", thresholdFlag, 'Multithreading flag is:', multithreadFlag)
     print('Vision flag: {v}\nDebug flag: {d}\nThreshold Flag: {t}\nMultithread Flag: {mt}'.format(v=visionFlag, d=debugFlag, t=thresholdFlag, mt=multithreadFlag))
 
 lower_color = np.array(data["lower-color-list-thresh"]) if thresholdFlag else np.array(data["lower-color-list"])
 upper_color = np.array(data["upper-color-list-thresh"]) if thresholdFlag else np.array(data["upper-color-list"])
-
-'''
-if thresholdFlag:
-    lower_color = np.array(data['lower-color-list-thresh'])
-    upper_color = np.array(data['upper-color-list-thresh'])
-else:
-    lower_color = np.array(data['lower-color-list'])
-    upper_color = np.array(data['upper-color-list'])
-    
-lower_color = np.array([50.0 - threshold, 55.03597122302158-threshold, 174.28057553956833-threshold])
-upper_color = np.array([90.60606060606061+threshold, 255, 255])
-'''
 
 def drawPoints(frame, center1x, center1y, center2x, center2y, averagedCenterX, averagedCenterY):
     cv2.line(frame, (center1x, center1y), (center1x, center1y), (255, 0, 0), 8)
@@ -124,16 +104,16 @@ while True:
             averagedCenterX, averagedCenterY = getAverage(center1X, center2X, center1Y, center2Y)
             if True:
             #if isPair(topLeft1X, topLeft2X, bottomRight1X, bottomRight2X):
-                updateNetTable(1, center1X, center1Y, center2X, center2Y, averagedCenterX, averagedCenterY,debugFlag)
-                drawPoints(frame, center1X, center1Y, center2X,center2Y, averagedCenterX, averagedCenterY)
+                updateNetTable(1, center1X, center1Y, center2X, center2Y, averagedCenterX, averagedCenterY, debugFlag)
+                drawPoints(frame, center1X, center1Y, center2X, center2Y, averagedCenterX, averagedCenterY)
 
             if len(rectangles) > 3:
                 topLeft3X, topLeft3Y, bottomRight3X, bottomRight3Y, center3X, center3Y = defineRec(rectangles[2])
                 topLeft4X, topLeft4Y, bottomRight4X, bottomRight4Y, center4X, center4Y = defineRec(rectangles[3])
                 averagedCenter1X, averagedCenter1Y = getAverage(center3X, center4X, center3Y, center4Y)
                 if isPair(topLeft3X, topLeft4X, bottomRight3X, bottomRight4X):
-                    updateNetTable(2, center3X, center3Y, center4X, center4Y, averagedCenter1X, averagedCenter1Y,debugFlag)
-                    drawPoints(frame, center3X, center3Y, center4X,center4Y, averagedCenter1X, averagedCenter1Y)
+                    updateNetTable(2, center3X, center3Y, center4X, center4Y, averagedCenter1X, averagedCenter1Y, debugFlag)
+                    drawPoints(frame, center3X, center3Y, center4X, center4Y, averagedCenter1X, averagedCenter1Y)
 
                 if len(rectangles) > 5:
                     topLeft5X, topLeft5Y, bottomRight5X, bottomRight5Y, center5X, center5Y = defineRec(rectangles[4])
@@ -141,7 +121,7 @@ while True:
                     averagedCenter2X, averagedCenter2Y = getAverage(center5X, center6X, center5Y, center6Y)
                     if isPair(topLeft5X, topLeft6X, bottomRight5X, bottomRight6X):
                         updateNetTable(3, center5X, center5Y, center6X, center6Y, averagedCenter2X, averagedCenter2Y, debugFlag)
-                        drawPoints(frame, center4X, center4Y, center5X,center5Y, averagedCenter2X, averagedCenter2Y)
+                        drawPoints(frame, center4X, center4Y, center5X, center5Y, averagedCenter2X, averagedCenter2Y)
 
     if visionFlag:
         cv2.imshow('Contour Window', frame)
