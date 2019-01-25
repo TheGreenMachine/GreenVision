@@ -58,11 +58,11 @@ def get_avg_points(center1_x, center2_x, center1_y, center2_y):
     return avg_center_x, avg_center_y
 
 
-def is_pair(topLeftX, topLeftX1, bottomRightX, bottomRightX1):
-    topDiff = abs(topLeftX - topLeftX1)
-    bottomDiff = abs(bottomRightX - bottomRightX1)
-    print('Top diff: {td}\nBottom diff: {bd}'.format(td=topDiff, bd=bottomDiff))
-    return bottomDiff > topDiff
+def is_pair(tl1_x, tl2_x, br1_x, br2_x):
+    top_diff = abs(tl1_x - tl2_x)
+    bottom_diff = abs(br1_x - br2_x)
+    print('Top diff: {td}\nBottom diff: {bd}'.format(td=top_diff, bd=bottom_diff))
+    return bottom_diff > top_diff
 
 
 def update_net_table(n, center1x=-1, center1y=-1, center2x=-1, center2y=-1, averagedCenterX=-1, averagedCenterY=-1):
