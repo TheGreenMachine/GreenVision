@@ -6,14 +6,15 @@ from imutils.video import WebcamVideoStream
 import json
 
 
-visionFlag = sys.argv.index('-v') != -1
-debugFlag = sys.argv.index('-d') != -1
-thresholdFlag = sys.argv.index('-t') != -1
-multithreadFlag = sys.argv.index('-mt') != -1
+visionFlag = '-v' in sys.argv
+debugFlag = '-d' in sys.argv
+thresholdFlag = '-t' in sys.argv
+multithreadFlag = '-mt' in sys.argv
 
 with open('values.json') as json_file:
     data = json.load(json_file)
-    cap = WebcamVideoStream(src=0).start() if multithreadFlag else cv2.VideoCapture(0)
+
+cap = WebcamVideoStream(src=0).start() if multithreadFlag else cv2.VideoCapture(0)
 '''
 if multithreadFlag:
     cap = WebcamVideoStream(src=0).start()
@@ -28,30 +29,13 @@ if table:
     print("table OK")
 table.putNumber("visionX", -1)
 table.putNumber("visionY", -1)
-'''
-visionFlag = False
-debugFlag = False
-thresholdFlag = False
-
-if len(sys.argv) == 2:
-    visionFlag = sys.argv[1] == "-v"
-    debugFlag = sys.argv[1] == "-d"
-elif len(sys.argv) == 3:
-    visionFlag = sys.argv[1] == "-v" or sys.argv[2] == "-v"
-    debugFlag = sys.argv[1] == "-d" or sys.argv[2] == "-d"
-    thresholdFlag = sys.argv[1] == "-t" or sys.argv[2] == "-t"
-
-elif len(sys.argv) == 4:
-    visionFlag = sys.argv[1] == "-v" or sys.argv[2] == "-v" or sys.argv[3] == "-v"
-    debugFlag = sys.argv[1] == "-d" or sys.argv[2] == "-d" or sys.argv[3] == "-d"
-    thresholdFlag = sys.argv[1] == "-t" or sys.argv[2] == "-t" or sys.argv[3] == "-t"
-'''
 
 if debugFlag:
-    print("Vision flag is:", visionFlag, "Debug flag is:", debugFlag, "Threshold flag is:", thresholdFlag)
+    #print("Vision flag is:", visionFlag, "Debug flag is:", debugFlag, "Threshold flag is:", thresholdFlag, 'Multithreading flag is:', multithreadFlag)
+    print('Vision flag: {v}\nDebug flag: {d}\nThreshold Flag: {t}\nMultithread Flag: {mt}'.format(v=visionFlag, d=debugFlag, t=thresholdFlag, mt=multithreadFlag))
 
-lower_color = np.array(data['lower-color-list-thresh']) if thresholdFlag else np.array(data['lower-color-list'])
-upper_color = np.array(data['upper-color-list-thresh']) if thresholdFlag else np.array(data['upper-color-list'])
+lower_color = np.array(data["lower-color-list-thresh"]) if thresholdFlag else np.array(data["lower-color-list"])
+upper_color = np.array(data["upper-color-list-thresh"]) if thresholdFlag else np.array(data["upper-color-list"])
 
 '''
 if thresholdFlag:
@@ -94,6 +78,7 @@ def getAverage(center1x, center2x, center1y, center2y):
 def isPair(topLeftX, topLeftX1, bottomRightX, bottomRightX1):
     topDiff = abs(topLeftX - topLeftX1)
     bottomDiff = abs(bottomRightX - bottomRightX1)
+    print('Top diff: {td}\nBottom diff: {bd}'.format(td=topDiff,bd=bottomDiff))
     return bottomDiff > topDiff
         
     
@@ -114,13 +99,11 @@ def updateNetTable(n, center1x = -1, center1y = -1, center2x = -1, center2y = -1
 
 
 while True:
-    _, frame = None, cap.read() if multithreadFlag else cap.read()
-    '''
     if multithreadFlag:
         frame = cap.read()
     else:
         _, frame = cap.read()
-    '''
+
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(hsv, lower_color, upper_color)
 
@@ -139,7 +122,8 @@ while True:
             topLeft1X, topLeft1Y, bottomRight1X, bottomRight1Y, center1X, center1Y = defineRec(rectangles[0])
             topLeft2X, topLeft2Y, bottomRight2X, bottomRight2Y, center2X, center2Y = defineRec(rectangles[1])
             averagedCenterX, averagedCenterY = getAverage(center1X, center2X, center1Y, center2Y)
-            if isPair(topLeft1X, topLeft2X, bottomRight1X, bottomRight2X):
+            if True:
+            #if isPair(topLeft1X, topLeft2X, bottomRight1X, bottomRight2X):
                 updateNetTable(1, center1X, center1Y, center2X, center2Y, averagedCenterX, averagedCenterY,debugFlag)
                 drawPoints(frame, center1X, center1Y, center2X,center2Y, averagedCenterX, averagedCenterY)
 
