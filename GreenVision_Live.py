@@ -65,20 +65,20 @@ def is_pair(tl1_x, tl2_x, br1_x, br2_x):
     return bottom_diff > top_diff
 
 
-def update_net_table(n, center1x=-1, center1y=-1, center2x=-1, center2y=-1, averagedCenterX=-1, averagedCenterY=-1):
-    table.putNumber("center{n}X".format(n=n), center1x)
-    table.putNumber("center{n}Y".format(n=n), center1y)
-    table.putNumber("center{n}X".format(n=n + 1), center2x)
-    table.putNumber("center{n}Y".format(n=n + 1), center2y)
-    table.putNumber("averagedCenterX", averagedCenterX)
-    table.putNumber("averagedCenterY", averagedCenterY)
+def update_net_table(n, c1_x=-1, c1_y=-1, c2_x=-1, c2_y=-1, avgc_x=-1, avgc_y=-1):
+    table.putNumber("center{n}X".format(n=n), c1_x)
+    table.putNumber("center{n}Y".format(n=n), c1_y)
+    table.putNumber("center{n}X".format(n=n + 1), c2_x)
+    table.putNumber("center{n}Y".format(n=n + 1), c2_y)
+    table.putNumber("averagedCenterX", avgc_x)
+    table.putNumber("averagedCenterY", avgc_y)
     if debug_flag:
-        print("center{n}X".format(n=n), center1x)
-        print("center{n}Y".format(n=n), center1y)
-        print("center{n}X".format(n=n + 1), center2x)
-        print("center{n}Y".format(n=n + 1), center2y)
-        print("averagedCenterX", averagedCenterX)
-        print("averagedCenterY", averagedCenterY)
+        print("center{n}X".format(n=n), c1_x)
+        print("center{n}Y".format(n=n), c1_y)
+        print("center{n}X".format(n=n + 1), c2_x)
+        print("center{n}Y".format(n=n + 1), c2_y)
+        print("averagedCenterX", avgc_x)
+        print("averagedCenterY", avgc_y)
 
 
 while True:
