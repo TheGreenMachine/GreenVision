@@ -29,13 +29,13 @@ if debug_flag:
 lower_color = np.array(data["lower-color-list-thresh"]) if threshold_flag else np.array(data["lower-color-list"])
 upper_color = np.array(data["upper-color-list-thresh"]) if threshold_flag else np.array(data["upper-color-list"])
 
-def drawPoints(frame, center1x, center1y, center2x, center2y, averagedCenterX, averagedCenterY):
+def draw_points(frame, center1x, center1y, center2x, center2y, averagedCenterX, averagedCenterY):
     cv2.line(frame, (center1x, center1y), (center1x, center1y), (255, 0, 0), 8)
     cv2.line(frame, (center2x, center2y), (center2x, center2y), (255, 0, 0), 8)
     cv2.line(frame, (averagedCenterX, averagedCenterY), (averagedCenterX, averagedCenterY), (255, 0, 0), 8)
 
 
-def defineRec(rectangle):
+def def_rec(rectangle):
     topleftX = rectangle[0]
     topleftY = rectangle[1]
     width = rectangle[2]
@@ -48,21 +48,21 @@ def defineRec(rectangle):
     return topleftX, topleftY, bottomrightX, bottomrightY, centerX, centerY
 
 
-def getAverage(center1x, center2x, center1y, center2y):
+def get_avg_points(center1x, center2x, center1y, center2y):
     averagedCenterX = int((center1x + center2x) / 2)
     averagedCenterY = int((center1y + center2y) / 2)
 
     return averagedCenterX, averagedCenterY
 
 
-def isPair(topLeftX, topLeftX1, bottomRightX, bottomRightX1):
+def is_pair(topLeftX, topLeftX1, bottomRightX, bottomRightX1):
     topDiff = abs(topLeftX - topLeftX1)
     bottomDiff = abs(bottomRightX - bottomRightX1)
     print('Top diff: {td}\nBottom diff: {bd}'.format(td=topDiff,bd=bottomDiff))
     return bottomDiff > topDiff
         
     
-def updateNetTable(n, center1x = -1, center1y = -1, center2x = -1, center2y = -1, averagedCenterX = -1, averagedCenterY = -1, debug_flag = False):
+def update_net_table(n, center1x = -1, center1y = -1, center2x = -1, center2y = -1, averagedCenterX = -1, averagedCenterY = -1, debug_flag = False):
         table.putNumber("center{n}X".format(n=n), center1x)
         table.putNumber("center{n}Y".format(n=n), center1y)
         table.putNumber("center{n}X".format(n=n+1), center2x)
@@ -99,29 +99,29 @@ while True:
         cv2.drawContours(frame, [c], -1, (0, 0, 255), 3)
         rectangles.append(cv2.boundingRect(c))
         if len(rectangles) > 1:
-            topLeft1X, topLeft1Y, bottomRight1X, bottomRight1Y, center1X, center1Y = defineRec(rectangles[0])
-            topLeft2X, topLeft2Y, bottomRight2X, bottomRight2Y, center2X, center2Y = defineRec(rectangles[1])
-            averagedCenterX, averagedCenterY = getAverage(center1X, center2X, center1Y, center2Y)
+            topLeft1X, topLeft1Y, bottomRight1X, bottomRight1Y, center1X, center1Y = def_rec(rectangles[0])
+            topLeft2X, topLeft2Y, bottomRight2X, bottomRight2Y, center2X, center2Y = def_rec(rectangles[1])
+            averagedCenterX, averagedCenterY = get_avg_points(center1X, center2X, center1Y, center2Y)
             if True:
-            #if isPair(topLeft1X, topLeft2X, bottomRight1X, bottomRight2X):
-                updateNetTable(1, center1X, center1Y, center2X, center2Y, averagedCenterX, averagedCenterY, debug_flag)
-                drawPoints(frame, center1X, center1Y, center2X, center2Y, averagedCenterX, averagedCenterY)
+            #if is_pair(topLeft1X, topLeft2X, bottomRight1X, bottomRight2X):
+                update_net_table(1, center1X, center1Y, center2X, center2Y, averagedCenterX, averagedCenterY, debug_flag)
+                draw_points(frame, center1X, center1Y, center2X, center2Y, averagedCenterX, averagedCenterY)
 
             if len(rectangles) > 3:
-                topLeft3X, topLeft3Y, bottomRight3X, bottomRight3Y, center3X, center3Y = defineRec(rectangles[2])
-                topLeft4X, topLeft4Y, bottomRight4X, bottomRight4Y, center4X, center4Y = defineRec(rectangles[3])
-                averagedCenter1X, averagedCenter1Y = getAverage(center3X, center4X, center3Y, center4Y)
-                if isPair(topLeft3X, topLeft4X, bottomRight3X, bottomRight4X):
-                    updateNetTable(2, center3X, center3Y, center4X, center4Y, averagedCenter1X, averagedCenter1Y, debug_flag)
-                    drawPoints(frame, center3X, center3Y, center4X, center4Y, averagedCenter1X, averagedCenter1Y)
+                topLeft3X, topLeft3Y, bottomRight3X, bottomRight3Y, center3X, center3Y = def_rec(rectangles[2])
+                topLeft4X, topLeft4Y, bottomRight4X, bottomRight4Y, center4X, center4Y = def_rec(rectangles[3])
+                averagedCenter1X, averagedCenter1Y = get_avg_points(center3X, center4X, center3Y, center4Y)
+                if is_pair(topLeft3X, topLeft4X, bottomRight3X, bottomRight4X):
+                    update_net_table(2, center3X, center3Y, center4X, center4Y, averagedCenter1X, averagedCenter1Y, debug_flag)
+                    draw_points(frame, center3X, center3Y, center4X, center4Y, averagedCenter1X, averagedCenter1Y)
 
                 if len(rectangles) > 5:
-                    topLeft5X, topLeft5Y, bottomRight5X, bottomRight5Y, center5X, center5Y = defineRec(rectangles[4])
-                    topLeft6X, topLeft6Y, bottomRight6X, bottomRight6Y, center6X, center6Y = defineRec(rectangles[5])
-                    averagedCenter2X, averagedCenter2Y = getAverage(center5X, center6X, center5Y, center6Y)
-                    if isPair(topLeft5X, topLeft6X, bottomRight5X, bottomRight6X):
-                        updateNetTable(3, center5X, center5Y, center6X, center6Y, averagedCenter2X, averagedCenter2Y, debug_flag)
-                        drawPoints(frame, center4X, center4Y, center5X, center5Y, averagedCenter2X, averagedCenter2Y)
+                    topLeft5X, topLeft5Y, bottomRight5X, bottomRight5Y, center5X, center5Y = def_rec(rectangles[4])
+                    topLeft6X, topLeft6Y, bottomRight6X, bottomRight6Y, center6X, center6Y = def_rec(rectangles[5])
+                    averagedCenter2X, averagedCenter2Y = get_avg_points(center5X, center6X, center5Y, center6Y)
+                    if is_pair(topLeft5X, topLeft6X, bottomRight5X, bottomRight6X):
+                        update_net_table(3, center5X, center5Y, center6X, center6Y, averagedCenter2X, averagedCenter2Y, debug_flag)
+                        draw_points(frame, center4X, center4Y, center5X, center5Y, averagedCenter2X, averagedCenter2Y)
 
     if vision_flag:
         cv2.imshow('Contour Window', frame)
