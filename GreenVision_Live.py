@@ -65,8 +65,7 @@ def is_pair(topLeftX, topLeftX1, bottomRightX, bottomRightX1):
     return bottomDiff > topDiff
 
 
-def update_net_table(n, center1x=-1, center1y=-1, center2x=-1, center2y=-1, averagedCenterX=-1, averagedCenterY=-1,
-                     debug_flag=False):
+def update_net_table(n, center1x=-1, center1y=-1, center2x=-1, center2y=-1, averagedCenterX=-1, averagedCenterY=-1):
     table.putNumber("center{n}X".format(n=n), center1x)
     table.putNumber("center{n}Y".format(n=n), center1y)
     table.putNumber("center{n}X".format(n=n + 1), center2x)
@@ -108,8 +107,7 @@ while True:
             averagedCenterX, averagedCenterY = get_avg_points(center1X, center2X, center1Y, center2Y)
             if True:
                 # if is_pair(topLeft1X, topLeft2X, bottomRight1X, bottomRight2X):
-                update_net_table(1, center1X, center1Y, center2X, center2Y, averagedCenterX, averagedCenterY,
-                                 debug_flag)
+                update_net_table(1, center1X, center1Y, center2X, center2Y, averagedCenterX, averagedCenterY)
                 draw_points(frame, center1X, center1Y, center2X, center2Y, averagedCenterX, averagedCenterY)
 
             if len(rectangles) > 3:
@@ -117,8 +115,7 @@ while True:
                 topLeft4X, topLeft4Y, bottomRight4X, bottomRight4Y, center4X, center4Y = def_rec(rectangles[3])
                 averagedCenter1X, averagedCenter1Y = get_avg_points(center3X, center4X, center3Y, center4Y)
                 if is_pair(topLeft3X, topLeft4X, bottomRight3X, bottomRight4X):
-                    update_net_table(2, center3X, center3Y, center4X, center4Y, averagedCenter1X, averagedCenter1Y,
-                                     debug_flag)
+                    update_net_table(2, center3X, center3Y, center4X, center4Y, averagedCenter1X, averagedCenter1Y)
                     draw_points(frame, center3X, center3Y, center4X, center4Y, averagedCenter1X, averagedCenter1Y)
 
                 if len(rectangles) > 5:
@@ -126,8 +123,7 @@ while True:
                     topLeft6X, topLeft6Y, bottomRight6X, bottomRight6Y, center6X, center6Y = def_rec(rectangles[5])
                     averagedCenter2X, averagedCenter2Y = get_avg_points(center5X, center6X, center5Y, center6Y)
                     if is_pair(topLeft5X, topLeft6X, bottomRight5X, bottomRight6X):
-                        update_net_table(3, center5X, center5Y, center6X, center6Y, averagedCenter2X, averagedCenter2Y,
-                                         debug_flag)
+                        update_net_table(3, center5X, center5Y, center6X, center6Y, averagedCenter2X, averagedCenter2Y)
                         draw_points(frame, center4X, center4Y, center5X, center5Y, averagedCenter2X, averagedCenter2Y)
 
     if vision_flag:
