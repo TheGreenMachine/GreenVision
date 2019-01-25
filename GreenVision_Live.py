@@ -51,11 +51,11 @@ def def_rec(rectangle):
     return top_left_x, top_left_y, bottom_right_x, bottom_right_y, center_x, center_y
 
 
-def get_avg_points(center1x, center2x, center1y, center2y):
-    averagedCenterX = int((center1x + center2x) / 2)
-    averagedCenterY = int((center1y + center2y) / 2)
+def get_avg_points(center1_x, center2_x, center1_y, center2_y):
+    avg_center_x = int((center1_x + center2_x) / 2)
+    avg_center_y = int((center1_y + center2_y) / 2)
 
-    return averagedCenterX, averagedCenterY
+    return avg_center_x, avg_center_y
 
 
 def is_pair(topLeftX, topLeftX1, bottomRightX, bottomRightX1):
