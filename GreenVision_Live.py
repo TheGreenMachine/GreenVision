@@ -39,16 +39,16 @@ def draw_points(center1x, center1y, center2x, center2y, averagedCenterX, average
 
 
 def def_rec(rectangle):
-    topleftX = rectangle[0]
-    topleftY = rectangle[1]
+    top_left_x = rectangle[0]
+    top_left_y = rectangle[1]
     width = rectangle[2]
     height = rectangle[3]
-    bottomrightX = topleftX + width
-    bottomrightY = topleftY + height
-    centerX = int((topleftX + bottomrightX) / 2)
-    centerY = int((topleftY + bottomrightY) / 2)
+    bottom_right_x = top_left_x + width
+    bottom_right_y = top_left_y + height
+    center_x = int((top_left_x + bottom_right_x) / 2)
+    center_y = int((top_left_y + bottom_right_y) / 2)
 
-    return topleftX, topleftY, bottomrightX, bottomrightY, centerX, centerY
+    return top_left_x, top_left_y, bottom_right_x, bottom_right_y, center_x, center_y
 
 
 def get_avg_points(center1x, center2x, center1y, center2y):
