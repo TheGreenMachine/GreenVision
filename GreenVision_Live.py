@@ -6,15 +6,15 @@ from imutils.video import WebcamVideoStream
 import json
 
 
-visionFlag = '-v' in sys.argv
-debugFlag = '-d' in sys.argv
-thresholdFlag = '-t' in sys.argv
-multithreadFlag = '-mt' in sys.argv
+vision_flag = '-v' in sys.argv
+debug_flag = '-d' in sys.argv
+threshold_flag = '-t' in sys.argv
+multithread_flag = '-mt' in sys.argv
 
 with open('values.json') as json_file:
     data = json.load(json_file)
 
-cap = WebcamVideoStream(src=0).start() if multithreadFlag else cv2.VideoCapture(0)
+cap = WebcamVideoStream(src=0).start() if multithread_flag else cv2.VideoCapture(0)
 
 nt.NetworkTables.initialize(server=data['server-ip'])
 table = nt.NetworkTables.getTable("SmartDashboard")
@@ -23,11 +23,11 @@ if table:
 table.putNumber("visionX", -1)
 table.putNumber("visionY", -1)
 
-if debugFlag:
-    print('Vision flag: {v}\nDebug flag: {d}\nThreshold Flag: {t}\nMultithread Flag: {mt}'.format(v=visionFlag, d=debugFlag, t=thresholdFlag, mt=multithreadFlag))
+if debug_flag:
+    print('Vision flag: {v}\nDebug flag: {d}\nThreshold Flag: {t}\nMultithread Flag: {mt}'.format(v=vision_flag, d=debug_flag, t=threshold_flag, mt=multithread_flag))
 
-lower_color = np.array(data["lower-color-list-thresh"]) if thresholdFlag else np.array(data["lower-color-list"])
-upper_color = np.array(data["upper-color-list-thresh"]) if thresholdFlag else np.array(data["upper-color-list"])
+lower_color = np.array(data["lower-color-list-thresh"]) if threshold_flag else np.array(data["lower-color-list"])
+upper_color = np.array(data["upper-color-list-thresh"]) if threshold_flag else np.array(data["upper-color-list"])
 
 def drawPoints(frame, center1x, center1y, center2x, center2y, averagedCenterX, averagedCenterY):
     cv2.line(frame, (center1x, center1y), (center1x, center1y), (255, 0, 0), 8)
@@ -62,14 +62,14 @@ def isPair(topLeftX, topLeftX1, bottomRightX, bottomRightX1):
     return bottomDiff > topDiff
         
     
-def updateNetTable(n, center1x = -1, center1y = -1, center2x = -1, center2y = -1, averagedCenterX = -1, averagedCenterY = -1, debugFlag = False):
+def updateNetTable(n, center1x = -1, center1y = -1, center2x = -1, center2y = -1, averagedCenterX = -1, averagedCenterY = -1, debug_flag = False):
         table.putNumber("center{n}X".format(n=n), center1x)
         table.putNumber("center{n}Y".format(n=n), center1y)
         table.putNumber("center{n}X".format(n=n+1), center2x)
         table.putNumber("center{n}Y".format(n=n+1), center2y)
         table.putNumber("averagedCenterX", averagedCenterX)
         table.putNumber("averagedCenterY", averagedCenterY)
-        if debugFlag:
+        if debug_flag:
             print("center{n}X".format(n=n), center1x)
             print("center{n}Y".format(n=n), center1y)
             print("center{n}X".format(n=n + 1), center2x)
@@ -79,7 +79,7 @@ def updateNetTable(n, center1x = -1, center1y = -1, center2x = -1, center2y = -1
 
 
 while True:
-    if multithreadFlag:
+    if multithread_flag:
         frame = cap.read()
     else:
         _, frame = cap.read()
@@ -104,7 +104,7 @@ while True:
             averagedCenterX, averagedCenterY = getAverage(center1X, center2X, center1Y, center2Y)
             if True:
             #if isPair(topLeft1X, topLeft2X, bottomRight1X, bottomRight2X):
-                updateNetTable(1, center1X, center1Y, center2X, center2Y, averagedCenterX, averagedCenterY, debugFlag)
+                updateNetTable(1, center1X, center1Y, center2X, center2Y, averagedCenterX, averagedCenterY, debug_flag)
                 drawPoints(frame, center1X, center1Y, center2X, center2Y, averagedCenterX, averagedCenterY)
 
             if len(rectangles) > 3:
@@ -112,7 +112,7 @@ while True:
                 topLeft4X, topLeft4Y, bottomRight4X, bottomRight4Y, center4X, center4Y = defineRec(rectangles[3])
                 averagedCenter1X, averagedCenter1Y = getAverage(center3X, center4X, center3Y, center4Y)
                 if isPair(topLeft3X, topLeft4X, bottomRight3X, bottomRight4X):
-                    updateNetTable(2, center3X, center3Y, center4X, center4Y, averagedCenter1X, averagedCenter1Y, debugFlag)
+                    updateNetTable(2, center3X, center3Y, center4X, center4Y, averagedCenter1X, averagedCenter1Y, debug_flag)
                     drawPoints(frame, center3X, center3Y, center4X, center4Y, averagedCenter1X, averagedCenter1Y)
 
                 if len(rectangles) > 5:
@@ -120,10 +120,10 @@ while True:
                     topLeft6X, topLeft6Y, bottomRight6X, bottomRight6Y, center6X, center6Y = defineRec(rectangles[5])
                     averagedCenter2X, averagedCenter2Y = getAverage(center5X, center6X, center5Y, center6Y)
                     if isPair(topLeft5X, topLeft6X, bottomRight5X, bottomRight6X):
-                        updateNetTable(3, center5X, center5Y, center6X, center6Y, averagedCenter2X, averagedCenter2Y, debugFlag)
+                        updateNetTable(3, center5X, center5Y, center6X, center6Y, averagedCenter2X, averagedCenter2Y, debug_flag)
                         drawPoints(frame, center4X, center4Y, center5X, center5Y, averagedCenter2X, averagedCenter2Y)
 
-    if visionFlag:
+    if vision_flag:
         cv2.imshow('Contour Window', frame)
         cv2.imshow('Mask', mask)
     if cv2.waitKey(10) & 0xFF == ord('q'):
