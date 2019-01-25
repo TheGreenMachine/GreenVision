@@ -108,7 +108,7 @@ while True:
             if True:
                 # if is_pair(topLeft1X, topLeft2X, bottomRight1X, bottomRight2X):
                 update_net_table(1, center1X, center1Y, center2X, center2Y, averagedCenterX, averagedCenterY)
-                draw_points(frame, center1X, center1Y, center2X, center2Y, averagedCenterX, averagedCenterY)
+                draw_points(center1X, center1Y, center2X, center2Y, averagedCenterX, averagedCenterY)
 
             if len(rectangles) > 3:
                 topLeft3X, topLeft3Y, bottomRight3X, bottomRight3Y, center3X, center3Y = def_rec(rectangles[2])
@@ -116,7 +116,7 @@ while True:
                 averagedCenter1X, averagedCenter1Y = get_avg_points(center3X, center4X, center3Y, center4Y)
                 if is_pair(topLeft3X, topLeft4X, bottomRight3X, bottomRight4X):
                     update_net_table(2, center3X, center3Y, center4X, center4Y, averagedCenter1X, averagedCenter1Y)
-                    draw_points(frame, center3X, center3Y, center4X, center4Y, averagedCenter1X, averagedCenter1Y)
+                    draw_points(center3X, center3Y, center4X, center4Y, averagedCenter1X, averagedCenter1Y)
 
                 if len(rectangles) > 5:
                     topLeft5X, topLeft5Y, bottomRight5X, bottomRight5Y, center5X, center5Y = def_rec(rectangles[4])
@@ -124,7 +124,7 @@ while True:
                     averagedCenter2X, averagedCenter2Y = get_avg_points(center5X, center6X, center5Y, center6Y)
                     if is_pair(topLeft5X, topLeft6X, bottomRight5X, bottomRight6X):
                         update_net_table(3, center5X, center5Y, center6X, center6Y, averagedCenter2X, averagedCenter2Y)
-                        draw_points(frame, center4X, center4Y, center5X, center5Y, averagedCenter2X, averagedCenter2Y)
+                        draw_points(center4X, center4Y, center5X, center5Y, averagedCenter2X, averagedCenter2Y)
 
     if vision_flag:
         cv2.imshow('Contour Window', frame)
