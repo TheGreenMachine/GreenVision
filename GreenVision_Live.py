@@ -29,14 +29,12 @@ if debug_flag:
                                                                                                   t=threshold_flag,
                                                                                                   mt=multithread_flag))
 cam_fov = data['fish-eye-cam-FOV']
-diagonal_view = math.radians(cam_fov)
 
 horizontal_aspect = data['horizontal-aspect']
 vertical_aspect = data['vertical-aspect']
 
-diagonal_aspect = math.hypot(horizontal_aspect, vertical_aspect)
-horizontal_view = math.atan(math.tan(diagonal_view / 2) * (horizontal_aspect / diagonal_aspect)) * 2
-vertical_view = math.atan(math.tan(diagonal_view / 2) * (vertical_aspect / diagonal_aspect)) * 2
+horizontal_view = data['fish-eye-cam-HFOV']
+vertical_view =
 
 H_FOCAL_LENGTH = data['image-width'] / (2 * math.tan((horizontal_view / 2)))
 V_FOCAL_LENGTH = data['image-height'] / (2 * math.tan((vertical_view / 2)))
