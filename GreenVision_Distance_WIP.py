@@ -63,6 +63,9 @@ lower_color = np.array(data['lower-color-list'])
 upper_color = np.array(data['upper-color-list'])
 
 cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 256)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 144)
+
 while True:
     print('=========================================================')
     _, frame = cap.read()
