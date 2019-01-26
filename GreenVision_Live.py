@@ -53,7 +53,7 @@ def calc_distance(p):
 
 def calc_pitch(pixel_y, center_y, v_foc_len):
     p = math.degrees(math.atan((pixel_y - center_y) / v_foc_len)) * -1
-    return round(p)
+    return p
 
 
 def calc_yaw(pixel_x, center_x, h_foc_len):
