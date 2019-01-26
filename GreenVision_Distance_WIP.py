@@ -15,8 +15,8 @@ def calc_distance(pitch):
 
 
 def calc_pitch(py, cy, v_foc_len):
-    pitch = math.degrees(math.atan((py - cy) / v_foc_len)) * -1
-    return round(pitch)
+    p = math.degrees(math.atan((py - cy) / v_foc_len)) * -1
+    return round(p)
 
 
 def def_rec(rectangle):
@@ -91,7 +91,7 @@ while True:
             avg_c1_x, avg_c1_y = get_avg_points(rec1, rec2)
             if True:
                 draw_points(rec1, rec2, avg_c1_x, avg_c1_y)
-                pitch = calc_pitch(avg_c1_y, cy, V_FOCAL_LENGTH)
+                pitch = calc_pitch(cy, avg_c1_y, V_FOCAL_LENGTH)
                 distance = calc_distance(pitch)
                 print('Pitch = {} \t Distance = {}'.format(pitch, distance))
     cv2.imshow('Contour Window', frame)
