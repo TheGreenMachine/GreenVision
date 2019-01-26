@@ -135,14 +135,14 @@ while True:
     print("Number of contours: ", len(ncontours))
     rec_list = []
     for c in ncontours:
-        M = cv2.moments(c)
-        if M["m00"] != 0:
-            cy = int(M["m01"] / M["m00"])
-            cx = int(M["m10"] / M["m00"])
-            #cy = M["m01"] / M["m00"]
-        else:
-            cy, cx = 0, 0
-        print('cy: {}'.format(cy))
+        # M = cv2.moments(c)
+        # if M["m00"] != 0:
+        #     cy = int(M["m01"] / M["m00"])
+        #     cx = int(M["m10"] / M["m00"])
+        #     #cy = M["m01"] / M["m00"]
+        # else:
+        #     cy, cx = 0, 0
+        # print('cy: {}'.format(cy))
         cv2.drawContours(frame, [c], -1, (0, 0, 255), 3)
         rec_list.append(cv2.boundingRect(c))
         if len(rec_list) > 1:
@@ -153,9 +153,9 @@ while True:
                 update_net_table(1, rec1['c_x'], rec1['c_y'], rec2['c_x'], rec2['c_y'], avg_c1_x, avg_c1_y)
                 draw_points(rec1, rec2, avg_c1_x, avg_c1_y)
                 # pitch = calc_pitch(cy, avg_c1_y, V_FOCAL_LENGTH)
-                pitch = calc_pitch(cy, screen_c_y, V_FOCAL_LENGTH)
+                pitch = calc_pitch(avg_c1_y, screen_c_y, V_FOCAL_LENGTH)
                 distance = calc_distance(pitch) if pitch != 0 else 0
-                yaw = calc_yaw(cx, screen_c_x, H_FOCAL_LENGTH)
+                yaw = calc_yaw(avg_c1_x, screen_c_x, H_FOCAL_LENGTH)
                 print('Pitch = {} \t Distance = {} \t Yaw = {}'.format(pitch, distance, yaw))
 
             if len(rec_list) > 3:
