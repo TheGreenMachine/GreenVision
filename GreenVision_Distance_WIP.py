@@ -77,10 +77,15 @@ while True:
     print("Number of contours: ", len(ncontours))
     rec_list = []
     for c in ncontours:
+        M = cv2.moments(c)
+        if M["m00"] != 0:
+            cy = int(M["m01"] / M["m00"])
+        else:
+            cy = 0, 0
+        print('cy: {}'.format(cy))
         cv2.drawContours(frame, [c], -1, (0, 0, 255), 3)
         rec_list.append(cv2.boundingRect(c))
         if len(rec_list) > 1:
-
             rec1 = def_rec(rec_list[0])
             rec2 = def_rec(rec_list[1])
             avg_c1_x, avg_c1_y = get_avg_points(rec1, rec2)
