@@ -49,8 +49,8 @@ def get_avg_points(rec_a, rec_b):
 cam_fov = data['fish-eye-cam-FOV']
 diagonal_view = math.radians(cam_fov)
 
-horizontal_aspect = 16
-vertical_aspect = 9
+horizontal_aspect = data['horizontal-aspect']
+vertical_aspect = data['vertical-aspect']
 
 diagonal_aspect = math.hypot(horizontal_aspect, vertical_aspect)
 horizontal_view = math.atan(math.tan(diagonal_view / 2) * (horizontal_aspect / diagonal_aspect)) * 2
@@ -65,7 +65,6 @@ upper_color = np.array(data['upper-color-list'])
 cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
-cap.set(cv2.CAP_PROP_FOURCC, ('M', 'J', 'P', 'G'))
 
 while True:
     print('=========================================================')
