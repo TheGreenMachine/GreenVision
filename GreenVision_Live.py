@@ -53,7 +53,7 @@ def calc_distance(p):
 
 def calc_pitch(pixel_y, center_y, v_foc_len):
     p = math.degrees(math.atan((pixel_y - center_y) / v_foc_len)) * -1
-    return p
+    return round(p)
 
 
 def calc_yaw(pixel_x, center_x, h_foc_len):
@@ -124,8 +124,8 @@ while True:
     mask = cv2.inRange(hsv, lower_color, upper_color)
 
     screen_h, screen_w, _ = frame.shape
-    screen_c_x = (screen_w / 2) - .5
-    screen_c_y = (screen_h / 2) - .5
+    screen_c_x = (screen_w / 2) - 1
+    screen_c_y = (screen_h / 2) - 1
     _, contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     ncontours = []
     for contour in contours:
