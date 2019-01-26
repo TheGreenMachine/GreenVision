@@ -92,7 +92,7 @@ while True:
             if True:
                 draw_points(rec1, rec2, avg_c1_x, avg_c1_y)
                 pitch = calc_pitch(cy, avg_c1_y, V_FOCAL_LENGTH)
-                distance = calc_distance(pitch)
+                distance = calc_distance(pitch) if pitch != 0 else 0
                 print('Pitch = {} \t Distance = {}'.format(pitch, distance))
     cv2.imshow('Contour Window', frame)
     cv2.imshow('Mask', mask)
