@@ -33,10 +33,6 @@ upper_color = np.array(data["upper-color-list-thresh"]) if threshold_flag else n
 
 
 def draw_points(rec_a, rec_b, avgcx, avgcy):
-    # center1_x, center1_y, center2_x, center2_y, avg_center_x, avg_center_y
-    # cv2.line(frame, (center1_x, center1_y), (center1_x, center1_y), (255, 0, 0), 8)
-    # cv2.line(frame, (center2_x, center2_y), (center2_x, center2_y), (255, 0, 0), 8)
-    # cv2.line(frame, (avg_center_x, avg_center_y), (avg_center_x, avg_center_y), (255, 0, 0), 8)
     cv2.line(frame, (rec_a['c_x'], rec_a['c_y']), (rec_a['c_x'], rec_a['c_y']), (255, 0, 0), 8)
     cv2.line(frame, (rec_b['c_x'], rec_b['c_y']), (rec_b['c_x'], rec_b['c_y']), (255, 0, 0), 8)
     cv2.line(frame, (avgcx, avgcy), (avgcx, avgcy), (255, 0, 0), 8)
@@ -57,9 +53,6 @@ def def_rec(rectangle):
 
 
 def get_avg_points(rec_a, rec_b):
-    # (center1_x, center2_x, center1_y, center2_y)
-    # avg_center_x = int((center1_x + center2_x) / 2)
-    # avg_center_y = int((center1_y + center2_y) / 2)
     avg_center_x = int((rec_a['c_x'] + rec_b['c_x']) / 2)
     avg_center_y = int((rec_a['c_y'] + rec_b['c_y']) / 2)
     if debug_flag:
@@ -113,24 +106,14 @@ while True:
         cv2.drawContours(frame, [c], -1, (0, 0, 255), 3)
         rec_list.append(cv2.boundingRect(c))
         if len(rec_list) > 1:
-            # topLeft1X, topLeft1Y, bottomRight1X, bottomRight1Y, center1X, center1Y = def_rec(rec_list[0])
-            # topLeft2X, topLeft2Y, bottomRight2X, bottomRight2Y, center2X, center2Y = def_rec(rec_list[1])
-            # averagedCenterX, averagedCenterY = get_avg_points(center1X, center2X, center1Y, center2Y)
-
             rec1 = def_rec(rec_list[0])
             rec2 = def_rec(rec_list[1])
             avg_c1_x, avg_c1_y = get_avg_points(rec1, rec2)
             if True:
-                # if is_pair(topLeft1X, topLeft2X, bottomRight1X, bottomRight2X):
-                # update_net_table(1, center1X, center1Y, center2X, center2Y, averagedCenterX, averagedCenterY)
-                # draw_points(center1X, center1Y, center2X, center2Y, averagedCenterX, averagedCenterY)
                 update_net_table(1, rec1['c_x'], rec1['c_y'], rec2['c_x'], rec2['c_y'], avg_c1_x, avg_c1_y)
                 draw_points(rec1, rec2, avg_c1_x, avg_c1_y)
 
             if len(rec_list) > 3:
-                # topLeft3X, topLeft3Y, bottomRight3X, bottomRight3Y, center3X, center3Y = def_rec(rec_list[2])
-                # topLeft4X, topLeft4Y, bottomRight4X, bottomRight4Y, center4X, center4Y = def_rec(rec_list[3])
-                # if is_pair(topLeft3X, topLeft4X, bottomRight3X, bottomRight4X):
                 rec3 = def_rec(rec_list[2])
                 rec4 = def_rec(rec_list[3])
                 avg_c2_x, avg_c2_y = get_avg_points(rec3, rec4)
@@ -139,12 +122,9 @@ while True:
                     draw_points(rec3, rec4, avg_c2_x, avg_c2_y)
 
                 if len(rec_list) > 5:
-                    # topLeft5X, topLeft5Y, bottomRight5X, bottomRight5Y, center5X, center5Y = def_rec(rec_list[4])
-                    # topLeft6X, topLeft6Y, bottomRight6X, bottomRight6Y, center6X, center6Y = def_rec(rec_list[5])
                     rec5 = def_rec(rec_list[4])
                     rec6 = def_rec(rec_list[5])
                     avg_c3_x, avg_c3_y = get_avg_points(rec5, rec6)
-                    # if is_pair(topLeft5X, topLeft6X, bottomRight5X, bottomRight6X):
                     if True:
                         update_net_table(3, rec5['c_x'], rec5['c_y'], rec6['c_x'], rec6['c_y'], avg_c3_x, avg_c3_y)
                         draw_points(rec5, rec6, avg_c3_x, avg_c3_y)
