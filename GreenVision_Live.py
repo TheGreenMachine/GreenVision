@@ -4,6 +4,7 @@ import sys
 import networktables as nt
 from imutils.video import WebcamVideoStream
 import json
+import math
 
 vision_flag = '-v' in sys.argv
 debug_flag = '-d' in sys.argv
@@ -27,10 +28,30 @@ if debug_flag:
                                                                                                   d=debug_flag,
                                                                                                   t=threshold_flag,
                                                                                                   mt=multithread_flag))
+cam_fov = data['fish-eye-cam-FOV']
+diagonal_view = math.radians(cam_fov)
+
+horizontal_aspect = data['horizontal-aspect']
+vertical_aspect = data['vertical-aspect']
+
+diagonal_aspect = math.hypot(horizontal_aspect, vertical_aspect)
+horizontal_view = math.atan(math.tan(diagonal_view / 2) * (horizontal_aspect / diagonal_aspect)) * 2
+vertical_view = math.atan(math.tan(diagonal_view / 2) * (vertical_aspect / diagonal_aspect)) * 2
+
+H_FOCAL_LENGTH = data['image-width'] / (2 * math.tan(horizontal_view / 2))
+V_FOCAL_LENGTH = data['image-height'] / (2 * math.tan(vertical_view / 2))
 
 lower_color = np.array(data["lower-color-list-thresh"]) if threshold_flag else np.array(data["lower-color-list"])
 upper_color = np.array(data["upper-color-list-thresh"]) if threshold_flag else np.array(data["upper-color-list"])
 
+def calc_distance(pitch):
+    height_diff = data['height-of-target'] - data['height-of-camera']
+    distance = math.fabs(height_diff / math.tan(math.radians(pitch)))
+    return distance
+
+def calc_pitch(py, cy, v_foc_len):
+    p = math.degrees(math.atan((py - cy) / v_foc_len)) * -1
+    return round(p)
 
 def draw_points(rec_a, rec_b, avgcx, avgcy):
     cv2.line(frame, (rec_a['c_x'], rec_a['c_y']), (rec_a['c_x'], rec_a['c_y']), (255, 0, 0), 8)
@@ -103,6 +124,13 @@ while True:
     print("Number of contours: ", len(ncontours))
     rec_list = []
     for c in ncontours:
+        M = cv2.moments(c)
+        if M["m00"] != 0:
+            # cy = int(M["m01"] / M["m00"])
+            cy = M["m01"] / M["m00"]
+        else:
+             cy = 0, 0
+        print('cy: {}'.format(cy))
         cv2.drawContours(frame, [c], -1, (0, 0, 255), 3)
         rec_list.append(cv2.boundingRect(c))
         if len(rec_list) > 1:
@@ -112,6 +140,9 @@ while True:
             if True:
                 update_net_table(1, rec1['c_x'], rec1['c_y'], rec2['c_x'], rec2['c_y'], avg_c1_x, avg_c1_y)
                 draw_points(rec1, rec2, avg_c1_x, avg_c1_y)
+                pitch = calc_pitch(cy, avg_c1_y, V_FOCAL_LENGTH)
+                distance = calc_distance(pitch) if pitch != 0 else 0
+                print('Pitch = {} \t Distance = {}'.format(pitch, distance))
 
             if len(rec_list) > 3:
                 rec3 = def_rec(rec_list[2])
