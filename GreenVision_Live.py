@@ -44,14 +44,17 @@ V_FOCAL_LENGTH = data['image-height'] / (2 * math.tan(vertical_view / 2))
 lower_color = np.array(data["lower-color-list-thresh"]) if threshold_flag else np.array(data["lower-color-list"])
 upper_color = np.array(data["upper-color-list-thresh"]) if threshold_flag else np.array(data["upper-color-list"])
 
+
 def calc_distance(pitch):
     height_diff = data['height-of-target'] - data['height-of-camera']
     distance = math.fabs(height_diff / math.tan(math.radians(pitch)))
     return distance
 
+
 def calc_pitch(py, cy, v_foc_len):
     p = math.degrees(math.atan((py - cy) / v_foc_len)) * -1
     return round(p)
+
 
 def draw_points(rec_a, rec_b, avgcx, avgcy):
     cv2.line(frame, (rec_a['c_x'], rec_a['c_y']), (rec_a['c_x'], rec_a['c_y']), (255, 0, 0), 8)
@@ -129,7 +132,7 @@ while True:
             # cy = int(M["m01"] / M["m00"])
             cy = M["m01"] / M["m00"]
         else:
-             cy = 0, 0
+            cy = 0, 0
         print('cy: {}'.format(cy))
         cv2.drawContours(frame, [c], -1, (0, 0, 255), 3)
         rec_list.append(cv2.boundingRect(c))
