@@ -16,7 +16,7 @@ def calc_distance(pitch):
 
 def calc_pitch(py, cy, v_foc_len):
     p = math.degrees(math.atan((py - cy) / v_foc_len)) * -1
-    return round(p)
+    return p
 
 
 def def_rec(rectangle):
