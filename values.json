@@ -23,6 +23,6 @@
   "fish-eye-cam-FOV": 120,
   "image-width": 256,
   "image-height": 144,
-  "height-of-target": 0,
-  "height-of-camera": 0
+  "height-of-target": 5.5,
+  "height-of-camera": 4.75
 }
