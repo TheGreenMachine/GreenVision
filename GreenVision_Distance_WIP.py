@@ -86,7 +86,7 @@ while True:
             avg_c1_x, avg_c1_y = get_avg_points(rec1, rec2)
             if True:
                 draw_points(rec1, rec2, avg_c1_x, avg_c1_y)
-        cv2.imshow('Contour Window', frame)
-        cv2.imshow('Mask', mask)
+    cv2.imshow('Contour Window', frame)
+    cv2.imshow('Mask', mask)
     if cv2.waitKey(10) & 0xFF == ord('q'):
         break
