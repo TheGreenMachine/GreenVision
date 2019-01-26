@@ -16,7 +16,7 @@ def calc_distance(pitch):
 
 def calc_pitch(py, cy, v_foc_len):
     p = math.degrees(math.atan((py - cy) / v_foc_len)) * -1
-    return p
+    return round(p)
 
 
 def def_rec(rectangle):
@@ -63,8 +63,8 @@ lower_color = np.array(data['lower-color-list'])
 upper_color = np.array(data['upper-color-list'])
 
 cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 256)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 144)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
 
 while True:
     print('=========================================================')
