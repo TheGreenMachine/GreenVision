@@ -38,22 +38,27 @@ diagonal_aspect = math.hypot(horizontal_aspect, vertical_aspect)
 horizontal_view = math.atan(math.tan(diagonal_view / 2) * (horizontal_aspect / diagonal_aspect)) * 2
 vertical_view = math.atan(math.tan(diagonal_view / 2) * (vertical_aspect / diagonal_aspect)) * 2
 
-H_FOCAL_LENGTH = data['image-width'] / (2 * math.tan(horizontal_view / 2))
-V_FOCAL_LENGTH = data['image-height'] / (2 * math.tan(vertical_view / 2))
+H_FOCAL_LENGTH = data['image-width'] / (2 * math.tan((horizontal_view / 2)))
+V_FOCAL_LENGTH = data['image-height'] / (2 * math.tan((vertical_view / 2)))
 
 lower_color = np.array(data["lower-color-list-thresh"]) if threshold_flag else np.array(data["lower-color-list"])
 upper_color = np.array(data["upper-color-list-thresh"]) if threshold_flag else np.array(data["upper-color-list"])
 
 
-def calc_distance(pitch):
+def calc_distance(p):
     height_diff = data['height-of-target'] - data['height-of-camera']
-    distance = math.fabs(height_diff / math.tan(math.radians(pitch)))
-    return distance
+    d = math.fabs(height_diff / math.tan(math.radians(p)))
+    return d
 
 
-def calc_pitch(py, cy, v_foc_len):
-    p = math.degrees(math.atan((py - cy) / v_foc_len)) * -1
+def calc_pitch(pixel_y, center_y, v_foc_len):
+    p = math.degrees(math.atan((pixel_y - center_y) / v_foc_len)) * -1
     return round(p)
+
+
+def calc_yaw(pixel_x, center_x, h_foc_len):
+    yaw = math.degrees(math.atan((pixel_x - center_x) / h_foc_len))
+    return round(yaw)
 
 
 def draw_points(rec_a, rec_b, avgcx, avgcy):
@@ -118,6 +123,9 @@ while True:
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(hsv, lower_color, upper_color)
 
+    screen_h, screen_w, _ = frame.shape
+    screen_c_x = screen_w / 2 - .5
+    screen_c_y = screen_h / 2 - .5
     _, contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     ncontours = []
     for contour in contours:
@@ -127,13 +135,13 @@ while True:
     print("Number of contours: ", len(ncontours))
     rec_list = []
     for c in ncontours:
-        M = cv2.moments(c)
-        if M["m00"] != 0:
-            # cy = int(M["m01"] / M["m00"])
-            cy = M["m01"] / M["m00"]
-        else:
-            cy = 0, 0
-        print('cy: {}'.format(cy))
+        # M = cv2.moments(c)
+        # if M["m00"] != 0:
+        #     # cy = int(M["m01"] / M["m00"])
+        #     cy = M["m01"] / M["m00"]
+        # else:
+        #     cy = 0, 0
+        # print('cy: {}'.format(cy))
         cv2.drawContours(frame, [c], -1, (0, 0, 255), 3)
         rec_list.append(cv2.boundingRect(c))
         if len(rec_list) > 1:
@@ -143,7 +151,8 @@ while True:
             if True:
                 update_net_table(1, rec1['c_x'], rec1['c_y'], rec2['c_x'], rec2['c_y'], avg_c1_x, avg_c1_y)
                 draw_points(rec1, rec2, avg_c1_x, avg_c1_y)
-                pitch = calc_pitch(cy, avg_c1_y, V_FOCAL_LENGTH)
+                # pitch = calc_pitch(cy, avg_c1_y, V_FOCAL_LENGTH)
+                pitch = calc_pitch(avg_c1_y, screen_c_y, V_FOCAL_LENGTH)
                 distance = calc_distance(pitch) if pitch != 0 else 0
                 print('Pitch = {} \t Distance = {}'.format(pitch, distance))
 
