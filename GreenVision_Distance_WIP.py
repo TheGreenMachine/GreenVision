@@ -65,7 +65,7 @@ upper_color = np.array(data['upper-color-list'])
 cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
-cap.set(cv2.CAP_PROP_FOURCC, cv2.CV_FOURCC('M', 'J', 'P', 'G'))
+cap.set(cv2.CAP_PROP_FOURCC, ('M', 'J', 'P', 'G'))
 
 while True:
     print('=========================================================')
