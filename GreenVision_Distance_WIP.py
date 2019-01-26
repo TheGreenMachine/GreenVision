@@ -91,6 +91,9 @@ while True:
             avg_c1_x, avg_c1_y = get_avg_points(rec1, rec2)
             if True:
                 draw_points(rec1, rec2, avg_c1_x, avg_c1_y)
+                pitch = calc_pitch(avg_c1_y, cy, V_FOCAL_LENGTH)
+                distance = calc_distance(pitch)
+                print('Pitch = {} \t Distance = {}'.format(pitch, distance))
     cv2.imshow('Contour Window', frame)
     cv2.imshow('Mask', mask)
     if cv2.waitKey(10) & 0xFF == ord('q'):
