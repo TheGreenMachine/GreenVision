@@ -10,31 +10,31 @@ vision_flag = '-v' in sys.argv
 debug_flag = '-d' in sys.argv
 threshold_flag = '-t' in sys.argv
 multithread_flag = '-mt' in sys.argv
+nt_flag = '-nt' in sys.argv
 
 with open('values.json') as json_file:
     data = json.load(json_file)
 
 cap = WebcamVideoStream(src=0).start() if multithread_flag else cv2.VideoCapture(0)
-
-nt.NetworkTables.initialize(server=data['server-ip'])
-table = nt.NetworkTables.getTable("SmartDashboard")
-if table:
-    print("table OK")
-table.putNumber("visionX", -1)
-table.putNumber("visionY", -1)
+if nt_flag:
+    nt.NetworkTables.initialize(server=data['server-ip'])
+    table = nt.NetworkTables.getTable("SmartDashboard")
+    if table:
+        print("table OK")
+    table.putNumber("visionX", -1)
+    table.putNumber("visionY", -1)
 
 if debug_flag:
     print('Vision flag: {v}\nDebug flag: {d}\nThreshold Flag: {t}\nMultithread Flag: {mt}'.format(v=vision_flag,
                                                                                                   d=debug_flag,
                                                                                                   t=threshold_flag,
                                                                                                   mt=multithread_flag))
-cam_fov = data['fish-eye-cam-FOV']
 
 horizontal_aspect = data['horizontal-aspect']
 vertical_aspect = data['vertical-aspect']
 
 horizontal_view = data['fish-eye-cam-HFOV']
-vertical_view =
+vertical_view = data['fist-eye-cam-VFOV']
 
 H_FOCAL_LENGTH = data['image-width'] / (2 * math.tan((horizontal_view / 2)))
 V_FOCAL_LENGTH = data['image-height'] / (2 * math.tan((vertical_view / 2)))
@@ -133,14 +133,6 @@ while True:
     print("Number of contours: ", len(ncontours))
     rec_list = []
     for c in ncontours:
-        # M = cv2.moments(c)
-        # if M["m00"] != 0:
-        #     cy = int(M["m01"] / M["m00"])
-        #     cx = int(M["m10"] / M["m00"])
-        #     #cy = M["m01"] / M["m00"]
-        # else:
-        #     cy, cx = 0, 0
-        # print('cy: {}'.format(cy))
         cv2.drawContours(frame, [c], -1, (0, 0, 255), 3)
         rec_list.append(cv2.boundingRect(c))
         if len(rec_list) > 1:
@@ -148,9 +140,9 @@ while True:
             rec2 = def_rec(rec_list[1])
             avg_c1_x, avg_c1_y = get_avg_points(rec1, rec2)
             if True:
-                update_net_table(1, rec1['c_x'], rec1['c_y'], rec2['c_x'], rec2['c_y'], avg_c1_x, avg_c1_y)
+                if nt_flag:
+                    update_net_table(1, rec1['c_x'], rec1['c_y'], rec2['c_x'], rec2['c_y'], avg_c1_x, avg_c1_y)
                 draw_points(rec1, rec2, avg_c1_x, avg_c1_y)
-                # pitch = calc_pitch(cy, avg_c1_y, V_FOCAL_LENGTH)
                 pitch = calc_pitch(avg_c1_y, screen_c_y, V_FOCAL_LENGTH)
                 distance = calc_distance(pitch) if pitch != 0 else 0
                 yaw = calc_yaw(avg_c1_x, screen_c_x, H_FOCAL_LENGTH)
@@ -161,7 +153,8 @@ while True:
                 rec4 = def_rec(rec_list[3])
                 avg_c2_x, avg_c2_y = get_avg_points(rec3, rec4)
                 if True:
-                    update_net_table(2, rec3['c_x'], rec3['c_y'], rec4['c_x'], rec4['c_y'], avg_c2_x, avg_c2_y)
+                    if nt_flag:
+                        update_net_table(2, rec3['c_x'], rec3['c_y'], rec4['c_x'], rec4['c_y'], avg_c2_x, avg_c2_y)
                     draw_points(rec3, rec4, avg_c2_x, avg_c2_y)
 
                 if len(rec_list) > 5:
@@ -169,7 +162,8 @@ while True:
                     rec6 = def_rec(rec_list[5])
                     avg_c3_x, avg_c3_y = get_avg_points(rec5, rec6)
                     if True:
-                        update_net_table(3, rec5['c_x'], rec5['c_y'], rec6['c_x'], rec6['c_y'], avg_c3_x, avg_c3_y)
+                        if nt_flag:
+                            update_net_table(3, rec5['c_x'], rec5['c_y'], rec6['c_x'], rec6['c_y'], avg_c3_x, avg_c3_y)
                         draw_points(rec5, rec6, avg_c3_x, avg_c3_y)
 
     if vision_flag:
