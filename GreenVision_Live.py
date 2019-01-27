@@ -9,13 +9,13 @@ import math
 vision_flag = '-v' in sys.argv
 debug_flag = '-d' in sys.argv
 threshold_flag = '-t' in sys.argv
-multithread_flag = '-mt' in sys.argv
+multi_thread_flag = '-mt' in sys.argv
 nt_flag = '-nt' in sys.argv
 
 with open('values.json') as json_file:
     data = json.load(json_file)
 
-cap = WebcamVideoStream(src=0).start() if multithread_flag else cv2.VideoCapture(0)
+cap = WebcamVideoStream(src=0).start() if multi_thread_flag else cv2.VideoCapture(0)
 if nt_flag:
     nt.NetworkTables.initialize(server=data['server-ip'])
     table = nt.NetworkTables.getTable("SmartDashboard")
@@ -28,7 +28,7 @@ if debug_flag:
     print('Vision flag: {v}\nDebug flag: {d}\nThreshold Flag: {t}\nMultithread Flag: {mt}'.format(v=vision_flag,
                                                                                                   d=debug_flag,
                                                                                                   t=threshold_flag,
-                                                                                                  mt=multithread_flag))
+                                                                                                  mt=multi_thread_flag))
 
 horizontal_aspect = data['horizontal-aspect']
 vertical_aspect = data['vertical-aspect']
@@ -113,7 +113,7 @@ def update_net_table(n, c1_x=-1, c1_y=-1, c2_x=-1, c2_y=-1, avgc_x=-1, avgc_y=-1
 
 while True:
     print('=========================================================')
-    if multithread_flag:
+    if multi_thread_flag:
         frame = cap.read()
     else:
         _, frame = cap.read()
