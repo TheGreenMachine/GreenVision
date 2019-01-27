@@ -25,10 +25,13 @@ if nt_flag:
     table.putNumber("visionY", -1)
 
 if debug_flag:
-    print('Vision flag: {v}\nDebug flag: {d}\nThreshold Flag: {t}\nMultithread Flag: {mt}'.format(v=vision_flag,
-                                                                                                  d=debug_flag,
-                                                                                                  t=threshold_flag,
-                                                                                                  mt=multi_thread_flag))
+    print('----------------------------------------------------------------')
+    print('Vision Flag: {}'.format(vision_flag))
+    print('Debug Flag: {}'.format(debug_flag))
+    print('Threshold Flag: {}'.format(threshold_flag))
+    print('Multi-Thread Flag: {}'.format(multi_thread_flag))
+    print('Network Tables Flag: {}'.format(nt_flag))
+    print('----------------------------------------------------------------')
 
 horizontal_aspect = data['horizontal-aspect']
 vertical_aspect = data['vertical-aspect']
