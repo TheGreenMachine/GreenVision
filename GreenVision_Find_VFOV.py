@@ -5,7 +5,7 @@ import math
 
 
 def calc_distance(p):
-    height_diff = data['height-of-target'] - data['height-of-camera']
+    height_diff = 6.5 - data['height-of-camera']
     d = math.fabs(height_diff / math.tan(math.radians(p)))
     return d
 
@@ -90,7 +90,7 @@ for v_fov in range(50, 91):
             if True:
                 pitch = calc_pitch(avg_c1_y, screen_c_y, V_FOCAL_LENGTH)
                 distance = calc_distance(pitch) if pitch != 0 else 0
-                print('V_FOV: {}, pitch: {}, distance: {}'.format(V_FOCAL_LENGTH, pitch, distance))
+                print('V_FOV: {}, pitch: {}, distance: {}'.format(v_fov, pitch, distance))
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
