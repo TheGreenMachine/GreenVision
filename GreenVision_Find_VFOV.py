@@ -51,6 +51,8 @@ with open('values.json') as json_file:
     data = json.load(json_file)
 
 cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
 
 horizontal_aspect = data['horizontal-aspect']
 vertical_aspect = data['vertical-aspect']
@@ -93,8 +95,10 @@ for v_fov in range(50, 91):
                 if pitch != 0:
                     distance = calc_distance(pitch)
                 else:
-                    distance = 'Pitch = 0'
+                    print('Pitch = 0')
+                    continue
                 print('V_FOV: {}, pitch: {}, distance: {}'.format(v_fov, pitch, distance))
-
+    cv2.imshow('Contour Window', frame)
+    cv2.imshow('Mask', mask)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
