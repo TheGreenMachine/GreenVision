@@ -80,10 +80,10 @@ for v_fov in range(60, 65):
                 pitch = calc_pitch(avg_c1_y, screen_c_y, V_FOCAL_LENGTH)
                 if pitch != 0:
                     distance = calc_distance(pitch)
-                    print('=========================================================')
                 else:
                     continue
                 print('V_FOV: {}, pitch: {}, distance: {}'.format(v_fov, pitch, distance))
+                print('=========================================================')
     cv2.imshow('Contour Window', frame)
     cv2.imshow('Mask', mask)
     if cv2.waitKey(1) & 0xFF == ord('q'):
