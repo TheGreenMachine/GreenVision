@@ -11,7 +11,8 @@ def calc_distance(p):
 
 
 def calc_pitch(pixel_y, center_y, v_foc_len):
-    p = math.degrees(math.atan((pixel_y - center_y) / v_foc_len)) * -1
+    p = math.degrees(math.atan((pixel_y - center_y) / v_foc_len))
+    p *= -1
     return round(p)
 
 
@@ -72,9 +73,8 @@ for v_fov in range(50, 91):
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(hsv, lower_color, upper_color)
 
-    screen_h, screen_w, _ = frame.shape
-    screen_c_x = (screen_w / 2) - 0.5
-    screen_c_y = (screen_h / 2) - 0.5
+    screen_c_x = (data['image-width'] / 2) - 0.5
+    screen_c_y = (data['image-height'] / 2) - 0.5
     _, contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     ncontours = []
     for contour in contours:
@@ -95,7 +95,6 @@ for v_fov in range(50, 91):
                 if pitch != 0:
                     distance = calc_distance(pitch)
                 else:
-                    print('Pitch = 0')
                     continue
                 print('V_FOV: {}, pitch: {}, distance: {}'.format(v_fov, pitch, distance))
     cv2.imshow('Contour Window', frame)
