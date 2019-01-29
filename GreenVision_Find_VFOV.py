@@ -3,22 +3,6 @@ import cv2
 import json
 import math
 
-with open('values.json') as json_file:
-    data = json.load(json_file)
-
-cap = cv2.VideoCapture(0)
-
-horizontal_aspect = data['horizontal-aspect']
-vertical_aspect = data['vertical-aspect']
-
-horizontal_view = data['fish-eye-cam-HFOV']
-# vertical_view = data['fist-eye-cam-VFOV']
-
-H_FOCAL_LENGTH = data['image-width'] / (2 * math.tan((horizontal_view / 2)))
-
-lower_color = np.array(data["lower-color-list"])
-upper_color = np.array(data["upper-color-list"])
-
 
 def calc_distance(p):
     height_diff = data['height-of-target'] - data['height-of-camera']
@@ -62,6 +46,22 @@ def get_avg_points(rec_a, rec_b):
 
     return avg_center_x, avg_center_y
 
+
+with open('values.json') as json_file:
+    data = json.load(json_file)
+
+cap = cv2.VideoCapture(0)
+
+horizontal_aspect = data['horizontal-aspect']
+vertical_aspect = data['vertical-aspect']
+
+horizontal_view = data['fish-eye-cam-HFOV']
+# vertical_view = data['fist-eye-cam-VFOV']
+
+H_FOCAL_LENGTH = data['image-width'] / (2 * math.tan((horizontal_view / 2)))
+
+lower_color = np.array(data["lower-color-list"])
+upper_color = np.array(data["upper-color-list"])
 
 for v_fov in range(50, 91):
     print('=========================================================')
