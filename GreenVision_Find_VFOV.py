@@ -5,7 +5,7 @@ import math
 
 
 def calc_distance(p):
-    height_diff = 6.5 - data['height-of-camera']
+    height_diff = data['height-of-target'] - data['height-of-camera']
     d = math.fabs(height_diff / math.tan(math.radians(p)))
     return d
 
@@ -14,11 +14,6 @@ def calc_pitch(pixel_y, center_y, v_foc_len):
     p = math.degrees(math.atan((pixel_y - center_y) / v_foc_len))
     p *= -1
     return round(p)
-
-
-def calc_yaw(pixel_x, center_x, h_foc_len):
-    yaw = math.degrees(math.atan((pixel_x - center_x) / h_foc_len))
-    return round(yaw)
 
 
 def draw_points(rec_a, rec_b, avgcx, avgcy):
@@ -58,11 +53,6 @@ cap.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
 horizontal_aspect = data['horizontal-aspect']
 vertical_aspect = data['vertical-aspect']
 
-horizontal_view = data['fish-eye-cam-HFOV']
-# vertical_view = data['fist-eye-cam-VFOV']
-
-H_FOCAL_LENGTH = data['image-width'] / (2 * math.tan((horizontal_view / 2)))
-
 lower_color = np.array(data["lower-color-list"])
 upper_color = np.array(data["upper-color-list"])
 
@@ -91,7 +81,6 @@ for v_fov in range(50, 91):
             avg_c1_x, avg_c1_y = get_avg_points(rec1, rec2)
             if True:
                 pitch = calc_pitch(avg_c1_y, screen_c_y, V_FOCAL_LENGTH)
-                # distance = calc_distance(pitch) if pitch != 0 else 0
                 if pitch != 0:
                     distance = calc_distance(pitch)
                 else:
