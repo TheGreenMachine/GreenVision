@@ -21,7 +21,7 @@
     255
   ],
   "fish-eye-cam-HFOV": 90,
-  "fish-eye-cam-VFOV": 80,
+  "fish-eye-cam-VFOV": 60,
   "image-width": 768,
   "image-height": 432,
   "height-of-target": 7,
