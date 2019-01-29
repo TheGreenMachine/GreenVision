@@ -89,7 +89,11 @@ for v_fov in range(50, 91):
             avg_c1_x, avg_c1_y = get_avg_points(rec1, rec2)
             if True:
                 pitch = calc_pitch(avg_c1_y, screen_c_y, V_FOCAL_LENGTH)
-                distance = calc_distance(pitch) if pitch != 0 else 0
+                # distance = calc_distance(pitch) if pitch != 0 else 0
+                if pitch != 0:
+                    distance = calc_distance(pitch)
+                else:
+                    distance = 'Pitch = 0'
                 print('V_FOV: {}, pitch: {}, distance: {}'.format(v_fov, pitch, distance))
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
