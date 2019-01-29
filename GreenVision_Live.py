@@ -37,7 +37,7 @@ horizontal_aspect = data['horizontal-aspect']
 vertical_aspect = data['vertical-aspect']
 
 horizontal_view = data['fish-eye-cam-HFOV']
-vertical_view = data['fist-eye-cam-VFOV']
+vertical_view = data['fish-eye-cam-VFOV']
 
 H_FOCAL_LENGTH = data['image-width'] / (2 * math.tan((horizontal_view / 2)))
 V_FOCAL_LENGTH = data['image-height'] / (2 * math.tan((vertical_view / 2)))
