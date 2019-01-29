@@ -56,7 +56,7 @@ vertical_aspect = data['vertical-aspect']
 lower_color = np.array(data["lower-color-list"])
 upper_color = np.array(data["upper-color-list"])
 
-for v_fov in range(50, 91):
+for v_fov in range(60, 65):
     V_FOCAL_LENGTH = data['image-height'] / (2 * math.tan((v_fov / 2)))
     _, frame = cap.read()
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -80,8 +80,6 @@ for v_fov in range(50, 91):
                 pitch = calc_pitch(avg_c1_y, screen_c_y, V_FOCAL_LENGTH)
                 if pitch != 0:
                     distance = calc_distance(pitch)
-                    if not (20 < distance < 30):
-                        continue
                     print('=========================================================')
                 else:
                     continue
