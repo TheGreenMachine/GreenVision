@@ -4,7 +4,7 @@ cap = cv2.VideoCapture(0)
 cv2.namedWindow('image cap')
 
 while True:
-    distance = input('Enter distance in inches: ')
+    distance = int(input('Enter distance in inches: '))
     ret, frame = cap.read()
     cv2.imshow("test", frame)
     if not ret:
