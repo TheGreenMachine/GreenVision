@@ -17,7 +17,7 @@ while cap.isOpened():
     if ret:
         out.write(frame)
         cv2.imshow('frame', frame)
-        if cv.waitKey(1) & 0xFF == ord('q'):
+        if cv2.waitKey(1) & 0xFF == ord('q'):
             break
     else:
         break
