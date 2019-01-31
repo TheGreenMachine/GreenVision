@@ -16,8 +16,6 @@ with open('values.json') as json_file:
     data = json.load(json_file)
 
 cap = WebcamVideoStream(src=0).start() if multi_thread_flag else cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
 if nt_flag:
     nt.NetworkTables.initialize(server=data['server-ip'])
     table = nt.NetworkTables.getTable("SmartDashboard")

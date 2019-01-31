@@ -4,8 +4,6 @@ with open('values.json') as json_file:
     data = json.load(json_file)
 
 cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
 cv2.namedWindow('image cap')
 
 while True:

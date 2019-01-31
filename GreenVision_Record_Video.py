@@ -6,8 +6,6 @@ with open('values.json') as json_file:
     data = json.load(json_file)
 
 cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
 # Define the codec and create VideoWriter object
 fourcc = cv2.VideoWriter_fourcc(*'MJPG')
 output_name = input('Enter name for file')
