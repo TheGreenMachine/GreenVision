@@ -11,7 +11,7 @@ while True:
 
     if cv2.waitKey(1) & 0xFF == ord('c'):
         distance = int(input('Enter distance in inches: '))
-        img_name = 'opencv_image_{}in_'.format(distance)
+        img_name = 'opencv_image_{}in_.jpg'.format(distance)
         cv2.imwrite(img_name, frame)
         print("{} written!".format(img_name))
     elif cv2.waitKey(1) & 0xFF == ord('q'):
