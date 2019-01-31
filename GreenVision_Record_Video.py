@@ -1,20 +1,22 @@
 import numpy as np
-import cv2 as cv
+import cv2
 import json
 
 with open('values.json') as json_file:
     data = json.load(json_file)
 
-cap = cv.VideoCapture(0)
+cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
 # Define the codec and create VideoWriter object
-fourcc = cv.VideoWriter_fourcc(*'MJPG')
+fourcc = cv2.VideoWriter_fourcc(*'MJPG')
 output_name = input('Enter name for file')
-out = cv.VideoWriter(output_name, fourcc, 30.0, (data['image-width'], data['image-height']))
+out = cv2.VideoWriter(output_name, fourcc, 30.0, (data['image-width'], data['image-height']))
 while cap.isOpened():
     ret, frame = cap.read()
     if ret:
         out.write(frame)
-        cv.imshow('frame', frame)
+        cv2.imshow('frame', frame)
         if cv.waitKey(1) & 0xFF == ord('q'):
             break
     else:
@@ -22,4 +24,4 @@ while cap.isOpened():
 # Release everything if job is finished
 cap.release()
 out.release()
-cv.destroyAllWindows()
+cv2.destroyAllWindows()
