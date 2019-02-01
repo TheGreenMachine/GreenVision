@@ -167,7 +167,7 @@ while True:
                         if nt_flag:
                             update_net_table(3, rec5['c_x'], rec5['c_y'], rec6['c_x'], rec6['c_y'], avg_c3_x, avg_c3_y)
                         draw_points(rec5, rec6, avg_c3_x, avg_c3_y)
-    print("Elasped Time: {}".format(starttime - time.time()))
+    print("Elasped Time: {}".format(time.time() - starttime))
     if vision_flag:
         cv2.imshow('Contour Window', frame)
         cv2.imshow('Mask', mask)
