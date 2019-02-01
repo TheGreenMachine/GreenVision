@@ -6,6 +6,17 @@ from imutils.video import WebcamVideoStream
 import json
 import math
 import time
+import argparse
+
+ap = argparse.ArgumentParser()
+ap.add_argument('-v', help='toggle contour and mask window')
+ap.add_argument('-db', help='toggle debug print statements')
+ap.add_argument('-th', help='adjust thresholds for lower_color and upper color by an addend')
+ap.add_argument('-mt', help='toggle for multi-threading')
+ap.add_argument('-nt', help='toggle for network tables')
+ap.add_argument('-src', help='choose source for processing: integer for camera, file path for image/video')
+
+args = vars(ap.parse_args())
 
 vision_flag = '-v' in sys.argv
 debug_flag = '-d' in sys.argv
