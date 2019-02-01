@@ -134,7 +134,7 @@ while True:
         frame = cap.read()
     else:
         _, frame = cap.read()
-    if (frameold == frame):
+    if (frameold.all() == frame.all()):
         continue
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(hsv, lower_color, upper_color)
