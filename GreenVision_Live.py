@@ -16,7 +16,19 @@ nt_flag = '-nt' in sys.argv
 with open('values.json') as json_file:
     data = json.load(json_file)
 
-cap = WebcamVideoStream(src=0).start() if multi_thread_flag else cv2.VideoCapture(0)
+# cap = WebcamVideoStream(src=0).start() if multi_thread_flag else cv2.VideoCapture(0)
+
+if multi_thread_flag:
+    cap = WebcamVideoStream(src=0)
+    cap.stream.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
+    cap.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
+    cap.start()
+
+else:
+    cap = cv2.VideoCapture(0)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
+
 if nt_flag:
     nt.NetworkTables.initialize(server=data['server-ip'])
     table = nt.NetworkTables.getTable("SmartDashboard")
@@ -45,6 +57,7 @@ V_FOCAL_LENGTH = data['image-height'] / (2 * math.tan((vertical_view / 2)))
 
 lower_color = np.array(data["lower-color-list-thresh"]) if threshold_flag else np.array(data["lower-color-list"])
 upper_color = np.array(data["upper-color-list-thresh"]) if threshold_flag else np.array(data["upper-color-list"])
+
 
 def calc_distance(p):
     height_diff = data['height-of-target'] - data['height-of-camera']
