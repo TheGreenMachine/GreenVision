@@ -22,10 +22,10 @@
   ],
   "fish-eye-cam-HFOV": 90,
   "fish-eye-cam-VFOV": 60,
-  "image-width": 1280,
-  "image-height": 720,
-  "height-of-target": 9.5,
+  "image-width": 640,
+  "image-height": 480,
+  "height-of-target": 5.25,
   "height-of-camera": 4.75,
-  "horizontal-aspect": 16,
-  "vertical-aspect": 9
+  "horizontal-aspect": 4,
+  "vertical-aspect": 3
 }
