@@ -19,13 +19,13 @@ with open('values.json') as json_file:
 # cap = WebcamVideoStream(src=0).start() if multi_thread_flag else cv2.VideoCapture(0)
 
 if multi_thread_flag:
-    cap = WebcamVideoStream(src=4)
+    cap = WebcamVideoStream(src=0)
     cap.stream.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
     cap.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
     cap.start()
 
 else:
-    cap = cv2.VideoCapture(4)
+    cap = cv2.VideoCapture(0)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
 
