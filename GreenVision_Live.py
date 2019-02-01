@@ -126,7 +126,6 @@ def update_net_table(n, c1_x=-1, c1_y=-1, c2_x=-1, c2_y=-1, avgc_x=-1, avgc_y=-1
         print("averagedCenterX", avgc_x)
         print("averagedCenterY", avgc_y)
 
-frameold = []
 while True:
     print('=========================================================')
     starttime = time.time()
@@ -134,6 +133,7 @@ while True:
         frame = cap.read()
     else:
         _, frame = cap.read()
+    frameold = frame.copy()
     if (frameold.all() == frame.all()):
         continue
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
