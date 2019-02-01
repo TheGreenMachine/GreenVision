@@ -141,7 +141,7 @@ while True:
 
     screen_c_x = (data['image-width'] / 2) - 0.5
     screen_c_y = (data['image-height'] / 2) - 0.5
-    _, contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     ncontours = []
     for contour in contours:
         if cv2.contourArea(contour) > 75:
