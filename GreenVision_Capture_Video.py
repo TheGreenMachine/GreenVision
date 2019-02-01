@@ -12,6 +12,7 @@ output_name = input('Enter name for file: ')
 path = '/home/pi/Desktop/GreenVision/Test_Images'
 out = cv2.VideoWriter(os.path.join(path, (output_name + '.avi')), fourcc, 30.0,
                       (data['image-width'], data['image-height']))
+print('Press Q to quit')
 while cap.isOpened():
     ret, frame = cap.read()
     if ret:
