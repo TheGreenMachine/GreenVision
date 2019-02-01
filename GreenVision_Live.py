@@ -125,7 +125,8 @@ def update_net_table(n, c1_x=-1, c1_y=-1, c2_x=-1, c2_y=-1, avgc_x=-1, avgc_y=-1
         print("center{n}Y".format(n=n + 1), c2_y)
         print("averagedCenterX", avgc_x)
         print("averagedCenterY", avgc_y)
-frameold = cap.read()
+
+
 while True:
     print('=========================================================')
     starttime = time.time()
@@ -133,14 +134,12 @@ while True:
         frame = cap.read()
     else:
         _, frame = cap.read()
-    if (frameold.all() == frame.all()):
-        continue
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(hsv, lower_color, upper_color)
 
     screen_c_x = (data['image-width'] / 2) - 0.5
     screen_c_y = (data['image-height'] / 2) - 0.5
-    contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    _, contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     ncontours = []
     for contour in contours:
         if cv2.contourArea(contour) > 75:
@@ -182,7 +181,6 @@ while True:
                             update_net_table(3, rec5['c_x'], rec5['c_y'], rec6['c_x'], rec6['c_y'], avg_c3_x, avg_c3_y)
                         draw_points(rec5, rec6, avg_c3_x, avg_c3_y)
     print("Elasped Time: {}".format(time.time() - starttime))
-    frameold = frame
     if vision_flag:
         cv2.imshow('Contour Window', frame)
         cv2.imshow('Mask', mask)
