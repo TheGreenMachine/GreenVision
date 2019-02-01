@@ -115,61 +115,64 @@ def update_net_table(n, c1_x=-1, c1_y=-1, c2_x=-1, c2_y=-1, avgc_x=-1, avgc_y=-1
 
 
 while True:
-    print('=========================================================')
-    starttime = time.time()
-    if multi_thread_flag:
-        frame = cap.read()
-    else:
-        _, frame = cap.read()
-    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    mask = cv2.inRange(hsv, lower_color, upper_color)
+    elapsedtime = elapsedtime + (elapsedtime - time.time())
+    if (elapsedtime >= .33333333333133333333333333):
+        print('=========================================================')
+        starttime = time.time()
+        if multi_thread_flag:
+            frame = cap.read()
+        else:
+            _, frame = cap.read()
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        mask = cv2.inRange(hsv, lower_color, upper_color)
 
-    screen_c_x = (data['image-width'] / 2) - 0.5
-    screen_c_y = (data['image-height'] / 2) - 0.5
-    _, contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    ncontours = []
-    for contour in contours:
-        if cv2.contourArea(contour) > 75:
-            print('Contour area:', cv2.contourArea(contour))
-            ncontours.append(contour)
-    print("Number of contours: ", len(ncontours))
-    rec_list = []
-    for c in ncontours:
-        cv2.drawContours(frame, [c], -1, (0, 0, 255), 3)
-        rec_list.append(cv2.boundingRect(c))
-        if len(rec_list) > 1:
-            rec1 = def_rec(rec_list[0])
-            rec2 = def_rec(rec_list[1])
-            avg_c1_x, avg_c1_y = get_avg_points(rec1, rec2)
-            if True:
-                if nt_flag:
-                    update_net_table(1, rec1['c_x'], rec1['c_y'], rec2['c_x'], rec2['c_y'], avg_c1_x, avg_c1_y)
-                draw_points(rec1, rec2, avg_c1_x, avg_c1_y)
-                pitch = calc_pitch(avg_c1_y, screen_c_y, V_FOCAL_LENGTH)
-                distance = calc_distance(pitch) if pitch != 0 else 0
-                yaw = calc_yaw(avg_c1_x, screen_c_x, H_FOCAL_LENGTH)
-                print('Pitch = {} \t Distance = {} \t Yaw = {}'.format(pitch, distance, yaw))
-
-            if len(rec_list) > 3:
-                rec3 = def_rec(rec_list[2])
-                rec4 = def_rec(rec_list[3])
-                avg_c2_x, avg_c2_y = get_avg_points(rec3, rec4)
+        screen_c_x = (data['image-width'] / 2) - 0.5
+        screen_c_y = (data['image-height'] / 2) - 0.5
+        _, contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        ncontours = []
+        for contour in contours:
+            if cv2.contourArea(contour) > 75:
+                print('Contour area:', cv2.contourArea(contour))
+                ncontours.append(contour)
+        print("Number of contours: ", len(ncontours))
+        rec_list = []
+        for c in ncontours:
+            cv2.drawContours(frame, [c], -1, (0, 0, 255), 3)
+            rec_list.append(cv2.boundingRect(c))
+            if len(rec_list) > 1:
+                rec1 = def_rec(rec_list[0])
+                rec2 = def_rec(rec_list[1])
+                avg_c1_x, avg_c1_y = get_avg_points(rec1, rec2)
                 if True:
                     if nt_flag:
-                        update_net_table(2, rec3['c_x'], rec3['c_y'], rec4['c_x'], rec4['c_y'], avg_c2_x, avg_c2_y)
-                    draw_points(rec3, rec4, avg_c2_x, avg_c2_y)
+                        update_net_table(1, rec1['c_x'], rec1['c_y'], rec2['c_x'], rec2['c_y'], avg_c1_x, avg_c1_y)
+                    draw_points(rec1, rec2, avg_c1_x, avg_c1_y)
+                    pitch = calc_pitch(avg_c1_y, screen_c_y, V_FOCAL_LENGTH)
+                    distance = calc_distance(pitch) if pitch != 0 else 0
+                    yaw = calc_yaw(avg_c1_x, screen_c_x, H_FOCAL_LENGTH)
+                    print('Pitch = {} \t Distance = {} \t Yaw = {}'.format(pitch, distance, yaw))
 
-                if len(rec_list) > 5:
-                    rec5 = def_rec(rec_list[4])
-                    rec6 = def_rec(rec_list[5])
-                    avg_c3_x, avg_c3_y = get_avg_points(rec5, rec6)
+                if len(rec_list) > 3:
+                    rec3 = def_rec(rec_list[2])
+                    rec4 = def_rec(rec_list[3])
+                    avg_c2_x, avg_c2_y = get_avg_points(rec3, rec4)
                     if True:
                         if nt_flag:
-                            update_net_table(3, rec5['c_x'], rec5['c_y'], rec6['c_x'], rec6['c_y'], avg_c3_x, avg_c3_y)
-                        draw_points(rec5, rec6, avg_c3_x, avg_c3_y)
-    print("Elasped Time: {}".format(time.time() - starttime))
-    if vision_flag:
-        cv2.imshow('Contour Window', frame)
-        cv2.imshow('Mask', mask)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+                            update_net_table(2, rec3['c_x'], rec3['c_y'], rec4['c_x'], rec4['c_y'], avg_c2_x, avg_c2_y)
+                        draw_points(rec3, rec4, avg_c2_x, avg_c2_y)
+
+                    if len(rec_list) > 5:
+                        rec5 = def_rec(rec_list[4])
+                        rec6 = def_rec(rec_list[5])
+                        avg_c3_x, avg_c3_y = get_avg_points(rec5, rec6)
+                        if True:
+                            if nt_flag:
+                                update_net_table(3, rec5['c_x'], rec5['c_y'], rec6['c_x'], rec6['c_y'], avg_c3_x, avg_c3_y)
+                            draw_points(rec5, rec6, avg_c3_x, avg_c3_y)
+        print("Elasped Time: {}".format(time.time() - starttime))
+        elapsedtime = time.time() - starttime
+        if vision_flag:
+            cv2.imshow('Contour Window', frame)
+            cv2.imshow('Mask', mask)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
