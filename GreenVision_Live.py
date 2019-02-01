@@ -46,7 +46,6 @@ V_FOCAL_LENGTH = data['image-height'] / (2 * math.tan((vertical_view / 2)))
 lower_color = np.array(data["lower-color-list-thresh"]) if threshold_flag else np.array(data["lower-color-list"])
 upper_color = np.array(data["upper-color-list-thresh"]) if threshold_flag else np.array(data["upper-color-list"])
 
-
 def calc_distance(p):
     height_diff = data['height-of-target'] - data['height-of-camera']
     d = math.fabs(height_diff / math.tan(math.radians(p)))
@@ -117,7 +116,7 @@ def update_net_table(n, c1_x=-1, c1_y=-1, c2_x=-1, c2_y=-1, avgc_x=-1, avgc_y=-1
 
 while True:
     print('=========================================================')
-    print("Start Time: {}".format(time.time()))
+    starttime = time.time()
     if multi_thread_flag:
         frame = cap.read()
     else:
@@ -168,7 +167,7 @@ while True:
                         if nt_flag:
                             update_net_table(3, rec5['c_x'], rec5['c_y'], rec6['c_x'], rec6['c_y'], avg_c3_x, avg_c3_y)
                         draw_points(rec5, rec6, avg_c3_x, avg_c3_y)
-    print("End time: {}".format(time.time()))
+    print("Elasped Time: {}".format(starttime - time.time()))
     if vision_flag:
         cv2.imshow('Contour Window', frame)
         cv2.imshow('Mask', mask)
