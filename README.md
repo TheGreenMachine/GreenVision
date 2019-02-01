@@ -16,6 +16,7 @@ In order to use OpenCV with Qt Creator, you must build OpenCV from source. The s
 
 `sudo apt-get install cmake git libgtk2.0-dev pkg-config libavcodec-dev libavformat-dev libswscale-dev`
 
+
 2. Next, we are going to download OpenCV via git. Run the following:
 
 `mkdir opencv`
