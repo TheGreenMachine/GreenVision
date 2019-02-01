@@ -1,6 +1,7 @@
 import cv2
 import json
 import os
+
 with open('values.json') as json_file:
     data = json.load(json_file)
 
@@ -16,7 +17,7 @@ while True:
     if cv2.waitKey(1) & 0xFF == ord('c'):
         distance = int(input('Enter distance in inches: '))
         path = '/home/pi/Desktop/GreenVision/Test_Images'
-	img_name = os.path.join(path,'opencv_image_{}in.jpg'.format(distance))
+        img_name = os.path.join(path, 'opencv_image_{}in.jpg'.format(distance))
         cv2.imwrite(img_name, frame)
         print("{} written!".format(img_name))
     if cv2.waitKey(1) & 0xFF == ord('q'):
