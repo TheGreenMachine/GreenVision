@@ -1,6 +1,6 @@
-import numpy as np
 import cv2
 import json
+import os
 
 with open('values.json') as json_file:
     data = json.load(json_file)
@@ -9,7 +9,9 @@ cap = cv2.VideoCapture(0)
 # Define the codec and create VideoWriter object
 fourcc = cv2.VideoWriter_fourcc(*'MJPG')
 output_name = input('Enter name for file: ')
-out = cv2.VideoWriter(output_name + '.avi', fourcc, 30.0, (data['image-width'], data['image-height']))
+path = '/home/pi/Desktop/GreenVision/Test_Images'
+out = cv2.VideoWriter(os.path.join(path, (output_name + '.avi')), fourcc, 30.0,
+                      (data['image-width'], data['image-height']))
 while cap.isOpened():
     ret, frame = cap.read()
     if ret:
