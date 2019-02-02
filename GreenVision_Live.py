@@ -8,13 +8,13 @@ import math
 import time
 import argparse
 
-ap = argparse.ArgumentParser()
-ap.add_argument('-v', help='toggle contour and mask window')
-ap.add_argument('-db', help='toggle debug print statements')
-ap.add_argument('-th', help='adjust thresholds for lower_color and upper color by an addend')
-ap.add_argument('-mt', help='toggle for multi-threading')
-ap.add_argument('-nt', help='toggle for network tables')
-ap.add_argument('-src', help='choose source for processing: integer for camera, file path for image/video')
+ap = argparse.ArgumentParser(description='Team 1816 Vision Processing for the 2019 Deep Space Season')
+ap.add_argument('-v', help='Toggle contour and mask window', action='store_true')
+ap.add_argument('-db', help='Toggle debug print statements', action='store_true')
+ap.add_argument('-th', help='Adjust thresholds for lower_color and upper color by an addend', action='store_true')
+ap.add_argument('-mt', help='Toggle multi-threading', action='store_true')
+ap.add_argument('-nt', help='Toggle network tables', action='store_true')
+ap.add_argument('-src', help='Choose source for processing: integer for camera, file path for image/video')
 
 args = vars(ap.parse_args())
 
