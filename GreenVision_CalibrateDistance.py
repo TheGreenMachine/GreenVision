@@ -3,6 +3,7 @@ import numpy as np
 from statistics import mean
 import json
 import os
+import csv
 
 with open('values.json') as json_file:
     data = json.load(json_file)
@@ -34,6 +35,8 @@ while (count < 33):
     print('Line up camera at {}, and press C to capture'.format(count))
     ret, frame = cap.read()
     cv2.imshow("test", frame)
+    if cv2.waitKey(1) & 0xFF == ord('s'):
+        break
     if cv2.waitKey(1) & 0xFF == ord('c'):
         capture(count)
         count +=3
@@ -43,7 +46,7 @@ while (count < 33):
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(hsv, lower_color, upper_color)
     print("{} in shot".format(count))
-    contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    _, contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     ncontours = []
     for contour in contours:
         if cv2.contourArea(contour) > 75:
