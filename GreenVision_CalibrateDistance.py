@@ -35,7 +35,7 @@ def capture(count):
 cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
-while (count < 33):
+while count < 31:
     print('Line up camera at {}, and press C to capture'.format(count))
     ret, frame = cap.read()
     cv2.imshow("test", frame)
@@ -45,7 +45,7 @@ while (count < 33):
         capture(count)
         count += 1
 count = 6
-while count < 33:
+while count < 31:
     img = cv2.imread("/home/pi/Desktop/GreenVision/Test_Images/opencv_image_{}in.jpg".format(count))
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(hsv, lower_color, upper_color)
