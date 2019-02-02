@@ -56,7 +56,7 @@ while count < 31:
         zs = np.append(zs, math.sqrt(1 / (contourarea)))
         x_contarea = np.append(x_contarea, count)
 
-        print(np.polyfit(x_contarea, y_distance, 2))
+        print('Polyfit: ', np.polyfit(x_contarea, y_distance, 2))
 
     count += 1
 
