@@ -10,16 +10,6 @@
     255,
     255
   ],
-  "lower-color-list-thresh": [
-    30.0,
-    35.03597122302158,
-    154.28057553956833
-  ],
-  "upper-color-list-thresh": [
-    110.60606060606061,
-    255,
-    255
-  ],
   "fish-eye-cam-HFOV": 90,
   "fish-eye-cam-VFOV": 60,
   "image-width": 640,
