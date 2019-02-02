@@ -86,6 +86,12 @@ def init_parser_video(sp):
                               help='choose a different name for the file')
 
 
+def init_parser_cali_distance(sp):
+    parser_cali_distance = sp.add_parser('calibrate_distance')
+    parser_cali_distance.add_argument_group('Calibrate Distance Arguments')
+    parser_cali_distance.
+
+
 def vision():
     src = args['src']
     view = args['view']
