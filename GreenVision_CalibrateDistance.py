@@ -68,6 +68,6 @@ while count < 31:
     count += 1
 
 df = pd.DataFrame({"x": xs, "y": ys, "z" : zs})
-m, b = best_fit_slope_and_intercept(xs, ys)
+m, b = best_fit_slope_and_intercept(xs, zs)
 df.to_csv("distance_calibrate_dump.csv", index=False)
 print("M: {} B: {}".format(m, b))
