@@ -70,10 +70,10 @@ lower_color = np.array(data['lower-color-list']) - threshold
 upper_color = np.array([data['upper-color-list'][0] + threshold, 255, 255])
 
 
-def calc_distance(p):
-    height_diff = data['height-of-target'] - data['height-of-camera']
-    d = math.fabs(height_diff / math.tan(math.radians(p)))
-    return d
+def calc_distance(area):
+    top = area - 10748.25
+    full = top / -323.75
+    return full
 
 
 def calc_pitch(pixel_y, center_y, v_foc_len):
