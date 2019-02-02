@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 from statistics import mean
 import json
+from scipy.optimize import curve_fit
 import os
 import pandas as pd
 import math
@@ -18,14 +19,20 @@ ys = np.array([], dtype=np.float64)
 zs = np.array([], dtype=np.float64)
 
 
-def best_fit_slope_and_intercept(xs, ys):
-    m = (((mean(xs) * mean(ys)) - mean(xs * ys)) /
-         ((mean(xs) * mean(xs)) - mean(xs * xs)))
-
-    b = mean(ys) - m * mean(xs)
-
-    return m, b
-
+# def best_fit_slope_and_intercept(xs, ys):
+#     m = (((mean(xs) * mean(ys)) - mean(xs * ys)) /
+#          ((mean(xs) * mean(xs)) - mean(xs * xs)))
+#
+#     b = mean(ys) - m * mean(xs)
+#
+#     return m, b
+def func_exp(x, a, b, c):
+    # c = 0
+    return a * np.exp(b * x) + c
+def exponential_regression(x_data, y_data):
+    popt, pcov = curve_fit(func_exp, x_data, y_data, p0=(-1, 0.01, 1))
+    print(popt)
+    return func_exp(x_data, *popt)
 
 def capture(count):
     path = '/home/pi/Desktop/GreenVision/Test_Images'
@@ -68,6 +75,7 @@ while count < 31:
     count += 1
 
 df = pd.DataFrame({"x": xs, "y": ys, "z" : zs})
-m, b = best_fit_slope_and_intercept(xs, zs)
+#m, b = best_fit_slope_and_intercept(xs, ys)
+print(exponential_regression(xs,ys))
 df.to_csv("distance_calibrate_dump.csv", index=False)
-print("M: {} B: {}".format(m, b))
+#print("M: {} B: {}".format(m, b))
