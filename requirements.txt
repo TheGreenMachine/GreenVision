@@ -2,4 +2,4 @@ opencv-python
 pynetworktables
 imutils
 numpy
-matplotlib
+scipy
