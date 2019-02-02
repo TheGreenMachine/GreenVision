@@ -13,7 +13,6 @@ cv2.namedWindow('image cap')
 while True:
     print('Press C to capture, press Q to quit')
     ret, frame = cap.read()
-    cv2.imshow("test", frame)
     if not ret:
         break
 
