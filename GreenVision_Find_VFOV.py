@@ -87,7 +87,7 @@ for v_fov in range(1, 100):
                     continue
                 print('V_FOV: {}, pitch: {}, distance: {}'.format(v_fov, pitch, distance))
                 print('=========================================================')
-                time.sleep(5)
+                time.sleep(.2)
     cv2.imshow('Contour Window', frame)
     cv2.imshow('Mask', mask)
     if cv2.waitKey(1) & 0xFF == ord('q'):
