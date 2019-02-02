@@ -89,7 +89,21 @@ def init_parser_video(sp):
 def init_parser_cali_distance(sp):
     parser_cali_distance = sp.add_parser('calibrate_distance')
     parser_cali_distance.add_argument_group('Calibrate Distance Arguments')
-    parser_cali_distance.
+    parser_cali_distance.add_argument('-s', '--src', '--source',
+                                      type=int,
+                                      default=0,
+                                      required=True,
+                                      help='set source for processing: [int] for camera')
+    parser_cali_distance.add_argument('-c', '--capture',
+                                      action='store_true',
+                                      help='toggle capture of new images')
+    parser_cali_distance.add_argument('-n', '--number',
+                                      type=int,
+                                      help='set number of images to take', )
+    parser_cali_distance.add_argument('-o', '--output',
+                                      type=str,
+                                      default='distance_calibration_dump',
+                                      help='choose name for output file')
 
 
 def vision():
