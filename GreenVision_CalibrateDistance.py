@@ -3,7 +3,7 @@ import numpy as np
 from statistics import mean
 import json
 import os
-import csv
+import pandas as pd
 
 with open('values.json') as json_file:
     data = json.load(json_file)
@@ -63,12 +63,7 @@ while count < 31:
         print(xs)
     count += 1
 
-with open('distance_calibrate_dump.csv', 'w') as output:
-    writer = csv.writer(output, lineterminator='\n')
-    x_list = xs.tolist()
-    y_list = ys.tolist()
-    for i in range(len(xs)):
-        writer.writerows((x_list[i], y_list[i]))
-m, b = best_fit_slope_and_intercept(x_list, y_list)
-
+df = pd.DataFrame({"x": xs, "y": ys})
+m, b = best_fit_slope_and_intercept(xs, ys)
+df.to_csv("distance_calibrate_dump.csv", index=False)
 print("M: {} B: {}".format(m, b))
