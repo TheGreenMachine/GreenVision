@@ -57,7 +57,7 @@ vertical_aspect = data['vertical-aspect']
 lower_color = np.array(data["lower-color-list"])
 upper_color = np.array(data["upper-color-list"])
 
-for v_fov in range(60, 66):
+for v_fov in range(1, 100):
     V_FOCAL_LENGTH = data['image-height'] / (2 * math.tan((v_fov / 2)))
     _, frame = cap.read()
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -87,7 +87,7 @@ for v_fov in range(60, 66):
                     continue
                 print('V_FOV: {}, pitch: {}, distance: {}'.format(v_fov, pitch, distance))
                 print('=========================================================')
-                time.sleep(5)
+                time.sleep(.2)
     cv2.imshow('Contour Window', frame)
     cv2.imshow('Mask', mask)
     if cv2.waitKey(1) & 0xFF == ord('q'):
