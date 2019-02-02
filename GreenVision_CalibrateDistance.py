@@ -23,11 +23,15 @@ def best_fit_slope_and_intercept(xs, ys):
     b = mean(ys) - m * mean(xs)
 
     return m, b
+
+
 def capture(count):
     path = '/home/pi/Desktop/GreenVision/Test_Images'
     img_name = os.path.join(path, 'opencv_image_{}in.jpg'.format(count))
     cv2.imwrite(img_name, frame)
     print("{} written!".format(img_name))
+
+
 cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
@@ -39,9 +43,9 @@ while (count < 33):
         break
     if cv2.waitKey(1) & 0xFF == ord('c'):
         capture(count)
-        count +=1
+        count += 1
 count = 6
-while (count < 33):
+while count < 33:
     img = cv2.imread("/home/pi/Desktop/GreenVision/Test_Images/opencv_image_{}in.jpg".format(count))
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(hsv, lower_color, upper_color)
@@ -57,8 +61,11 @@ while (count < 33):
         xs = np.append(xs, count)
         print(ys)
         print(xs)
-    count +=1
+    count += 1
 
+
+with open('distance_calibrate_dump', 'w') as output:
+    pass
 m, b = best_fit_slope_and_intercept(xs, ys)
 
-print("M: {} B: {}".format(m,b))
+print("M: {} B: {}".format(m, b))
