@@ -14,9 +14,9 @@ lower_color = np.array(data['lower-color-list'])
 upper_color = np.array([data['upper-color-list'][0], 255, 255])
 count = 6
 
-xs = np.array([], dtype=np.float128)
-ys = np.array([], dtype=np.float128)
-zs = np.array([], dtype=np.float128)
+xs = np.array([], dtype=np.float64)
+ys = np.array([], dtype=np.float64)
+zs = np.array([], dtype=np.float64)
 
 
 # def best_fit_slope_and_intercept(xs, ys):
