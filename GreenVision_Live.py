@@ -29,13 +29,13 @@ nt_flag = args['nt']
 # cap = WebcamVideoStream(src=0).start() if multi_thread_flag else cv2.VideoCapture(0)
 
 if multi_thread_flag:
-    cap = WebcamVideoStream(source_input)
+    cap = WebcamVideoStream(0)
     cap.stream.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
     cap.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
     cap.start()
 
 else:
-    cap = cv2.VideoCapture(source_input)
+    cap = cv2.VideoCapture(0)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
 
