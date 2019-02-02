@@ -15,7 +15,7 @@ lower_color = np.array(data['lower-color-list'])
 upper_color = np.array([data['upper-color-list'][0], 255, 255])
 count = 6
 
-y_dist = np.array([], dtype=np.float64)
+y_distance = np.array([], dtype=np.float64)
 x_area = np.array([], dtype=np.float64)
 zs = np.array([], dtype=np.float64)
 
@@ -53,13 +53,13 @@ while count < 31:
     if len(ncontours) <= 2 and len(ncontours) != 0 and len(ncontours) != 1 and len(ncontours) != 3:
         contourarea = cv2.contourArea(ncontours[0])
         x_area = np.append(x_area, contourarea)
-        zs = np.append(zs, math.sqrt(1 / (contourarea)))
-        y_dist = np.append(y_dist, count)
+        zs = np.append(zs, math.sqrt(1 / contourarea))
+        y_distance = np.append(y_distance, count)
 
     count += 1
 
-print('Polyfit: ', np.polyfit(x_area, y_dist, 2))
-df = pd.DataFrame({"x": x_area, "y": y_dist, "z": zs})
+print('Polyfit: ', np.polyfit(x_area, np.log(y_distance), 1, w=np.sqrt(y_distance)))
+df = pd.DataFrame({"x": x_area, "y": y_distance, "z": zs})
 # m, b = best_fit_slope_and_intercept(xs, ys)
 df.to_csv("distance_calibrate_dump.csv", index=False)
 # print("M: {} B: {}".format(m, b))
