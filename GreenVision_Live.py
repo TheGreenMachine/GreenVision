@@ -82,8 +82,8 @@ def calc_pitch(pixel_y, center_y, v_foc_len):
 
 
 def calc_yaw(pixel_x, center_x, h_foc_len):
-    yaw = math.degrees(math.atan((pixel_x - center_x) / h_foc_len))
-    return round(yaw)
+    ya = math.degrees(math.atan((pixel_x - center_x) / h_foc_len))
+    return round(ya)
 
 
 def draw_points(rec_a, rec_b, avgcx, avgcy):
