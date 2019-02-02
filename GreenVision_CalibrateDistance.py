@@ -40,7 +40,7 @@ while count < 31:
         capture(count)
         count += 1
 count = 6
-while count < 30:
+while count < 31:
     img = cv2.imread("/home/pi/Desktop/GreenVision/Test_Images/opencv_image_{}in.jpg".format(count))
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(hsv, lower_color, upper_color)
@@ -53,7 +53,7 @@ while count < 30:
     if len(ncontours) <= 2 and len(ncontours) != 0 and len(ncontours) != 1 and len(ncontours) != 3:
         contourarea = cv2.contourArea(ncontours[0])
         y_distance = np.append(y_distance, contourarea)
-        # zs = np.append(zs, math.sqrt(1 / (contourarea)))
+        zs = np.append(zs, math.sqrt(1 / (contourarea)))
         x_contarea = np.append(x_contarea, count)
 
         print(np.polyfit(x_contarea, y_distance, 2))
