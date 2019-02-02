@@ -155,6 +155,7 @@ while True:
     for contour in contours:
         if cv2.contourArea(contour) > 75:
             print('Contour area:', cv2.contourArea(contour))
+            contourarea = cv2.contourArea(contour)
             ncontours.append(contour)
     print("Number of contours: ", len(ncontours))
     rec_list = []
@@ -170,7 +171,7 @@ while True:
                     update_net_table(1, rec1['c_x'], rec1['c_y'], rec2['c_x'], rec2['c_y'], avg_c1_x, avg_c1_y)
                 draw_points(rec1, rec2, avg_c1_x, avg_c1_y)
                 pitch = calc_pitch(avg_c1_y, screen_c_y, V_FOCAL_LENGTH)
-                distance = calc_distance(pitch) if pitch != 0 else 0
+                distance = calc_distance(contourarea)
                 yaw = calc_yaw(avg_c1_x, screen_c_x, H_FOCAL_LENGTH)
                 print('Pitch = {} \t Distance = {} \t Yaw = {}'.format(pitch, distance, yaw))
 
