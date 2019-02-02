@@ -71,8 +71,8 @@ upper_color = np.array([data['upper-color-list'][0] + threshold, 255, 255])
 
 
 def calc_distance(area):
-    top = area - 10748.25
-    full = top / -323.75
+    top = area - data["b"]
+    full = top / data["m"]
     return full
 
 
