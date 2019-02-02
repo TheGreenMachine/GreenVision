@@ -20,39 +20,6 @@ y_distance = np.array([], dtype=np.float64)
 zs = np.array([], dtype=np.float64)
 
 
-# def best_fit_slope_and_intercept(xs, ys):
-#     m = (((mean(xs) * mean(ys)) - mean(xs * ys)) /
-#          ((mean(xs) * mean(xs)) - mean(xs * xs)))
-#
-#     b = mean(ys) - m * mean(xs)
-#
-#     return m, b
-# def func_exp(x, a, b, c):
-#     # c = 0
-#     return a * np.exp(b * x) + c
-#
-#
-# def exponential_regression(x_data, y_data):
-#     popt, pcov = curve_fit(func_exp, x_data, y_data, p0=(-1, 0.01, 1))
-#     print(popt)
-#     return func_exp(x_data, *popt)
-
-def func_exp(x, a, b, c):
-    c = 0
-    return a * np.exp(b * x) + c
-
-
-def exponential_regression(x_data, y_data):
-    popt, pcov = curve_fit(func_exp, x_data, y_data)
-    print(popt)
-    puntos = plt.plot(x_data, y_data, 'x', color='xkcd:maroon', label="data")
-    curva_regresion = plt.plot(x_data, func_exp(x_data, *popt), color='xkcd:teal',
-                               label="fit: {:.3f}, {:.3f}, {:.3f}".format(*popt))
-    plt.legend()
-    plt.show()
-    return func_exp(x_data, *popt)
-
-
 def capture(count):
     path = '/home/pi/Desktop/GreenVision/Test_Images'
     img_name = os.path.join(path, 'opencv_image_{}in.jpg'.format(count))
@@ -89,14 +56,11 @@ while count < 31:
         # zs = np.append(zs, math.sqrt(1 / (contourarea)))
         x_contarea = np.append(x_contarea, count)
 
-        exponential_regression(x_contarea, y_distance)
+        print(np.polyfit(x_contarea, y_distance, 2))
 
-        print(y_distance)
-        print(x_contarea)
     count += 1
 
 df = pd.DataFrame({"x": x_contarea, "y": y_distance, "z": zs})
 # m, b = best_fit_slope_and_intercept(xs, ys)
-print(exponential_regression(x_contarea, y_distance))
 df.to_csv("distance_calibrate_dump.csv", index=False)
 # print("M: {} B: {}".format(m, b))
