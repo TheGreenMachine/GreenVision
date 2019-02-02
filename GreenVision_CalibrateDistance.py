@@ -58,7 +58,7 @@ while count < 31:
 
     count += 1
 
-print('Polyfit: ', np.polyfit(x_area, y_dist, 5))
+print('Polyfit: ', np.polyfit(x_area, y_dist, 2))
 df = pd.DataFrame({"x": x_area, "y": y_dist, "z": zs})
 # m, b = best_fit_slope_and_intercept(xs, ys)
 df.to_csv("distance_calibrate_dump.csv", index=False)
