@@ -1,6 +1,5 @@
 import numpy as np
 import cv2
-import sys
 import networktables as nt
 from imutils.video import WebcamVideoStream
 import json
