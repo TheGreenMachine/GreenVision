@@ -57,7 +57,7 @@ vertical_aspect = data['vertical-aspect']
 lower_color = np.array(data["lower-color-list"])
 upper_color = np.array(data["upper-color-list"])
 
-for v_fov in range(0, 100):
+for v_fov in range(1, 100):
     V_FOCAL_LENGTH = data['image-height'] / (2 * math.tan((v_fov / 2)))
     _, frame = cap.read()
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
