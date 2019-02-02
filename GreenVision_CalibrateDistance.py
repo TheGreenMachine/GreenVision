@@ -38,7 +38,7 @@ zs = np.array([], dtype=np.float64)
 #     return func_exp(x_data, *popt)
 
 def func_exp(x, a, b, c):
-    # c = 0
+    c = 0
     return a * np.exp(b * x) + c
 
 
