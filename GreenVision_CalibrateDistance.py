@@ -4,6 +4,7 @@ from statistics import mean
 import json
 import os
 import pandas as pd
+import math
 
 with open('values.json') as json_file:
     data = json.load(json_file)
@@ -14,6 +15,7 @@ count = 6
 
 xs = np.array([], dtype=np.float64)
 ys = np.array([], dtype=np.float64)
+zs = np.array([], dtype=np.float64)
 
 
 def best_fit_slope_and_intercept(xs, ys):
@@ -58,12 +60,14 @@ while count < 31:
     if len(ncontours) <= 2 and len(ncontours) != 0 and len(ncontours) != 1 and len(ncontours) != 3:
         contourarea = cv2.contourArea(ncontours[0])
         ys = np.append(ys, contourarea)
+        zs = np.append(zs, math.sqrt(1/(contourarea)))
         xs = np.append(xs, count)
+
         print(ys)
         print(xs)
     count += 1
 
-df = pd.DataFrame({"x": xs, "y": ys})
+df = pd.DataFrame({"x": xs, "y": ys, "z" : zs})
 m, b = best_fit_slope_and_intercept(xs, ys)
 df.to_csv("distance_calibrate_dump.csv", index=False)
 print("M: {} B: {}".format(m, b))
