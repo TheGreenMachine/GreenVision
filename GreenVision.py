@@ -156,8 +156,8 @@ def vision():
     upper_color = np.array([data['upper-color-list'][0] + threshold, 255, 255])
 
     def calc_distance(area):
-        top = area - 10748.25
-        full = top / -323.75
+        top = area - data['b']
+        full = top / data['m']
         return full
 
     def calc_pitch(pixel_y, center_y, v_foc_len):
@@ -325,14 +325,19 @@ def video_capture():
     cv2.destroyAllWindows()
 
 
+def calibrate_distance():
+    pass
+
+
 parser = argparse.ArgumentParser(description='Team 1816 Vision Processing Utility for the 2019 Deep Space Season',
-                                 usage='Greenvision.py [vision] or [image_capture] or [video_capture]',
+                                 usage='Greenvision.py [vision] or [image_capture] or [video_capture] or [calibrate_distance]',
                                  add_help=False)
 
 subparsers = parser.add_subparsers(help='commands', dest='program')
 init_parser_vision(subparsers)
 init_parser_image(subparsers)
 init_parser_video(subparsers)
+init_parser_cali_distance(subparsers)
 
 args = vars(parser.parse_args())
 
@@ -348,3 +353,6 @@ elif 'image_capture' in args.values():
 elif 'video_capture' in args.values():
     del args['program']
     video_capture()
+elif 'calibrate_distance' in args.values():
+    del args['program']
+    calibrate_distance()
