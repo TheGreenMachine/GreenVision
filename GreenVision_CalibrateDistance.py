@@ -29,10 +29,13 @@ zs = np.array([], dtype=np.float64)
 def func_exp(x, a, b, c):
     # c = 0
     return a * np.exp(b * x) + c
+
+
 def exponential_regression(x_data, y_data):
     popt, pcov = curve_fit(func_exp, x_data, y_data, p0=(-1, 0.01, 1))
     print(popt)
     return func_exp(x_data, *popt)
+
 
 def capture(count):
     path = '/home/pi/Desktop/GreenVision/Test_Images'
@@ -67,15 +70,15 @@ while count < 31:
     if len(ncontours) <= 2 and len(ncontours) != 0 and len(ncontours) != 1 and len(ncontours) != 3:
         contourarea = cv2.contourArea(ncontours[0])
         ys = np.append(ys, contourarea)
-        zs = np.append(zs, math.sqrt(1/(contourarea)))
+        zs = np.append(zs, math.sqrt(1 / (contourarea)))
         xs = np.append(xs, count)
 
         print(ys)
         print(xs)
     count += 1
 
-df = pd.DataFrame({"x": xs, "y": ys, "z" : zs})
-#m, b = best_fit_slope_and_intercept(xs, ys)
-print(exponential_regression(xs,ys))
+df = pd.DataFrame({"x": xs, "y": ys, "z": zs})
+# m, b = best_fit_slope_and_intercept(xs, ys)
+print(exponential_regression(xs, ys))
 df.to_csv("distance_calibrate_dump.csv", index=False)
-#print("M: {} B: {}".format(m, b))
+# print("M: {} B: {}".format(m, b))
