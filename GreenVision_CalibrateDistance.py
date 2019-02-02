@@ -40,7 +40,7 @@ while count < 31:
         capture(count)
         count += 1
 count = 6
-while count < 31:
+while count < 30:
     img = cv2.imread("/home/pi/Desktop/GreenVision/Test_Images/opencv_image_{}in.jpg".format(count))
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(hsv, lower_color, upper_color)
