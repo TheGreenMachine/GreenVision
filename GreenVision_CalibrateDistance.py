@@ -3,6 +3,7 @@ import numpy as np
 from statistics import mean
 import json
 from scipy.optimize import curve_fit
+import matplotlib.pyplot as plt
 import os
 import pandas as pd
 import math
@@ -36,8 +37,20 @@ zs = np.array([], dtype=np.float64)
 #     print(popt)
 #     return func_exp(x_data, *popt)
 
-def func(x, a, b, c, d):
-    return a * x ** 3 + b * x ** 2 + c * x + d
+def func_exp(x, a, b, c):
+    # c = 0
+    return a * np.exp(b * x) + c
+
+
+def exponential_regression(x_data, y_data):
+    popt, pcov = curve_fit(func_exp, x_data, y_data, p0=(-1, 0.01, 1))
+    print(popt)
+    puntos = plt.plot(x_data, y_data, 'x', color='xkcd:maroon', label="data")
+    curva_regresion = plt.plot(x_data, func_exp(x_data, *popt), color='xkcd:teal',
+                               label="fit: {:.3f}, {:.3f}, {:.3f}".format(*popt))
+    plt.legend()
+    plt.show()
+    return func_exp(x_data, *popt)
 
 
 def capture(count):
@@ -76,8 +89,7 @@ while count < 31:
         # zs = np.append(zs, math.sqrt(1 / (contourarea)))
         x_contarea = np.append(x_contarea, count)
 
-        popt, pcov = curve_fit(func, x_contarea, y_distance)
-        print('distance = {}x^3 + {}x^2 + {}x + d'.format(popt[0], popt[1], popt[2], popt[3]))
+        exponential_regression(x_contarea, y_distance)
 
         print(y_distance)
         print(x_contarea)
