@@ -1,8 +1,8 @@
 # GreenVision
-Hello, and welcome to GreenVision, team 1816's Open Source C++ Vision Code. 
+Hello, and welcome to GreenVision, team 1816's Open Source Python (and C++) Vision Code. 
 
 ## Setup
-In order to get setup with GreenVision, install one of the following:
+In order to get setup with GreenVision Python, install one of the following:
 
 * [Visual Studio Community](https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=Community&rel=15)
 * [Qt Creator](https://www.qt.io/download-qt-installer?hsCtaTracking=9f6a2170-a938-42df-a8e2-a9f0b1d6cdce%7C6cb0de4f-9bb5-4778-ab02-bfb62735f3e5)
