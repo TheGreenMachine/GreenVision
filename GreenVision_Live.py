@@ -8,35 +8,35 @@ import math
 import time
 import argparse
 
-ap = argparse.ArgumentParser(description='Team 1816 Vision Processing for the 2019 Deep Space Season')
-ap.add_argument('-v', help='Toggle contour and mask window', action='store_true')
-ap.add_argument('-db', help='Toggle debug print statements', action='store_true')
-ap.add_argument('-th', help='Adjust thresholds for lower_color and upper color by an addend', action='store_true')
-ap.add_argument('-mt', help='Toggle multi-threading', action='store_true')
-ap.add_argument('-nt', help='Toggle network tables', action='store_true')
-ap.add_argument('-src', help='Choose source for processing: integer for camera, file path for image/video')
-
-args = vars(ap.parse_args())
-
-vision_flag = '-v' in sys.argv
-debug_flag = '-d' in sys.argv
-threshold_flag = '-t' in sys.argv
-multi_thread_flag = '-mt' in sys.argv
-nt_flag = '-nt' in sys.argv
-
 with open('values.json') as json_file:
     data = json.load(json_file)
+
+ap = argparse.ArgumentParser(description='Team 1816 Vision Processing for the 2019 Deep Space Season')
+ap.add_argument('src', help='Choose source for processing: integer for camera, file path for image/video')
+ap.add_argument('-v', help='Toggle contour and mask window', action='store_true')
+ap.add_argument('-db', help='Toggle debug print statements', action='store_true')
+ap.add_argument('-th', help='Adjust thresholds for lower_color and upper_color by 50 or less', default=0, type=int, )
+ap.add_argument('-mt', help='Toggle multi-threading', action='store_true')
+ap.add_argument('-nt', help='Toggle network tables', action='store_true')
+
+args = vars(ap.parse_args())
+source_input = args['src']
+vision_flag = args['v']
+debug_flag = args['db']
+threshold = args['th'] if 0 < args['th'] <= 50 else 0
+multi_thread_flag = args['mt']
+nt_flag = args['nt']
 
 # cap = WebcamVideoStream(src=0).start() if multi_thread_flag else cv2.VideoCapture(0)
 
 if multi_thread_flag:
-    cap = WebcamVideoStream(src=0)
+    cap = WebcamVideoStream(source_input)
     cap.stream.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
     cap.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
     cap.start()
 
 else:
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(source_input)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
 
@@ -50,9 +50,10 @@ if nt_flag:
 
 if debug_flag:
     print('----------------------------------------------------------------')
+    print('Current Source: {}'.format(source_input))
     print('Vision Flag: {}'.format(vision_flag))
     print('Debug Flag: {}'.format(debug_flag))
-    print('Threshold Flag: {}'.format(threshold_flag))
+    print('Threshold Value: {}'.format(threshold))
     print('Multi-Thread Flag: {}'.format(multi_thread_flag))
     print('Network Tables Flag: {}'.format(nt_flag))
     print('----------------------------------------------------------------')
@@ -66,8 +67,8 @@ vertical_view = data['fish-eye-cam-VFOV']
 H_FOCAL_LENGTH = data['image-width'] / (2 * math.tan((horizontal_view / 2)))
 V_FOCAL_LENGTH = data['image-height'] / (2 * math.tan((vertical_view / 2)))
 
-lower_color = np.array(data["lower-color-list-thresh"]) if threshold_flag else np.array(data["lower-color-list"])
-upper_color = np.array(data["upper-color-list-thresh"]) if threshold_flag else np.array(data["upper-color-list"])
+lower_color = np.array(data['lower-color-list']) - threshold
+upper_color = np.array([data['upper-color-list'][0] + threshold, 255, 255])
 
 
 def calc_distance(p):
