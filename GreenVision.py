@@ -46,6 +46,14 @@ def init_parser_image(sp):
                               type=int,
                               required=True,
                               help='set distance of target in inches')
+    parser_image.add_argument('-cw', '--width',
+                              type=int,
+                              default=data['image-width'],
+                              help='set width of the camera resolution')
+    parser_image.add_argument('-ch', '--height',
+                              type=int,
+                              default=data['image-height'],
+                              help='set height of the camera resolution')
     parser_image.add_argument('-p', '--path',
                               type=str,
                               default='home/pi/Desktop/GreenVision/Test_Images',
@@ -280,6 +288,10 @@ def vision():
 
 def image_capture():
     cap = cv2.VideoCapture(args['src'])
+    width = args['width']
+    height = args['height']
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
     cv2.namedWindow('Image Capture')
 
     while True:
@@ -340,6 +352,7 @@ init_parser_video(subparsers)
 init_parser_cali_distance(subparsers)
 
 args = vars(parser.parse_args())
+print(args)
 
 if len(args) == 0:
     print('No command selected, please rerun the script with the "-h" flag to see available commands.')
