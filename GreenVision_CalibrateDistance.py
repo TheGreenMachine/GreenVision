@@ -39,7 +39,7 @@ while (count < 33):
         break
     if cv2.waitKey(1) & 0xFF == ord('c'):
         capture(count)
-        count +=3
+        count +=1
 count = 6
 while (count < 33):
     img = cv2.imread("/home/pi/Desktop/GreenVision/Test_Images/opencv_image_{}in.jpg".format(count))
@@ -57,7 +57,7 @@ while (count < 33):
         xs = np.append(xs, count)
         print(ys)
         print(xs)
-    count +=3
+    count +=1
 
 m, b = best_fit_slope_and_intercept(xs, ys)
 
