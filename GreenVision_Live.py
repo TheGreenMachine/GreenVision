@@ -71,9 +71,8 @@ upper_color = np.array([data['upper-color-list'][0] + threshold, 255, 255])
 
 
 def calc_distance(area):
-    top = area - data["b"]
-    full = top / data["m"]
-    return full
+    equation = (-3.07571647 * 10 ** -15)(area ** 2) + (1.00000000 * 10 ** -2)(area) + 1
+    return equation
 
 
 def calc_pitch(pixel_y, center_y, v_foc_len):
