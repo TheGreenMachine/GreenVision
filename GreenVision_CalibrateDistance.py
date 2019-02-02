@@ -43,7 +43,7 @@ def func_exp(x, a, b, c):
 
 
 def exponential_regression(x_data, y_data):
-    popt, pcov = curve_fit(func_exp, x_data, y_data, p0=(-1, 0.01, 1))
+    popt, pcov = curve_fit(func_exp, x_data, y_data)
     print(popt)
     puntos = plt.plot(x_data, y_data, 'x', color='xkcd:maroon', label="data")
     curva_regresion = plt.plot(x_data, func_exp(x_data, *popt), color='xkcd:teal',
