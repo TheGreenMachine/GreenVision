@@ -14,8 +14,8 @@ lower_color = np.array(data['lower-color-list'])
 upper_color = np.array([data['upper-color-list'][0], 255, 255])
 count = 6
 
-xs = np.array([], dtype=np.float64)
-ys = np.array([], dtype=np.float64)
+x_contarea = np.array([], dtype=np.float64)
+y_distance = np.array([], dtype=np.float64)
 zs = np.array([], dtype=np.float64)
 
 
@@ -26,15 +26,18 @@ zs = np.array([], dtype=np.float64)
 #     b = mean(ys) - m * mean(xs)
 #
 #     return m, b
-def func_exp(x, a, b, c):
-    # c = 0
-    return a * np.exp(b * x) + c
+# def func_exp(x, a, b, c):
+#     # c = 0
+#     return a * np.exp(b * x) + c
+#
+#
+# def exponential_regression(x_data, y_data):
+#     popt, pcov = curve_fit(func_exp, x_data, y_data, p0=(-1, 0.01, 1))
+#     print(popt)
+#     return func_exp(x_data, *popt)
 
-
-def exponential_regression(x_data, y_data):
-    popt, pcov = curve_fit(func_exp, x_data, y_data, p0=(-1, 0.01, 1))
-    print(popt)
-    return func_exp(x_data, *popt)
+def func(x, a, b, c, d):
+    return a * x ** 3 + b * x ** 2 + c * x + d
 
 
 def capture(count):
@@ -69,16 +72,19 @@ while count < 31:
             ncontours.append(contour)
     if len(ncontours) <= 2 and len(ncontours) != 0 and len(ncontours) != 1 and len(ncontours) != 3:
         contourarea = cv2.contourArea(ncontours[0])
-        ys = np.append(ys, contourarea)
-        zs = np.append(zs, math.sqrt(1 / (contourarea)))
-        xs = np.append(xs, count)
+        y_distance = np.append(y_distance, contourarea)
+        # zs = np.append(zs, math.sqrt(1 / (contourarea)))
+        x_contarea = np.append(x_contarea, count)
 
-        print(ys)
-        print(xs)
+        popt, pcov = curve_fit(func, x_contarea, y_distance)
+        print('distance = {}x^3 + {}x^2 + {}x + d'.format(popt[0], popt[1], popt[2], popt[3]))
+
+        print(y_distance)
+        print(x_contarea)
     count += 1
 
-df = pd.DataFrame({"x": xs, "y": ys, "z": zs})
+df = pd.DataFrame({"x": x_contarea, "y": y_distance, "z": zs})
 # m, b = best_fit_slope_and_intercept(xs, ys)
-print(exponential_regression(xs, ys))
+print(exponential_regression(x_contarea, y_distance))
 df.to_csv("distance_calibrate_dump.csv", index=False)
 # print("M: {} B: {}".format(m, b))
