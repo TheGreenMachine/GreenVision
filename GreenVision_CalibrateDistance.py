@@ -65,8 +65,10 @@ while count < 31:
 
 with open('distance_calibrate_dump.csv', 'w') as output:
     writer = csv.writer(output, lineterminator='\n')
+    x_list = xs.tolist()
+    y_list = ys.tolist()
     for i in range(len(xs)):
-        writer.writerows((xs[i], ys[i]))
-m, b = best_fit_slope_and_intercept(xs, ys)
+        writer.writerows((x_list[i], y_list[i]))
+m, b = best_fit_slope_and_intercept(x_list, y_list)
 
 print("M: {} B: {}".format(m, b))
