@@ -13,4 +13,6 @@
   "fish-eye-cam-HFOV": 90,
   "image-width": 640,
   "image-height": 480,
+  "A": 24686.3,
+  "B": 0.908263
 }
