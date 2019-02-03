@@ -10,6 +10,7 @@ Welcome to GreenVision's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+Hello, and welcome to the Green Machine's Vision Processing Docs for the 2019 season.
 
 
 Indices and tables
