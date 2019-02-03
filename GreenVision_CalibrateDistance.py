@@ -1,15 +1,11 @@
 import cv2
 import numpy as np
-from statistics import mean
 import json
-from scipy.optimize import curve_fit
-import matplotlib.pyplot as plt
 import os
 import pandas as pd
-import math
 
 # Let y be distance from target in inches
-# and x be contour area
+# and x be average contour area
 # distance = 33.9638 * .999865^x
 # distance = 5913.04 * x ^ -0.70005
 
@@ -22,7 +18,6 @@ count = 6
 
 y_distance = np.array([], dtype=np.float64)
 x_area = np.array([], dtype=np.float64)
-zs = np.array([], dtype=np.float64)
 
 
 def capture(count):
@@ -55,15 +50,12 @@ while count < 31:
     for contour in contours:
         if cv2.contourArea(contour) > 75:
             ncontours.append(contour)
-    if len(ncontours) <= 2 and len(ncontours) != 0 and len(ncontours) != 1 and len(ncontours) != 3:
+    # if len(ncontours) <= 2 and len(ncontours) != 0 and len(ncontours) != 1 and len(ncontours) != 3:
+    if len(ncontours) == 2:
         contourarea = cv2.contourArea(ncontours[0])
         x_area = np.append(x_area, contourarea)
-        zs = np.append(zs, math.sqrt(1 / contourarea))
         y_distance = np.append(y_distance, count)
 
     count += 1
-print(curve_fit(lambda t, a, b: a * np.exp(b * t), x_area, y_distance, p0={100, 0.1}))
-df = pd.DataFrame({"x": x_area, "y": y_distance, "z": zs})
-# m, b = best_fit_slope_and_intercept(xs, ys)
+df = pd.DataFrame({"x": x_area, "y": y_distance})
 df.to_csv("distance_calibrate_dump.csv", index=False)
-# print("M: {} B: {}".format(m, b))
