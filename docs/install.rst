@@ -9,5 +9,6 @@ In order to get setup with GreenVision Python, follow the steps below:
    :maxdepth: 2
 
    setup
+   calibration
 
 .. contents:: :local:
