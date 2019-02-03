@@ -50,7 +50,6 @@ while count < 31:
     for contour in contours:
         if cv2.contourArea(contour) > 75:
             ncontours.append(contour)
-    # if len(ncontours) <= 2 and len(ncontours) != 0 and len(ncontours) != 1 and len(ncontours) != 3:
     if len(ncontours) == 2:
         contourarea = cv2.contourArea(ncontours[0])
         x_area = np.append(x_area, contourarea)
