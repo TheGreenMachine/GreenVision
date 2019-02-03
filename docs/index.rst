@@ -13,5 +13,5 @@ Hello, and welcome to the Green Machine's Vision Processing Docs for the 2019 se
    :maxdepth: 2
    :caption: Table of Contents:
 
+   about
    install
-
