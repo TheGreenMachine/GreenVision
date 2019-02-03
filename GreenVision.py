@@ -7,17 +7,39 @@ import math
 import time
 import argparse
 import os
+import pandas as pd
 
 with open('values.json') as json_file:
     data = json.load(json_file)
 
 
-def init_parser_vision(sp):
-    parser_vision = sp.add_parser('vision')
-    parser_vision.add_argument('-s', '--src', '--source',
+def program_description():
+    return 'Team 1816 Vision Processing Utility for the 2019 Deep Space Season'
+
+
+def program_help():
+    print(parser.description)
+    print("""
+Usage: GreenVision.py [program] [-optional arguments]
+     
+Available Programs:
+vision              start vision processing
+image_capture       save frame from camera
+video_capture       save video from camera
+distance_table      generate CSV containing contour area and distance
+""")
+
+
+def program_usage():
+    return 'Greenvision.py [vision] or [image_capture] or [video_capture] or [distance_table]'
+
+
+def init_parser_vision():
+    parser_vision = subparsers.add_parser('vision')
+    parser_vision.add_argument('-src', '--source',
                                required=True,
                                type=str,
-                               help='set source for processing: [int] for camera, [file path] for image/video')
+                               help='set source for processing: [int] for camera, [path] for file')
     parser_vision.add_argument('-v', '--view',
                                action='store_true',
                                help='toggle contour and mask window')
@@ -27,7 +49,7 @@ def init_parser_vision(sp):
     parser_vision.add_argument('-th', '--threshold',
                                default=0,
                                type=int,
-                               help='adjust thresholds for lower_color and upper_color by 50 or less')
+                               help='adjust color thresholds by 50.0 or less')
     parser_vision.add_argument('-mt', '--multithread',
                                action='store_true',
                                help='toggle multi-threading')
@@ -36,8 +58,8 @@ def init_parser_vision(sp):
                                help='toggle network tables')
 
 
-def init_parser_image(sp):
-    parser_image = sp.add_parser('image_capture')
+def init_parser_image():
+    parser_image = subparsers.add_parser('image_capture')
     parser_image.add_argument('-s', '--src', '--source',
                               required=True,
                               type=int,
@@ -54,18 +76,14 @@ def init_parser_image(sp):
                               type=int,
                               default=data['image-height'],
                               help='set height of the camera resolution')
-    parser_image.add_argument('-p', '--path',
-                              type=str,
-                              default='home/pi/Desktop/GreenVision/Test_Images',
-                              help='choose a different path to store file')
     parser_image.add_argument('-n', '--name',
                               type=str,
                               default='opencv_image_{}',
                               help='choose a different name for the file')
 
 
-def init_parser_video(sp):
-    parser_video = sp.add_parser('video_capture')
+def init_parser_video():
+    parser_video = subparsers.add_parser('video_capture')
     parser_video.add_argument_group('Video Capture Arguments')
     parser_video.add_argument('-s', '--src', '--source',
                               required=True,
@@ -83,10 +101,6 @@ def init_parser_video(sp):
                               type=int,
                               default=data['image-height'],
                               help='set height of the camera resolution')
-    parser_video.add_argument('-p', '--path',
-                              type=str,
-                              default='home/pi/Desktop/GreenVision/Test_Images',
-                              help='choose a different path to store file')
     parser_video.add_argument('-n', '--name',
                               type=str,
                               default='opencv_video',
@@ -94,28 +108,38 @@ def init_parser_video(sp):
                               help='choose a different name for the file')
 
 
-def init_parser_cali_distance(sp):
-    parser_cali_distance = sp.add_parser('calibrate_distance')
-    parser_cali_distance.add_argument_group('Calibrate Distance Arguments')
-    parser_cali_distance.add_argument('-s', '--src', '--source',
-                                      type=int,
-                                      default=0,
-                                      required=True,
-                                      help='set source for processing: [int] for camera')
-    parser_cali_distance.add_argument('-c', '--capture',
-                                      action='store_true',
-                                      help='toggle capture of new images')
-    parser_cali_distance.add_argument('-n', '--number',
-                                      type=int,
-                                      help='set number of images to take', )
-    parser_cali_distance.add_argument('-o', '--output',
-                                      type=str,
-                                      default='distance_calibration_dump',
-                                      help='choose name for output file')
+def init_parser_distance_table():
+    parser_distance_table = subparsers.add_parser('distance_table')
+    parser_distance_table.add_argument_group('Distance table Arguments')
+    parser_distance_table.add_argument('-s', '--src', '--source',
+                                       type=int,
+                                       default=0,
+                                       required=True,
+                                       help='set source for processing: [int] for camera')
+    parser_distance_table.add_argument('-c', '--capture',
+                                       action='store_true',
+                                       default=False,
+                                       help='toggle capture of new images')
+    parser_distance_table.add_argument('-th', '--threshold',
+                                       default=0,
+                                       type=float,
+                                       help='adjust color thresholds by 50.0 or less')
+    parser_distance_table.add_argument('-cw', '--width',
+                                       type=int,
+                                       default=data['image-width'],
+                                       help='set width of the camera resolution')
+    parser_distance_table.add_argument('-ch', '--height',
+                                       type=int,
+                                       default=data['image-height'],
+                                       help='set height of the camera resolution')
+    parser_distance_table.add_argument('-o', '--output',
+                                       type=str,
+                                       default='distance_table',
+                                       help='choose name for csv file')
 
 
 def vision():
-    src = args['src']
+    src = args['source']
     view = args['view']
     debug = args['debug']
     threshold = args['threshold'] if 0 < args['threshold'] < 50 else 0
@@ -287,7 +311,7 @@ def vision():
 
 
 def image_capture():
-    cap = cv2.VideoCapture(args['src'])
+    cap = cv2.VideoCapture(args['source'])
     width = args['width']
     height = args['height']
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
@@ -297,16 +321,19 @@ def image_capture():
     while True:
         print('Hold C to capture, Hold Q to quit')
         ret, frame = cap.read()
-        cv2.imshow("test", frame)
+        cv2.imshow("Image Capture", frame)
         if not ret:
             break
 
         if cv2.waitKey(1) & 0xFF == ord('c'):
             distance = args['distance']
-            path = args['path']
-            img_name = os.path.join(path, (args['name'] + 'in.jpg').format(distance))
-            cv2.imwrite(img_name, frame)
-            print("{} written!".format(img_name))
+            file_name = args['name'] + '{}in.jpg'.format(distance)
+            cwd = os.path.join(os.getcwd(), 'Image_Capture')  # /home/pi/Desktop/GreenVision/Image_Capture
+            if not os.path.exists(cwd):
+                os.makedirs(cwd)
+            path = os.path.join(cwd, file_name)
+            cv2.imwrite(path, frame)
+            print("{} saved!".format(file_name))
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
@@ -315,19 +342,24 @@ def image_capture():
 
 
 def video_capture():
-    cap = cv2.VideoCapture(args['src'])
-    fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-    output_name = args['name']
-    path = args['path']
+    src = args['source']
+    file_name = args['name']
+    cwd = os.path.join(os.getcwd(), 'Video_Capture')  # /home/pi/Desktop/GreenVision/Video_Capture
+    if not os.path.exists(cwd):
+        os.makedirs(cwd)
+    path = os.path.join(cwd, (file_name + '.avi'))
     fps = args['fps']
     res = (args['width'], args['height'])
-    out = cv2.VideoWriter(os.path.join(path, (output_name + '.avi')), fourcc, fps, res)
+
+    cap = cv2.VideoCapture(src)
+    fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+    out = cv2.VideoWriter(path, fourcc, fps, res)
     print('Hold Q to stop recording and quit')
     while cap.isOpened():
         ret, frame = cap.read()
         if ret:
             out.write(frame)
-            cv2.imshow('frame', frame)
+            cv2.imshow('Video Capture', frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
         else:
@@ -337,35 +369,97 @@ def video_capture():
     cv2.destroyAllWindows()
 
 
-def calibrate_distance():
-    pass
+def distance_table():
+    def capture():
+        length = input('Hold camera still and enter distance in inches from target: ')
+        img_name = os.path.join(cwd, 'distance_{}in.jpg'.format(length))
+        cv2.imwrite(img_name, frame)
+        print('{} saved!'.format(img_name))
+
+    src = args['source']
+    cwd = os.path.join(os.getcwd(), 'Distance_Table')  # /home/pi/Desktop/GreenVision/Distance_Table
+    if not os.path.exists(cwd):
+        os.makedirs(cwd)
+    threshold = args['threshold']
+    lower_color = np.array(data['lower-color-list']) - threshold
+    upper_color = np.array([data['upper-color-list'][0] + threshold, 255, 255])
+    distance_arr = np.array([], dtype=np.float64)
+    contour_area_arr = np.array([], dtype=np.float64)
+
+    if args['capture']:
+        cap = cv2.VideoCapture(src)
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, args['width'])
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, args['height'])
+        while True:
+            print('Press [C] to capture frame | Press [Q] to exit capture mode')
+            ret, frame = cap.read()
+            cv2.imshow('Image Capture', frame)
+            if cv2.waitKey(1) & 0xFF == ord('c'):
+                capture()
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+
+    _, _, files = os.walk(cwd)
+    for file in files:
+        if file.endswith('in.jpg'):
+            inches = int(file[9:-6])
+            img = cv2.imread(os.path.join(cwd, file))
+            hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+            mask = cv2.inRange(hsv, lower_color, upper_color)
+            _, contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            n_contours = []
+            for contour in contours:
+                if cv2.contourArea(contour) > 75:
+                    n_contours.append(contour)
+            if len(n_contours) == 2:
+                print('{} is a valid image!'.format(file))
+                contour_area = cv2.contourArea(np.mean(n_contours))
+                contour_area_arr = np.append(contour_area_arr, contour_area)
+                distance_arr = np.append(distance_arr, inches)
+            else:
+                print('{} is not valid!'.format(file))
+
+    df = pd.DataFrame({'x': contour_area_arr, 'y': distance_arr})
+    df.to_csv('Distance_Table.csv', index=False)
 
 
-parser = argparse.ArgumentParser(description='Team 1816 Vision Processing Utility for the 2019 Deep Space Season',
-                                 usage='Greenvision.py [vision] or [image_capture] or [video_capture] or [calibrate_distance]',
-                                 add_help=False)
-
+parser = argparse.ArgumentParser(description=program_description(), add_help=False)
+parser.add_argument('-h', '--help', action='store_true')
 subparsers = parser.add_subparsers(help='commands', dest='program')
-init_parser_vision(subparsers)
-init_parser_image(subparsers)
-init_parser_video(subparsers)
-init_parser_cali_distance(subparsers)
+init_parser_vision()
+init_parser_image()
+init_parser_video()
+init_parser_distance_table()
 
 args = vars(parser.parse_args())
-print(args)
-
-if len(args) == 0:
+# print(args)
+prog = args['program']
+if args['help']:
+    program_help()
+if prog is None and not args['help']:
     print('No command selected, please rerun the script with the "-h" flag to see available commands.')
-    print('To see the flags of each command, include a "-h" choosing a command')
-elif 'vision' in args.values():
+    print('To see the flags of each command, include a "-h" after choosing a command')
+elif prog == 'vision':
     del args['program']
-    vision()
-elif 'image_capture' in args.values():
+    del args['help']
+    print('IN VISION')
+    print(args)
+    # vision()
+elif prog == 'image_capture':
     del args['program']
-    image_capture()
-elif 'video_capture' in args.values():
+    del args['help']
+    print('IN IMAGE CAPTURE')
+    print(args)
+    # image_capture()
+elif prog == 'video_capture':
     del args['program']
-    video_capture()
-elif 'calibrate_distance' in args.values():
+    del args['help']
+    print('IN VIDEO CAPTURE')
+    print(args)
+    # video_capture()
+elif prog == 'distance_table':
     del args['program']
-    calibrate_distance()
+    del args['help']
+    print('IN DISTANCE TABLE')
+    print(args)
+    # distance_table()
