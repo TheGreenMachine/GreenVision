@@ -6,16 +6,12 @@
 Welcome to GreenVision's documentation!
 =======================================
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-
 Hello, and welcome to the Green Machine's Vision Processing Docs for the 2019 season.
 
 
-Indices and tables
-==================
+.. toctree::
+   :maxdepth: 2
+   :caption: Table of Contents:
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   install
+
