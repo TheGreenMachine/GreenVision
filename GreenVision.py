@@ -214,13 +214,6 @@ def vision():
             print('Average Center (x , y): ({acx} , {acy})'.format(acx=avg_center_x, acy=avg_center_y))
         return avg_center_x, avg_center_y
 
-    def is_pair(tl1_x, tl2_x, br1_x, br2_x):
-        top_diff = abs(tl1_x - tl2_x)
-        bottom_diff = abs(br1_x - br2_x)
-        if debug:
-            print('Top diff: {td}\nBottom diff: {bd}'.format(td=top_diff, bd=bottom_diff))
-        return bottom_diff > top_diff
-
     def update_net_table(n, c1_x=-1, c1_y=-1, c2_x=-1, c2_y=-1, avgc_x=-1, avgc_y=-1):
         table.putNumber("center{n}X".format(n=n), c1_x)
         table.putNumber("center{n}Y".format(n=n), c1_y)
