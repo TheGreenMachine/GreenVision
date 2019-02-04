@@ -368,7 +368,7 @@ def distance_table():
         cv2.imwrite(img_name, frame)
         print('{} saved!'.format(img_name))
 
-    src = args['source']
+    src = args['src']
     cwd = os.path.join(os.getcwd(), 'Distance_Table')  # /home/pi/Desktop/GreenVision/Distance_Table
     if not os.path.exists(cwd):
         os.makedirs(cwd)
@@ -391,7 +391,9 @@ def distance_table():
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
-    _, _, files = os.walk(cwd)
+    files = []
+    for _, _, filenames in os.walk(cwd, topdown=False):
+        files = filenames.copy()
     for file in files:
         if file.endswith('in.jpg'):
             inches = int(file[9:-6])
@@ -405,11 +407,12 @@ def distance_table():
                     n_contours.append(contour)
             if len(n_contours) == 2:
                 print('{} is a valid image!'.format(file))
-                contour_area = cv2.contourArea(np.mean(n_contours))
+                # contour_area = cv2.contourArea(np.mean(n_contours))
+                contour_area = cv2.contourArea(n_contours[0])
                 contour_area_arr = np.append(contour_area_arr, contour_area)
                 distance_arr = np.append(distance_arr, inches)
             else:
-                print('{} is not valid!'.format(file))
+                print('{} is not a valid image! Please retake the image from that distance and run this utility again.'.format(file))
 
     df = pd.DataFrame({'x': contour_area_arr, 'y': distance_arr})
     df.to_csv('Distance_Table.csv', index=False)
@@ -454,4 +457,4 @@ elif prog == 'distance_table':
     del args['help']
     print('IN DISTANCE TABLE')
     print(args)
-    # distance_table()
+    distance_table()
