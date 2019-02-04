@@ -176,25 +176,14 @@ def vision():
         print('----------------------------------------------------------------')
 
     horizontal_aspect = data['horizontal-aspect']
-    vertical_aspect = data['vertical-aspect']
-
-    horizontal_view = data['fish-eye-cam-HFOV']
-    vertical_view = data['fish-eye-cam-VFOV']
-
-    H_FOCAL_LENGTH = data['image-width'] / (2 * math.tan((horizontal_view / 2)))
-    V_FOCAL_LENGTH = data['image-height'] / (2 * math.tan((vertical_view / 2)))
+    horizontal_fov = data['fish-eye-cam-HFOV']
+    h_focal_length = data['image-width'] / (2 * math.tan((horizontal_fov / 2)))
 
     lower_color = np.array(data['lower-color-list']) - threshold
     upper_color = np.array([data['upper-color-list'][0] + threshold, 255, 255])
 
     def calc_distance(area):
-        top = area - data['b']
-        full = top / data['m']
-        return full
-
-    def calc_pitch(pixel_y, center_y, v_foc_len):
-        p = math.degrees(math.atan((pixel_y - center_y) / v_foc_len)) * -1
-        return round(p)
+        return data['A'] * (data['B'] ** area)
 
     def calc_yaw(pixel_x, center_x, h_foc_len):
         ya = math.degrees(math.atan((pixel_x - center_x) / h_foc_len))
@@ -281,7 +270,7 @@ def vision():
                     draw_points(rec1, rec2, avg_c1_x, avg_c1_y)
                     pitch = calc_pitch(avg_c1_y, screen_c_y, V_FOCAL_LENGTH)
                     distance = calc_distance(contourarea)
-                    yaw = calc_yaw(avg_c1_x, screen_c_x, H_FOCAL_LENGTH)
+                    yaw = calc_yaw(avg_c1_x, screen_c_x, h_focal_length)
                     print('Pitch = {} \t Distance = {} \t Yaw = {}'.format(pitch, distance, yaw))
 
                 if len(rec_list) > 3:
