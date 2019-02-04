@@ -182,17 +182,28 @@ def vision():
     lower_color = np.array(data['lower-color-list']) - threshold
     upper_color = np.array([data['upper-color-list'][0] + threshold, 255, 255])
 
-    def calc_distance(area):
-        return data['A'] * (data['B'] ** area)
+    class Rect:
+        def __init__(self, rectangle):
+            self.tlx = rectangle[0]
+            self.tly = rectangle[1]
+            self.width = rectangle[2]
+            self.height = rectangle[3]
+            self.brx = self.tlx + self.width
+            self.bry = self.tly + self.height
+            self.cx = int((self.tlx + self.brx) / 2)
+            self.cy = int((self.tly + self.bry) / 2)
+
+    def calc_distance(contour_area):
+        return data['A'] * (data['B'] ** contour_area)
 
     def calc_yaw(pixel_x, center_x, h_foc_len):
         ya = math.degrees(math.atan((pixel_x - center_x) / h_foc_len))
         return round(ya)
 
-    def draw_points(rec_a, rec_b, avgcx, avgcy):
-        cv2.line(frame, (rec_a['c_x'], rec_a['c_y']), (rec_a['c_x'], rec_a['c_y']), (255, 0, 0), 8)
-        cv2.line(frame, (rec_b['c_x'], rec_b['c_y']), (rec_b['c_x'], rec_b['c_y']), (255, 0, 0), 8)
-        cv2.line(frame, (avgcx, avgcy), (avgcx, avgcy), (255, 0, 0), 8)
+    def draw_points(rec_a, rec_b, acx, acy):
+        cv2.line(frame, (rec_a.cx, rec_a.cy), (rec_a.cx, rec_a.cy), (255, 0, 0), 8)
+        cv2.line(frame, (rec_b.cx, rec_b.cy), (rec_b.cx, rec_b.cy), (255, 0, 0), 8)
+        cv2.line(frame, (acx, acy), (acx, acy), (255, 0, 0), 8)
 
     def def_rec(rectangle):
         top_left_x = rectangle[0]
@@ -208,11 +219,11 @@ def vision():
                 'c_y': center_y}
 
     def get_avg_points(rec_a, rec_b):
-        avg_center_x = int((rec_a['c_x'] + rec_b['c_x']) / 2)
-        avg_center_y = int((rec_a['c_y'] + rec_b['c_y']) / 2)
+        avgcx = int((rec_a.cx + rec_b.cx) / 2)
+        avgcy = int((rec_a.cy + rec_b.cy) / 2)
         if debug:
-            print('Average Center (x , y): ({acx} , {acy})'.format(acx=avg_center_x, acy=avg_center_y))
-        return avg_center_x, avg_center_y
+            print('Average Center (x , y): ({} , {})'.format(avgcx, avgcy))
+        return avgcx, avgcy
 
     def update_net_table(n, c1_x=-1, c1_y=-1, c2_x=-1, c2_y=-1, avgc_x=-1, avgc_y=-1):
         table.putNumber("center{n}X".format(n=n), c1_x)
@@ -240,7 +251,6 @@ def vision():
         mask = cv2.inRange(hsv, lower_color, upper_color)
 
         screen_c_x = (data['image-width'] / 2) - 0.5
-        screen_c_y = (data['image-height'] / 2) - 0.5
         _, contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         ncontours = []
         for contour in contours:
@@ -250,38 +260,38 @@ def vision():
                 ncontours.append(contour)
         print("Number of contours: ", len(ncontours))
         rec_list = []
-        for c in ncontours:
-            cv2.drawContours(frame, [c], -1, (0, 0, 255), 3)
-            rec_list.append(cv2.boundingRect(c))
+        for contour in ncontours:
+            cv2.drawContours(frame, [contour], -1, (0, 0, 255), 3)
+            rec_list.append(cv2.boundingRect(contour))
             if len(rec_list) > 1:
-                rec1 = def_rec(rec_list[0])
-                rec2 = def_rec(rec_list[1])
+                rec1 = Rect(rec_list[0])
+                rec2 = Rect(rec_list[1])
                 avg_c1_x, avg_c1_y = get_avg_points(rec1, rec2)
                 if True:
                     if net_table:
-                        update_net_table(1, rec1['c_x'], rec1['c_y'], rec2['c_x'], rec2['c_y'], avg_c1_x, avg_c1_y)
+                        update_net_table(1, rec1.cx, rec1.cy, rec2.cx, rec2.cy, avg_c1_x, avg_c1_y)
                     draw_points(rec1, rec2, avg_c1_x, avg_c1_y)
-                    pitch = calc_pitch(avg_c1_y, screen_c_y, V_FOCAL_LENGTH)
+
                     distance = calc_distance(contourarea)
                     yaw = calc_yaw(avg_c1_x, screen_c_x, h_focal_length)
-                    print('Pitch = {} \t Distance = {} \t Yaw = {}'.format(pitch, distance, yaw))
+                    print('Distance = {} \t Yaw = {}'.format(distance, yaw))
 
                 if len(rec_list) > 3:
-                    rec3 = def_rec(rec_list[2])
-                    rec4 = def_rec(rec_list[3])
+                    rec3 = Rect(rec_list[2])
+                    rec4 = Rect(rec_list[3])
                     avg_c2_x, avg_c2_y = get_avg_points(rec3, rec4)
                     if True:
                         if net_table:
-                            update_net_table(2, rec3['c_x'], rec3['c_y'], rec4['c_x'], rec4['c_y'], avg_c2_x, avg_c2_y)
+                            update_net_table(2, rec3.cx, rec3.cy, rec4.cx, rec4.cy, avg_c2_x, avg_c2_y)
                         draw_points(rec3, rec4, avg_c2_x, avg_c2_y)
 
                     if len(rec_list) > 5:
-                        rec5 = def_rec(rec_list[4])
-                        rec6 = def_rec(rec_list[5])
+                        rec5 = Rect(rec_list[4])
+                        rec6 = Rect(rec_list[5])
                         avg_c3_x, avg_c3_y = get_avg_points(rec5, rec6)
                         if True:
                             if net_table:
-                                update_net_table(3, rec5['c_x'], rec5['c_y'], rec6['c_x'], rec6['c_y'], avg_c3_x,
+                                update_net_table(3, rec5.cx, rec5.cy, rec6.cx, rec6.cy, avg_c3_x,
                                                  avg_c3_y)
                             draw_points(rec5, rec6, avg_c3_x, avg_c3_y)
         print("Elasped Time: {}".format(time.time() - starttime))
