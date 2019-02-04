@@ -1,0 +1,460 @@
+import numpy as np
+import cv2
+import networktables as nt
+from imutils.video import WebcamVideoStream
+import json
+import math
+import time
+import argparse
+import os
+import pandas as pd
+
+with open('values.json') as json_file:
+    data = json.load(json_file)
+
+
+def program_description():
+    return 'Team 1816 Vision Processing Utility for the 2019 Deep Space Season'
+
+
+def program_help():
+    print(parser.description)
+    print("""
+Usage: GreenVision.py [program] [-optional arguments]
+     
+Available Programs:
+vision              start vision processing
+image_capture       save frame from camera
+video_capture       save video from camera
+distance_table      generate CSV containing contour area and distance
+""")
+
+
+def program_usage():
+    return 'Greenvision.py [vision] or [image_capture] or [video_capture] or [distance_table]'
+
+
+def init_parser_vision():
+    parser_vision = subparsers.add_parser('vision')
+    parser_vision.add_argument('-src', '--source',
+                               required=True,
+                               type=str,
+                               help='set source for processing: [int] for camera, [path] for file')
+    parser_vision.add_argument('-v', '--view',
+                               action='store_true',
+                               help='toggle contour and mask window')
+    parser_vision.add_argument('-d', '--debug',
+                               action='store_true',
+                               help='toggle debug output to console')
+    parser_vision.add_argument('-th', '--threshold',
+                               default=0,
+                               type=int,
+                               help='adjust color thresholds by 50.0 or less')
+    parser_vision.add_argument('-mt', '--multithread',
+                               action='store_true',
+                               help='toggle multi-threading')
+    parser_vision.add_argument('-nt', '--networktables',
+                               action='store_true',
+                               help='toggle network tables')
+
+
+def init_parser_image():
+    parser_image = subparsers.add_parser('image_capture')
+    parser_image.add_argument('-s', '--src', '--source',
+                              required=True,
+                              type=int,
+                              help='set source for processing: [int] for camera')
+    parser_image.add_argument('-d', '--distance',
+                              type=int,
+                              required=True,
+                              help='set distance of target in inches')
+    parser_image.add_argument('-cw', '--width',
+                              type=int,
+                              default=data['image-width'],
+                              help='set width of the camera resolution')
+    parser_image.add_argument('-ch', '--height',
+                              type=int,
+                              default=data['image-height'],
+                              help='set height of the camera resolution')
+    parser_image.add_argument('-n', '--name',
+                              type=str,
+                              default='opencv_image_{}',
+                              help='choose a different name for the file')
+
+
+def init_parser_video():
+    parser_video = subparsers.add_parser('video_capture')
+    parser_video.add_argument_group('Video Capture Arguments')
+    parser_video.add_argument('-s', '--src', '--source',
+                              required=True,
+                              type=int,
+                              help='set source for processing: [int] for camera')
+    parser_video.add_argument('-f', '--fps',
+                              type=float,
+                              default=30.0,
+                              help='set fps of the video')
+    parser_video.add_argument('-cw', '--width',
+                              type=int,
+                              default=data['image-width'],
+                              help='set width of the camera resolution')
+    parser_video.add_argument('-ch', '--height',
+                              type=int,
+                              default=data['image-height'],
+                              help='set height of the camera resolution')
+    parser_video.add_argument('-n', '--name',
+                              type=str,
+                              default='opencv_video',
+                              required=True,
+                              help='choose a different name for the file')
+
+
+def init_parser_distance_table():
+    parser_distance_table = subparsers.add_parser('distance_table')
+    parser_distance_table.add_argument_group('Distance table Arguments')
+    parser_distance_table.add_argument('-s', '--src', '--source',
+                                       type=int,
+                                       default=0,
+                                       required=True,
+                                       help='set source for processing: [int] for camera')
+    parser_distance_table.add_argument('-c', '--capture',
+                                       action='store_true',
+                                       default=False,
+                                       help='toggle capture of new images')
+    parser_distance_table.add_argument('-th', '--threshold',
+                                       default=0,
+                                       type=float,
+                                       help='adjust color thresholds by 50.0 or less')
+    parser_distance_table.add_argument('-cw', '--width',
+                                       type=int,
+                                       default=data['image-width'],
+                                       help='set width of the camera resolution')
+    parser_distance_table.add_argument('-ch', '--height',
+                                       type=int,
+                                       default=data['image-height'],
+                                       help='set height of the camera resolution')
+    parser_distance_table.add_argument('-o', '--output',
+                                       type=str,
+                                       default='distance_table',
+                                       help='choose name for csv file')
+
+
+def vision():
+    src = args['source']
+    view = args['view']
+    debug = args['debug']
+    threshold = args['threshold'] if 0 < args['threshold'] < 50 else 0
+    multi = args['multithread']
+    net_table = args['networktables']
+
+    if multi:
+        cap = WebcamVideoStream(src)
+        cap.stream.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
+        cap.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
+        cap.start()
+
+    else:
+        cap = cv2.VideoCapture(src)
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
+
+    if net_table:
+        nt.NetworkTables.initialize(server=data['server-ip'])
+        table = nt.NetworkTables.getTable("SmartDashboard")
+        if table:
+            print("table OK")
+        table.putNumber("visionX", -1)
+        table.putNumber("visionY", -1)
+
+    if debug:
+        print('----------------------------------------------------------------')
+        print('Current Source: {}'.format(src))
+        print('Vision Flag: {}'.format(view))
+        print('Debug Flag: {}'.format(debug))
+        print('Threshold Value: {}'.format(threshold))
+        print('Multi-Thread Flag: {}'.format(multi))
+        print('Network Tables Flag: {}'.format(net_table))
+        print('----------------------------------------------------------------')
+
+    horizontal_aspect = data['horizontal-aspect']
+    horizontal_fov = data['fish-eye-cam-HFOV']
+    h_focal_length = data['image-width'] / (2 * math.tan((horizontal_fov / 2)))
+
+    lower_color = np.array(data['lower-color-list']) - threshold
+    upper_color = np.array([data['upper-color-list'][0] + threshold, 255, 255])
+
+    class Rect:
+        def __init__(self, rectangle):
+            self.tlx = rectangle[0]
+            self.tly = rectangle[1]
+            self.width = rectangle[2]
+            self.height = rectangle[3]
+            self.brx = self.tlx + self.width
+            self.bry = self.tly + self.height
+            self.cx = int((self.tlx + self.brx) / 2)
+            self.cy = int((self.tly + self.bry) / 2)
+
+    def calc_distance(contour_area):
+        return data['A'] * (data['B'] ** contour_area)
+
+    def calc_yaw(pixel_x, center_x, h_foc_len):
+        ya = math.degrees(math.atan((pixel_x - center_x) / h_foc_len))
+        return round(ya)
+
+    def draw_points(rec_a, rec_b, acx, acy):
+        cv2.line(frame, (rec_a.cx, rec_a.cy), (rec_a.cx, rec_a.cy), (255, 0, 0), 8)
+        cv2.line(frame, (rec_b.cx, rec_b.cy), (rec_b.cx, rec_b.cy), (255, 0, 0), 8)
+        cv2.line(frame, (acx, acy), (acx, acy), (255, 0, 0), 8)
+
+    def def_rec(rectangle):
+        top_left_x = rectangle[0]
+        top_left_y = rectangle[1]
+        width = rectangle[2]
+        height = rectangle[3]
+        bottom_right_x = top_left_x + width
+        bottom_right_y = top_left_y + height
+        center_x = int((top_left_x + bottom_right_x) / 2)
+        center_y = int((top_left_y + bottom_right_y) / 2)
+
+        return {'tl_x': top_left_x, 'tl_y': top_left_y, 'br_x': bottom_right_x, 'br_y': bottom_right_y, 'c_x': center_x,
+                'c_y': center_y}
+
+    def get_avg_points(rec_a, rec_b):
+        avgcx = int((rec_a.cx + rec_b.cx) / 2)
+        avgcy = int((rec_a.cy + rec_b.cy) / 2)
+        if debug:
+            print('Average Center (x , y): ({} , {})'.format(avgcx, avgcy))
+        return avgcx, avgcy
+
+    def update_net_table(n, c1_x=-1, c1_y=-1, c2_x=-1, c2_y=-1, avgc_x=-1, avgc_y=-1):
+        table.putNumber("center{n}X".format(n=n), c1_x)
+        table.putNumber("center{n}Y".format(n=n), c1_y)
+        table.putNumber("center{n}X".format(n=n + 1), c2_x)
+        table.putNumber("center{n}Y".format(n=n + 1), c2_y)
+        table.putNumber("averagedCenterX", avgc_x)
+        table.putNumber("averagedCenterY", avgc_y)
+        if debug:
+            print("center{n}X".format(n=n), c1_x)
+            print("center{n}Y".format(n=n), c1_y)
+            print("center{n}X".format(n=n + 1), c2_x)
+            print("center{n}Y".format(n=n + 1), c2_y)
+            print("averagedCenterX", avgc_x)
+            print("averagedCenterY", avgc_y)
+
+    while True:
+        print('=========================================================')
+        starttime = time.time()
+        if multi:
+            frame = cap.read()
+        else:
+            _, frame = cap.read()
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        mask = cv2.inRange(hsv, lower_color, upper_color)
+
+        screen_c_x = (data['image-width'] / 2) - 0.5
+        _, contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        ncontours = []
+        for contour in contours:
+            if cv2.contourArea(contour) > 75:
+                print('Contour area:', cv2.contourArea(contour))
+                contourarea = cv2.contourArea(contour)
+                ncontours.append(contour)
+        print("Number of contours: ", len(ncontours))
+        rec_list = []
+        for contour in ncontours:
+            cv2.drawContours(frame, [contour], -1, (0, 0, 255), 3)
+            rec_list.append(cv2.boundingRect(contour))
+            if len(rec_list) > 1:
+                rec1 = Rect(rec_list[0])
+                rec2 = Rect(rec_list[1])
+                avg_c1_x, avg_c1_y = get_avg_points(rec1, rec2)
+                if True:
+                    if net_table:
+                        update_net_table(1, rec1.cx, rec1.cy, rec2.cx, rec2.cy, avg_c1_x, avg_c1_y)
+                    draw_points(rec1, rec2, avg_c1_x, avg_c1_y)
+
+                    distance = calc_distance(contourarea)
+                    yaw = calc_yaw(avg_c1_x, screen_c_x, h_focal_length)
+                    print('Distance = {} \t Yaw = {}'.format(distance, yaw))
+
+                if len(rec_list) > 3:
+                    rec3 = Rect(rec_list[2])
+                    rec4 = Rect(rec_list[3])
+                    avg_c2_x, avg_c2_y = get_avg_points(rec3, rec4)
+                    if True:
+                        if net_table:
+                            update_net_table(2, rec3.cx, rec3.cy, rec4.cx, rec4.cy, avg_c2_x, avg_c2_y)
+                        draw_points(rec3, rec4, avg_c2_x, avg_c2_y)
+
+                    if len(rec_list) > 5:
+                        rec5 = Rect(rec_list[4])
+                        rec6 = Rect(rec_list[5])
+                        avg_c3_x, avg_c3_y = get_avg_points(rec5, rec6)
+                        if True:
+                            if net_table:
+                                update_net_table(3, rec5.cx, rec5.cy, rec6.cx, rec6.cy, avg_c3_x,
+                                                 avg_c3_y)
+                            draw_points(rec5, rec6, avg_c3_x, avg_c3_y)
+        print("Elasped Time: {}".format(time.time() - starttime))
+        if view:
+            cv2.imshow('Contour Window', frame)
+            cv2.imshow('Mask', mask)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+
+def image_capture():
+    cap = cv2.VideoCapture(args['source'])
+    width = args['width']
+    height = args['height']
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+    cv2.namedWindow('Image Capture')
+
+    while True:
+        print('Hold C to capture, Hold Q to quit')
+        ret, frame = cap.read()
+        cv2.imshow("Image Capture", frame)
+        if not ret:
+            break
+
+        if cv2.waitKey(1) & 0xFF == ord('c'):
+            distance = args['distance']
+            file_name = args['name'] + '{}in.jpg'.format(distance)
+            cwd = os.path.join(os.getcwd(), 'Image_Capture')  # /home/pi/Desktop/GreenVision/Image_Capture
+            if not os.path.exists(cwd):
+                os.makedirs(cwd)
+            path = os.path.join(cwd, file_name)
+            cv2.imwrite(path, frame)
+            print("{} saved!".format(file_name))
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()
+
+
+def video_capture():
+    src = args['source']
+    file_name = args['name']
+    cwd = os.path.join(os.getcwd(), 'Video_Capture')  # /home/pi/Desktop/GreenVision/Video_Capture
+    if not os.path.exists(cwd):
+        os.makedirs(cwd)
+    path = os.path.join(cwd, (file_name + '.avi'))
+    fps = args['fps']
+    res = (args['width'], args['height'])
+
+    cap = cv2.VideoCapture(src)
+    fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+    out = cv2.VideoWriter(path, fourcc, fps, res)
+    print('Hold Q to stop recording and quit')
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if ret:
+            out.write(frame)
+            cv2.imshow('Video Capture', frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+        else:
+            break
+    cap.release()
+    out.release()
+    cv2.destroyAllWindows()
+
+
+def distance_table():
+    def capture():
+        length = input('Hold camera still and enter distance in inches from target: ')
+        img_name = os.path.join(cwd, 'distance_{}in.jpg'.format(length))
+        cv2.imwrite(img_name, frame)
+        print('{} saved!'.format(img_name))
+
+    src = args['src']
+    cwd = os.path.join(os.getcwd(), 'Distance_Table')  # /home/pi/Desktop/GreenVision/Distance_Table
+    if not os.path.exists(cwd):
+        os.makedirs(cwd)
+    threshold = args['threshold']
+    lower_color = np.array(data['lower-color-list']) - threshold
+    upper_color = np.array([data['upper-color-list'][0] + threshold, 255, 255])
+    distance_arr = np.array([], dtype=np.float64)
+    contour_area_arr = np.array([], dtype=np.float64)
+
+    if args['capture']:
+        cap = cv2.VideoCapture(src)
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, args['width'])
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, args['height'])
+        while True:
+            print('Press [C] to capture frame | Press [Q] to exit capture mode')
+            ret, frame = cap.read()
+            cv2.imshow('Image Capture', frame)
+            if cv2.waitKey(1) & 0xFF == ord('c'):
+                capture()
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+
+    files = []
+    for _, _, filenames in os.walk(cwd, topdown=False):
+        files = filenames.copy()
+    for file in files:
+        if file.endswith('in.jpg'):
+            inches = int(file[9:-6])
+            img = cv2.imread(os.path.join(cwd, file))
+            hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+            mask = cv2.inRange(hsv, lower_color, upper_color)
+            _, contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            n_contours = []
+            for contour in contours:
+                if cv2.contourArea(contour) > 75:
+                    n_contours.append(contour)
+            if len(n_contours) == 2:
+                print('{} is a valid image!'.format(file))
+                # contour_area = cv2.contourArea(np.mean(n_contours))
+                contour_area = cv2.contourArea(n_contours[0])
+                contour_area_arr = np.append(contour_area_arr, contour_area)
+                distance_arr = np.append(distance_arr, inches)
+            else:
+                print('{} is not a valid image! Please retake the image from that distance.'.format(file))
+
+    df = pd.DataFrame({'x': contour_area_arr, 'y': distance_arr})
+    df.to_csv(os.path.join(cwd, 'Distance_Table.csv'), index=False)
+
+
+parser = argparse.ArgumentParser(description=program_description(), add_help=False)
+parser.add_argument('-h', '--help', action='store_true')
+subparsers = parser.add_subparsers(help='commands', dest='program')
+init_parser_vision()
+init_parser_image()
+init_parser_video()
+init_parser_distance_table()
+
+args = vars(parser.parse_args())
+# print(args)
+prog = args['program']
+if args['help']:
+    program_help()
+if prog is None and not args['help']:
+    print('No command selected, please rerun the script with the "-h" flag to see available commands.')
+    print('To see the flags of each command, include a "-h" after choosing a command')
+elif prog == 'vision':
+    del args['program']
+    del args['help']
+    print('IN VISION')
+    print(args)
+    # vision()
+elif prog == 'image_capture':
+    del args['program']
+    del args['help']
+    print('IN IMAGE CAPTURE')
+    print(args)
+    # image_capture()
+elif prog == 'video_capture':
+    del args['program']
+    del args['help']
+    print('IN VIDEO CAPTURE')
+    print(args)
+    # video_capture()
+elif prog == 'distance_table':
+    del args['program']
+    del args['help']
+    print('IN DISTANCE TABLE')
+    print(args)
+    distance_table()

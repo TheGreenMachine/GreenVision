@@ -1,0 +1,7 @@
+opencv-python
+pynetworktables
+imutils
+numpy
+scipy
+pandas
+matplotlib
