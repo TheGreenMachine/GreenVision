@@ -412,10 +412,10 @@ def distance_table():
                 contour_area_arr = np.append(contour_area_arr, contour_area)
                 distance_arr = np.append(distance_arr, inches)
             else:
-                print('{} is not a valid image! Please retake the image from that distance and run this utility again.'.format(file))
+                print('{} is not a valid image! Please retake the image from that distance.'.format(file))
 
     df = pd.DataFrame({'x': contour_area_arr, 'y': distance_arr})
-    df.to_csv('Distance_Table.csv', index=False)
+    df.to_csv(os.path.join(cwd, 'Distance_Table.csv'), index=False)
 
 
 parser = argparse.ArgumentParser(description=program_description(), add_help=False)
