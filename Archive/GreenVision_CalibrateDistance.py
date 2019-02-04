@@ -57,4 +57,4 @@ while count < 31:
 
     count += 1
 df = pd.DataFrame({"x": x_area, "y": y_distance})
-df.to_csv("distance_calibrate_dump.csv", index=False)
+df.to_csv("Distance_Table.csv", index=False)
