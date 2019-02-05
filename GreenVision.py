@@ -194,7 +194,7 @@ def vision():
             self.cy = int((self.tly + self.bry) / 2)
 
     def calc_distance(ca, cb):
-        return data['A'] * (data['B'] ** ((ca + cb) / 2))
+        return data['A'] * ((ca + cb) / 2) ** data['B']
 
     def calc_yaw(pixel_x, center_x, h_foc_len):
         ya = math.degrees(math.atan((pixel_x - center_x) / h_foc_len))
