@@ -442,7 +442,7 @@ elif prog == 'vision':
     del args['help']
     print('IN VISION')
     print(args)
-    # vision()
+    vision()
 elif prog == 'image_capture':
     del args['program']
     del args['help']
