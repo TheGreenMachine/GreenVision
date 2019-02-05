@@ -273,7 +273,7 @@ def vision():
                         update_net_table(1, rec1.cx, rec1.cy, rec2.cx, rec2.cy, avg_c1_x, avg_c1_y)
                     draw_points(rec1, rec2, avg_c1_x, avg_c1_y)
 
-                    distance = calc_distance(contour_area_arr[1], contour_area_arr[2])
+                    distance = calc_distance(contour_area_arr[0], contour_area_arr[1])
                     yaw = calc_yaw(avg_c1_x, screen_c_x, h_focal_length)
                     print('Distance = {} \t Yaw = {}'.format(distance, yaw))
 
