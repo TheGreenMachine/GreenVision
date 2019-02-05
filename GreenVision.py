@@ -253,6 +253,7 @@ def vision():
         screen_c_x = (data['image-width'] / 2) - 0.5
         _, contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         ncontours = []
+        contourarea = []
         for contour in contours:
             if cv2.contourArea(contour) > 75:
                 print('Contour area:', cv2.contourArea(contour))
@@ -409,7 +410,9 @@ def distance_table():
                 print('{} is a valid image!'.format(file))
                 # contour_area = cv2.contourArea(np.mean(n_contours))
                 contour_area = cv2.contourArea(n_contours[0])
-                contour_area_arr = np.append(contour_area_arr, contour_area)
+                contour_area1 = cv2.contourArea(n_contours[1])
+                contour_area_average = (contour_area + contour_area1) / 2
+                contour_area_arr = np.append(contour_area_arr, contour_area_average)
                 distance_arr = np.append(distance_arr, inches)
             else:
                 print('{} is not a valid image! Please retake the image from that distance.'.format(file))
