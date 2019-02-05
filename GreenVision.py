@@ -194,7 +194,7 @@ def vision():
             self.cy = int((self.tly + self.bry) / 2)
 
     def calc_distance(ca, cb):
-        return data['A'] * (data['B'] ** (ca + cb) / 2)
+        return data['A'] * (data['B'] ** ((ca + cb) / 2))
 
     def calc_yaw(pixel_x, center_x, h_foc_len):
         ya = math.degrees(math.atan((pixel_x - center_x) / h_foc_len))
@@ -257,7 +257,7 @@ def vision():
         for contour in contours:
             if cv2.contourArea(contour) > 75:
                 print('Contour area:', cv2.contourArea(contour))
-                contour_area_arr = cv2.contourArea(contour)
+                contour_area_arr.append(cv2.contourArea(contour))
                 ncontours.append(contour)
         print("Number of contours: ", len(ncontours))
         rec_list = []
@@ -272,7 +272,7 @@ def vision():
                     if net_table:
                         update_net_table(1, rec1.cx, rec1.cy, rec2.cx, rec2.cy, avg_c1_x, avg_c1_y)
                     draw_points(rec1, rec2, avg_c1_x, avg_c1_y)
-
+                    print(contour_area_arr)
                     distance = calc_distance(contour_area_arr[0], contour_area_arr[1])
                     yaw = calc_yaw(avg_c1_x, screen_c_x, h_focal_length)
                     print('Distance = {} \t Yaw = {}'.format(distance, yaw))
