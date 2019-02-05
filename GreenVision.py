@@ -159,11 +159,13 @@ def vision():
 
     if net_table:
         nt.NetworkTables.initialize(server=data['server-ip'])
-        table = nt.NetworkTables.getTable("SmartDashboard")
+        table = nt.NetworkTables.getTable('SmartDashboard')
         if table:
-            print("table OK")
-        table.putNumber("visionX", -1)
-        table.putNumber("visionY", -1)
+            print('table OK')
+        table.putNumber('visionX', -1)
+        table.putNumber('visionY', -1)
+        table.putNumber('width', data['width'])
+        table.putNumber('height', data['height'])
 
     if debug:
         print('----------------------------------------------------------------')
@@ -205,19 +207,6 @@ def vision():
         cv2.line(frame, (rec_b.cx, rec_b.cy), (rec_b.cx, rec_b.cy), (255, 0, 0), 8)
         cv2.line(frame, (acx, acy), (acx, acy), (255, 0, 0), 8)
 
-    def def_rec(rectangle):
-        top_left_x = rectangle[0]
-        top_left_y = rectangle[1]
-        width = rectangle[2]
-        height = rectangle[3]
-        bottom_right_x = top_left_x + width
-        bottom_right_y = top_left_y + height
-        center_x = int((top_left_x + bottom_right_x) / 2)
-        center_y = int((top_left_y + bottom_right_y) / 2)
-
-        return {'tl_x': top_left_x, 'tl_y': top_left_y, 'br_x': bottom_right_x, 'br_y': bottom_right_y, 'c_x': center_x,
-                'c_y': center_y}
-
     def get_avg_points(rec_a, rec_b):
         avgcx = int((rec_a.cx + rec_b.cx) / 2)
         avgcy = int((rec_a.cy + rec_b.cy) / 2)
@@ -225,24 +214,25 @@ def vision():
             print('Average Center (x , y): ({} , {})'.format(avgcx, avgcy))
         return avgcx, avgcy
 
-    def update_net_table(n, c1_x=-1, c1_y=-1, c2_x=-1, c2_y=-1, avgc_x=-1, avgc_y=-1):
-        table.putNumber("center{n}X".format(n=n), c1_x)
-        table.putNumber("center{n}Y".format(n=n), c1_y)
-        table.putNumber("center{n}X".format(n=n + 1), c2_x)
-        table.putNumber("center{n}Y".format(n=n + 1), c2_y)
-        table.putNumber("averagedCenterX", avgc_x)
-        table.putNumber("averagedCenterY", avgc_y)
+    def update_net_table(n, c1_x=-1, c1_y=-1, c2_x=-1, c2_y=-1, avgc_x=-1, avgc_y=-1, dis=-1):
+        table.putNumber("center{}_x".format(n), c1_x)
+        table.putNumber("center{}_y".format(n), c1_y)
+        table.putNumber("center{}_x".format(n + 1), c2_x)
+        table.putNumber("center{}_y".format(n + 1), c2_y)
+        table.putNumber("center_x", avgc_x)
+        table.putNumber("center_y", avgc_y)
+        table.putNumber('distance_esti', dis)
         if debug:
-            print("center{n}X".format(n=n), c1_x)
-            print("center{n}Y".format(n=n), c1_y)
-            print("center{n}X".format(n=n + 1), c2_x)
-            print("center{n}Y".format(n=n + 1), c2_y)
-            print("averagedCenterX", avgc_x)
-            print("averagedCenterY", avgc_y)
+            print("center{}_x".format(n), c1_x)
+            print("center{}_y".format(n), c1_y)
+            print("center{}_x".format(n + 1), c2_x)
+            print("center{}_y".format(n + 1), c2_y)
+            print("center_x", avgc_x)
+            print("center_y", avgc_y)
+            print('distance_esti', dis)
 
     while True:
         print('=========================================================')
-        starttime = time.time()
         if multi:
             frame = cap.read()
         else:
@@ -269,22 +259,22 @@ def vision():
                 rec2 = Rect(rec_list[1])
                 avg_c1_x, avg_c1_y = get_avg_points(rec1, rec2)
                 if True:
-                    if net_table:
-                        update_net_table(1, rec1.cx, rec1.cy, rec2.cx, rec2.cy, avg_c1_x, avg_c1_y)
                     draw_points(rec1, rec2, avg_c1_x, avg_c1_y)
-                    print(contour_area_arr)
                     distance = calc_distance(contour_area_arr[0], contour_area_arr[1])
                     yaw = calc_yaw(avg_c1_x, screen_c_x, h_focal_length)
-                    print('Distance = {} \t Yaw = {}'.format(distance, yaw))
+                    if debug:
+                        print('Distance = {} \t Yaw = {}'.format(distance, yaw))
+                    if net_table:
+                        update_net_table(1, rec1.cx, rec1.cy, rec2.cx, rec2.cy, avg_c1_x, avg_c1_y, distance)
 
                 if len(rec_list) > 3:
                     rec3 = Rect(rec_list[2])
                     rec4 = Rect(rec_list[3])
                     avg_c2_x, avg_c2_y = get_avg_points(rec3, rec4)
                     if True:
+                        draw_points(rec3, rec4, avg_c2_x, avg_c2_y)
                         if net_table:
                             update_net_table(2, rec3.cx, rec3.cy, rec4.cx, rec4.cy, avg_c2_x, avg_c2_y)
-                        draw_points(rec3, rec4, avg_c2_x, avg_c2_y)
 
                     if len(rec_list) > 5:
                         rec5 = Rect(rec_list[4])
@@ -295,7 +285,6 @@ def vision():
                                 update_net_table(3, rec5.cx, rec5.cy, rec6.cx, rec6.cy, avg_c3_x,
                                                  avg_c3_y)
                             draw_points(rec5, rec6, avg_c3_x, avg_c3_y)
-        print("Elasped Time: {}".format(time.time() - starttime))
         if view:
             cv2.imshow('Contour Window', frame)
             cv2.imshow('Mask', mask)
@@ -430,7 +419,6 @@ init_parser_video()
 init_parser_distance_table()
 
 args = vars(parser.parse_args())
-# print(args)
 prog = args['program']
 if args['help']:
     program_help()
@@ -440,24 +428,16 @@ if prog is None and not args['help']:
 elif prog == 'vision':
     del args['program']
     del args['help']
-    print('IN VISION')
-    print(args)
     vision()
 elif prog == 'image_capture':
     del args['program']
     del args['help']
-    print('IN IMAGE CAPTURE')
-    print(args)
-    # image_capture()
+    image_capture()
 elif prog == 'video_capture':
     del args['program']
     del args['help']
-    print('IN VIDEO CAPTURE')
-    print(args)
-    # video_capture()
+    video_capture()
 elif prog == 'distance_table':
     del args['program']
     del args['help']
-    print('IN DISTANCE TABLE')
-    print(args)
     distance_table()
