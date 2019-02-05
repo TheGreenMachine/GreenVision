@@ -139,7 +139,7 @@ def init_parser_distance_table():
 
 
 def vision():
-    src = args['source']
+    src = int(args['source'])
     view = args['view']
     debug = args['debug']
     threshold = args['threshold'] if 0 < args['threshold'] < 50 else 0
