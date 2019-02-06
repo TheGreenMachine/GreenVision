@@ -252,6 +252,8 @@ def vision():
         print("Number of contours: ", len(ncontours))
         rec_list = []
         for contour in ncontours:
+            _, _, theta = cv2.minAreaRect(contour)
+            print('Angle: {}'.format(theta))
             cv2.drawContours(frame, [contour], -1, (0, 0, 255), 3)
             rec_list.append(cv2.boundingRect(contour))
             if len(rec_list) > 1:
