@@ -312,7 +312,9 @@ def vision():
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-        if cv2.waitKey(1) & 0xFF == ord('p'):
+        elif cv2.waitKey(1) & 0xFF == ord('p'):
+            print('Paused!')
+            time.sleep(1)
             while True:
                 if cv2.waitKey(1) & 0xFF == ord('p'):
                     break
