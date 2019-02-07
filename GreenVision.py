@@ -244,21 +244,22 @@ def vision():
         _, contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         ncontours = []
         contour_area_arr = []
+        theta_list = []
         for contour in contours:
             if cv2.contourArea(contour) > 75:
                 print('Contour area:', cv2.contourArea(contour))
                 contour_area_arr.append(cv2.contourArea(contour))
+                theta_list.append(cv2.minAreaRect(contour)[2])
                 ncontours.append(contour)
         print("Number of contours: ", len(ncontours))
         rec_list = []
         for contour in ncontours:
-            _, _, theta = cv2.minAreaRect(contour)
+            # _, _, theta = cv2.minAreaRect(contour)
             # print('Angle: {}'.format(theta))
             cv2.drawContours(frame, [contour], -1, (0, 0, 255), 3)
             rec_list.append(cv2.boundingRect(contour))
             if len(rec_list) > 1:
-                print('Angle left: {}'.format(rec_list[0]))
-                print('Angle right: {}'.format(rec_list[1]))
+                print('Angles: {}'.format(theta_list))
                 rec1 = Rect(rec_list[0])
                 rec2 = Rect(rec_list[1])
                 avg_c1_x, avg_c1_y = get_avg_points(rec1, rec2)
