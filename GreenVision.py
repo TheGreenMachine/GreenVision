@@ -312,6 +312,11 @@ def vision():
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
+        if cv2.waitKey(1) & 0xFF == ord('p'):
+            while True:
+                if cv2.waitKey(1) & 0xFF == ord('p'):
+                    break
+
 
 def image_capture():
     cap = cv2.VideoCapture(args['source'])
