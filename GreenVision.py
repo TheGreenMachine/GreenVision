@@ -198,6 +198,7 @@ def vision():
 
     def is_pair(ca, cb):
         if cb.angle < 0 or ca.angle < 0:
+            print('is_pair() math: {}'.format(ca.angle + cb.angle))
             return 0 < abs(ca.angle + cb.angle) < 10
         else:
             return False
