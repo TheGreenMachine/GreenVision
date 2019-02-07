@@ -185,7 +185,7 @@ def vision():
     upper_color = np.array([data['upper-color-list'][0] + threshold, 255, 255])
 
     class Rect:
-        def __init__(self, rectangle, theta, carea):
+        def __init__(self, rectangle, theta, area):
             self.tlx = rectangle[0]
             self.tly = rectangle[1]
             self.width = rectangle[2]
@@ -195,7 +195,10 @@ def vision():
             self.cx = int((self.tlx + self.brx) / 2)
             self.cy = int((self.tly + self.bry) / 2)
             self.angle = theta
-            self.conarea = carea
+            self.cont_area = area
+
+    def make_rec(rec_l, theta_l, contour_l):
+        pass
 
     def is_pair(ca, cb):
         if ca.angle < 0:
@@ -263,27 +266,29 @@ def vision():
         ncontours = []
         contour_area_arr = []
         theta_list = []
+        rec_list = []
         for contour in contours:
             if cv2.contourArea(contour) > 75:
                 print('Contour area:'.format(cv2.contourArea(contour)))
                 theta_list.append(calc_angle(contour))
                 contour_area_arr.append(cv2.contourArea(contour))
                 ncontours.append(contour)
+                rec_list.append(cv2.boundingRect(contour))
         print("Number of contours: ", len(ncontours))
-        rec_list = []
         for contour in ncontours:
             cv2.drawContours(frame, [contour], -1, (0, 0, 255), 3)
-            rec_list.append(cv2.boundingRect(contour))
             if len(rec_list) > 1:
                 print('Angles: {}'.format(theta_list))
-                biggest = max(contour_area_arr)
-                biggest_index = contour_area_arr.index(biggest)
+                biggest_contour = max(contour_area_arr)
+                biggest_index = contour_area_arr.index(biggest_contour)
                 rec1 = Rect(rec_list[biggest_index], theta_list[biggest_index], contour_area_arr[biggest_index])
+
                 rec_list.pop(biggest_index)
                 theta_list.pop(biggest_index)
                 contour_area_arr.pop(biggest_index)
-                biggest = max(contour_area_arr)
-                biggest_index = contour_area_arr.index(biggest)
+
+                biggest_contour = max(contour_area_arr)
+                biggest_index = contour_area_arr.index(biggest_contour)
                 rec2 = Rect(rec_list[biggest_index], theta_list[biggest_index], contour_area_arr[biggest_index])
                 print('Is pair: {}'.format(is_pair(rec1, rec2)))
                 avg_c1_x, avg_c1_y = get_avg_points(rec1, rec2)
