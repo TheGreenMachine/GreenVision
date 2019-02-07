@@ -284,24 +284,24 @@ def vision():
                     if net_table:
                         update_net_table(1, rec1.cx, rec1.cy, rec2.cx, rec2.cy, avg_c1_x, avg_c1_y, distance)
 
-                if len(rec_list) > 3:
-                    rec3 = Rect(rec_list[2])
-                    rec4 = Rect(rec_list[3])
-                    avg_c2_x, avg_c2_y = get_avg_points(rec3, rec4)
-                    if True:
-                        draw_points(rec3, rec4, avg_c2_x, avg_c2_y)
-                        if net_table:
-                            update_net_table(2, rec3.cx, rec3.cy, rec4.cx, rec4.cy, avg_c2_x, avg_c2_y)
-
-                    if len(rec_list) > 5:
-                        rec5 = Rect(rec_list[4])
-                        rec6 = Rect(rec_list[5])
-                        avg_c3_x, avg_c3_y = get_avg_points(rec5, rec6)
-                        if True:
-                            if net_table:
-                                update_net_table(3, rec5.cx, rec5.cy, rec6.cx, rec6.cy, avg_c3_x,
-                                                 avg_c3_y)
-                            draw_points(rec5, rec6, avg_c3_x, avg_c3_y)
+                # if len(rec_list) > 3:
+                #     rec3 = Rect(rec_list[2])
+                #     rec4 = Rect(rec_list[3])
+                #     avg_c2_x, avg_c2_y = get_avg_points(rec3, rec4)
+                #     if True:
+                #         draw_points(rec3, rec4, avg_c2_x, avg_c2_y)
+                #         if net_table:
+                #             update_net_table(2, rec3.cx, rec3.cy, rec4.cx, rec4.cy, avg_c2_x, avg_c2_y)
+                #
+                #     if len(rec_list) > 5:
+                #         rec5 = Rect(rec_list[4])
+                #         rec6 = Rect(rec_list[5])
+                #         avg_c3_x, avg_c3_y = get_avg_points(rec5, rec6)
+                #         if True:
+                #             if net_table:
+                #                 update_net_table(3, rec5.cx, rec5.cy, rec6.cx, rec6.cy, avg_c3_x,
+                #                                  avg_c3_y)
+                #             draw_points(rec5, rec6, avg_c3_x, avg_c3_y)
         if view:
             cv2.imshow('Contour Window', frame)
             cv2.imshow('Mask', mask)
