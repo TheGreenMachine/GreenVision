@@ -185,7 +185,7 @@ def vision():
     upper_color = np.array([data['upper-color-list'][0] + threshold, 255, 255])
 
     class Rect:
-        def __init__(self, rectangle, theta):
+        def __init__(self, rectangle, theta, carea):
             self.tlx = rectangle[0]
             self.tly = rectangle[1]
             self.width = rectangle[2]
@@ -195,6 +195,7 @@ def vision():
             self.cx = int((self.tlx + self.brx) / 2)
             self.cy = int((self.tly + self.bry) / 2)
             self.angle = theta
+            self.conarea = carea
 
     def is_pair(ca, cb):
         if ca.angle < 0:
@@ -265,8 +266,8 @@ def vision():
         for contour in contours:
             if cv2.contourArea(contour) > 75:
                 print('Contour area:'.format(cv2.contourArea(contour)))
-                contour_area_arr.append(cv2.contourArea(contour))
                 theta_list.append(calc_angle(contour))
+                contour_area_arr.append(cv2.contourArea(contour))
                 ncontours.append(contour)
         print("Number of contours: ", len(ncontours))
         rec_list = []
@@ -275,13 +276,18 @@ def vision():
             rec_list.append(cv2.boundingRect(contour))
             if len(rec_list) > 1:
                 print('Angles: {}'.format(theta_list))
-                rec1 = Rect(rec_list[0], theta_list[0])
+                biggest = max(contour_area_arr)
+                biggest_index = biggest.index(biggest)
+                rec1 = Rect(rec_list[biggest_index], theta_list[biggest_index], contour_area_arr[biggest_index])
+                rec_list.pop(biggest_index)
+                theta_list.pop(biggest_index)
+                contour_area_arr.pop(biggest_index)
                 rec2 = Rect(rec_list[1], theta_list[1])
                 print('Is pair: {}'.format(is_pair(rec1, rec2)))
                 avg_c1_x, avg_c1_y = get_avg_points(rec1, rec2)
                 if is_pair(rec1, rec2):
                     draw_points(rec1, rec2, avg_c1_x, avg_c1_y)
-                    distance = calc_distance(contour_area_arr[0], contour_area_arr[1])
+                    distance = calc_distance(rec1.conarea, rec2.conarea)
                     yaw = calc_yaw(avg_c1_x, screen_c_x, h_focal_length)
                     if debug:
                         print('Distance = {} \t Yaw = {}'.format(distance, yaw))
