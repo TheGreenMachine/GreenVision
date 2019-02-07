@@ -294,7 +294,7 @@ def vision():
                 avg_c1_x, avg_c1_y = get_avg_points(rec1, rec2)
                 if is_pair(rec1, rec2):
                     draw_points(rec1, rec2, avg_c1_x, avg_c1_y)
-                    distance = calc_distance(rec1.conarea, rec2.conarea)
+                    distance = calc_distance(rec1.cont_area, rec2.cont_area)
                     yaw = calc_yaw(avg_c1_x, screen_c_x, h_focal_length)
                     if debug:
                         print('Distance = {} \t Yaw = {}'.format(distance, yaw))
