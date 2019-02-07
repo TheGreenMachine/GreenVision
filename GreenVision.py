@@ -198,7 +198,14 @@ def vision():
             self.cont_area = area
 
     def make_rec(rec_l, theta_l, contour_l):
-        pass
+        big_cont = max(contour_l)
+        big_index = contour_l.index(big_cont)
+        rec = Rect(rec_l[big_index], theta_l[big_index], contour_l[big_index])
+
+        rec_l.pop(big_index)
+        theta_l.pop(big_index)
+        contour_l.pop(big_index)
+        return rec
 
     def is_pair(ca, cb):
         if ca.angle < 0:
