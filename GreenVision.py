@@ -253,10 +253,12 @@ def vision():
         rec_list = []
         for contour in ncontours:
             _, _, theta = cv2.minAreaRect(contour)
-            print('Angle: {}'.format(theta))
+            # print('Angle: {}'.format(theta))
             cv2.drawContours(frame, [contour], -1, (0, 0, 255), 3)
             rec_list.append(cv2.boundingRect(contour))
             if len(rec_list) > 1:
+                print('Angle left: {}'.format(rec_list[0]))
+                print('Angle right: {}'.format(rec_list[1]))
                 rec1 = Rect(rec_list[0])
                 rec2 = Rect(rec_list[1])
                 avg_c1_x, avg_c1_y = get_avg_points(rec1, rec2)
