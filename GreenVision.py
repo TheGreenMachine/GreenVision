@@ -250,7 +250,7 @@ def vision():
                 print('Contour area:', cv2.contourArea(contour))
                 print('Stuff: {}'.format(cv2.minAreaRect(contour)))
                 contour_area_arr.append(cv2.contourArea(contour))
-                theta_list.append(cv2.minAreaRect(contour)[2])
+                theta_list.append(cv2.minAreaRect(contour)[2] - 4)
                 ncontours.append(contour)
         print("Number of contours: ", len(ncontours))
         rec_list = []
