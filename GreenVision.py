@@ -43,6 +43,10 @@ def init_parser_vision():
     parser_vision.add_argument('-v', '--view',
                                action='store_true',
                                help='toggle contour and mask window')
+    parser_vision.add_argument('-m', '--model',
+                               type=str,
+                               default='power',
+                               help='choose function model for distance calculating: [power], [exponential]')
     parser_vision.add_argument('-d', '--debug',
                                action='store_true',
                                help='toggle debug output to console')
@@ -139,7 +143,8 @@ def init_parser_distance_table():
 
 
 def vision():
-    src = int(args['source'])
+    src = int(args['source']) if args['source'].isdigit() else args['source']
+    model = args['model']
     view = args['view']
     debug = args['debug']
     threshold = args['threshold'] if 0 < args['threshold'] < 50 else 0
@@ -173,6 +178,7 @@ def vision():
         print('Vision Flag: {}'.format(view))
         print('Debug Flag: {}'.format(debug))
         print('Threshold Value: {}'.format(threshold))
+        print('Function Model Value: {}'.format(model))
         print('Multi-Thread Flag: {}'.format(multi))
         print('Network Tables Flag: {}'.format(net_table))
         print('----------------------------------------------------------------')
@@ -224,15 +230,21 @@ def vision():
         return angle
 
     def calc_distance(ca, cb):
-        return data['A'] * ((ca + cb) / 2) ** data['B']
+        avg_contour = (ca + cb) / 2
+        if debug:
+            print('Coeff A: {}, Coeff B: {}, Avg Contour Area: {}'.format(data['A'], data['B'], avg_contour))
+        if model == 'power':
+            return data['A'] * avg_contour ** data['B']
+        elif model == 'exponential':
+            return data['A'] * data['B'] ** avg_contour
 
     def calc_yaw(pixel_x, center_x, h_foc_len):
         ya = math.degrees(math.atan((pixel_x - center_x) / h_foc_len))
         return round(ya)
 
-    def draw_points(rec_a, rec_b, acx, acy):
-        cv2.line(frame, (rec_a.cx, rec_a.cy), (rec_a.cx, rec_a.cy), (255, 0, 0), 8)
-        cv2.line(frame, (rec_b.cx, rec_b.cy), (rec_b.cx, rec_b.cy), (255, 0, 0), 8)
+    def draw_points(rec_a, rec_b, acx, acy, color):
+        cv2.line(frame, (rec_a.cx, rec_a.cy), (rec_a.cx, rec_a.cy), color, 8)
+        cv2.line(frame, (rec_b.cx, rec_b.cy), (rec_b.cx, rec_b.cy), color, 8)
         cv2.line(frame, (acx, acy), (acx, acy), (255, 0, 0), 8)
 
     def get_avg_points(rec_a, rec_b):
@@ -268,7 +280,7 @@ def vision():
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, lower_color, upper_color)
 
-        screen_c_x = (data['image-width'] / 2) - 0.5
+        screen_c_x = data['image-width'] / 2 - 0.5
         _, contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         ncontours = []
         contour_area_arr = []
@@ -297,13 +309,13 @@ def vision():
                 # biggest_contour = max(contour_area_arr)
                 # biggest_index = contour_area_arr.index(biggest_contour)
                 # rec2 = Rect(rec_list[biggest_index], theta_list[biggest_index], contour_area_arr[biggest_index])
-                
+
                 rec1 = get_rec(rec_list, theta_list, contour_area_arr)
                 rec2 = get_rec(rec_list, theta_list, contour_area_arr)
                 print('Is pair: {}'.format(is_pair(rec1, rec2)))
                 avg_c1_x, avg_c1_y = get_avg_points(rec1, rec2)
                 if is_pair(rec1, rec2):
-                    draw_points(rec1, rec2, avg_c1_x, avg_c1_y)
+                    draw_points(rec1, rec2, avg_c1_x, avg_c1_y, (255, 0, 0))  # (255, 0, 0) == blue (bgr)
                     distance = calc_distance(rec1.cont_area, rec2.cont_area)
                     yaw = calc_yaw(avg_c1_x, screen_c_x, h_focal_length)
                     if debug:
@@ -311,24 +323,24 @@ def vision():
                     if net_table:
                         update_net_table(1, rec1.cx, rec1.cy, rec2.cx, rec2.cy, avg_c1_x, avg_c1_y, distance)
 
-                # if len(rec_list) > 3:
-                #     rec3 = Rect(rec_list[2])
-                #     rec4 = Rect(rec_list[3])
-                #     avg_c2_x, avg_c2_y = get_avg_points(rec3, rec4)
-                #     if True:
-                #         draw_points(rec3, rec4, avg_c2_x, avg_c2_y)
-                #         if net_table:
-                #             update_net_table(2, rec3.cx, rec3.cy, rec4.cx, rec4.cy, avg_c2_x, avg_c2_y)
-                #
-                #     if len(rec_list) > 5:
-                #         rec5 = Rect(rec_list[4])
-                #         rec6 = Rect(rec_list[5])
-                #         avg_c3_x, avg_c3_y = get_avg_points(rec5, rec6)
-                #         if True:
-                #             if net_table:
-                #                 update_net_table(3, rec5.cx, rec5.cy, rec6.cx, rec6.cy, avg_c3_x,
-                #                                  avg_c3_y)
-                #             draw_points(rec5, rec6, avg_c3_x, avg_c3_y)
+                if len(rec_list) > 3:
+                    rec3 = get_rec(rec_list, theta_list, contour_area_arr)
+                    rec4 = get_rec(rec_list, theta_list, contour_area_arr)
+                    avg_c2_x, avg_c2_y = get_avg_points(rec3, rec4)
+                    if is_pair(rec3, rec4):
+                        draw_points(rec3, rec4, avg_c2_x, avg_c2_y, (0, 204, 204))  # (0, 204, 204) == yellow (bgr)
+                        if net_table:
+                            update_net_table(2, rec3.cx, rec3.cy, rec4.cx, rec4.cy, avg_c2_x, avg_c2_y)
+
+                    if len(rec_list) > 5:
+                        rec5 = get_rec(rec_list, theta_list, contour_area_arr)
+                        rec6 = get_rec(rec_list, theta_list, contour_area_arr)
+                        avg_c3_x, avg_c3_y = get_avg_points(rec5, rec6)
+                        if is_pair(rec5, rec6):
+                            if net_table:
+                                update_net_table(3, rec5.cx, rec5.cy, rec6.cx, rec6.cy, avg_c3_x,
+                                                 avg_c3_y)
+                            draw_points(rec5, rec6, avg_c3_x, avg_c3_y, (255, 0, 255))  # (255, 0, 255) == fuschia
         if view:
             cv2.imshow('Contour Window', frame)
             cv2.imshow('Mask', mask)
