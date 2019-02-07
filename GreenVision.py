@@ -185,7 +185,7 @@ def vision():
     upper_color = np.array([data['upper-color-list'][0] + threshold, 255, 255])
 
     class Rect:
-        def __init__(self, rectangle):
+        def __init__(self, rectangle, theta):
             self.tlx = rectangle[0]
             self.tly = rectangle[1]
             self.width = rectangle[2]
@@ -194,6 +194,19 @@ def vision():
             self.bry = self.tly + self.height
             self.cx = int((self.tlx + self.brx) / 2)
             self.cy = int((self.tly + self.bry) / 2)
+            self.angle = theta
+
+    def is_pair(ca, cb):
+        return abs(ca.angle - cb.angle) < 7
+
+    def calc_angle(con):
+        _, _, theta = cv2.minAreaRect(con)
+        if theta < -50:
+            angle = abs(theta + 90)
+        else:
+            angle = round(abs(theta))
+
+        return angle
 
     def calc_distance(ca, cb):
         return data['A'] * ((ca + cb) / 2) ** data['B']
@@ -248,22 +261,19 @@ def vision():
         for contour in contours:
             if cv2.contourArea(contour) > 75:
                 print('Contour area:', cv2.contourArea(contour))
-                print('Stuff: {}'.format(cv2.minAreaRect(contour)))
                 contour_area_arr.append(cv2.contourArea(contour))
-                _, _, theta = cv2.minAreaRect(contour)
-                theta_list.append(theta)
+                theta_list.append(calc_angle(contour))
                 ncontours.append(contour)
         print("Number of contours: ", len(ncontours))
         rec_list = []
         for contour in ncontours:
-            # _, _, theta = cv2.minAreaRect(contour)
-            # print('Angle: {}'.format(theta))
             cv2.drawContours(frame, [contour], -1, (0, 0, 255), 3)
             rec_list.append(cv2.boundingRect(contour))
             if len(rec_list) > 1:
                 print('Angles: {}'.format(theta_list))
-                rec1 = Rect(rec_list[0])
-                rec2 = Rect(rec_list[1])
+                rec1 = Rect(rec_list[0], theta_list[0])
+                rec2 = Rect(rec_list[1], theta_list[1])
+                print('Is pair: {}'.format(is_pair(rec1, rec2)))
                 avg_c1_x, avg_c1_y = get_avg_points(rec1, rec2)
                 if True:
                     draw_points(rec1, rec2, avg_c1_x, avg_c1_y)
