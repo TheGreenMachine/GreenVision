@@ -282,7 +282,9 @@ def vision():
                 rec_list.pop(biggest_index)
                 theta_list.pop(biggest_index)
                 contour_area_arr.pop(biggest_index)
-                rec2 = Rect(rec_list[1], theta_list[1])
+                biggest = max(contour_area_arr)
+                biggest_index = biggest.index(biggest)
+                rec2 = Rect(rec_list[biggest_index], theta_list[biggest_index], contour_area_arr[biggest_index])
                 print('Is pair: {}'.format(is_pair(rec1, rec2)))
                 avg_c1_x, avg_c1_y = get_avg_points(rec1, rec2)
                 if is_pair(rec1, rec2):
