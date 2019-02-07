@@ -197,7 +197,7 @@ def vision():
             self.angle = theta
             self.cont_area = area
 
-    def make_rec(rec_l, theta_l, contour_l):
+    def get_rec(rec_l, theta_l, contour_l):
         big_cont = max(contour_l)
         big_index = contour_l.index(big_cont)
         rec = Rect(rec_l[big_index], theta_l[big_index], contour_l[big_index])
@@ -286,17 +286,20 @@ def vision():
             cv2.drawContours(frame, [contour], -1, (0, 0, 255), 3)
             if len(rec_list) > 1:
                 print('Angles: {}'.format(theta_list))
-                biggest_contour = max(contour_area_arr)
-                biggest_index = contour_area_arr.index(biggest_contour)
-                rec1 = Rect(rec_list[biggest_index], theta_list[biggest_index], contour_area_arr[biggest_index])
+                # biggest_contour = max(contour_area_arr)
+                # biggest_index = contour_area_arr.index(biggest_contour)
+                # rec1 = Rect(rec_list[biggest_index], theta_list[biggest_index], contour_area_arr[biggest_index])
+                #
+                # rec_list.pop(biggest_index)
+                # theta_list.pop(biggest_index)
+                # contour_area_arr.pop(biggest_index)
 
-                rec_list.pop(biggest_index)
-                theta_list.pop(biggest_index)
-                contour_area_arr.pop(biggest_index)
-
-                biggest_contour = max(contour_area_arr)
-                biggest_index = contour_area_arr.index(biggest_contour)
-                rec2 = Rect(rec_list[biggest_index], theta_list[biggest_index], contour_area_arr[biggest_index])
+                # biggest_contour = max(contour_area_arr)
+                # biggest_index = contour_area_arr.index(biggest_contour)
+                # rec2 = Rect(rec_list[biggest_index], theta_list[biggest_index], contour_area_arr[biggest_index])
+                
+                rec1 = get_rec(rec_list, theta_list, contour_area_arr)
+                rec2 = get_rec(rec_list, theta_list, contour_area_arr)
                 print('Is pair: {}'.format(is_pair(rec1, rec2)))
                 avg_c1_x, avg_c1_y = get_avg_points(rec1, rec2)
                 if is_pair(rec1, rec2):
@@ -304,7 +307,7 @@ def vision():
                     distance = calc_distance(rec1.cont_area, rec2.cont_area)
                     yaw = calc_yaw(avg_c1_x, screen_c_x, h_focal_length)
                     if debug:
-                        print('Distance = {} \t Yaw = {}'.format(distance, yaw))
+                        print('Distance = {} \t Yaw = {} \t is_pair() = {}'.format(distance, yaw, is_pair(rec1, rec2)))
                     if net_table:
                         update_net_table(1, rec1.cx, rec1.cy, rec2.cx, rec2.cy, avg_c1_x, avg_c1_y, distance)
 
