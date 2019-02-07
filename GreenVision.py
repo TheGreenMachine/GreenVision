@@ -248,6 +248,7 @@ def vision():
         for contour in contours:
             if cv2.contourArea(contour) > 75:
                 print('Contour area:', cv2.contourArea(contour))
+                print('Stuff: {}'.format(cv2.minAreaRect(contour)))
                 contour_area_arr.append(cv2.contourArea(contour))
                 theta_list.append(cv2.minAreaRect(contour)[2])
                 ncontours.append(contour)
