@@ -197,7 +197,7 @@ def vision():
             self.angle = theta
 
     def is_pair(ca, cb):
-        if cb.angle < 0 or ca.angle < 0:
+        if ca.angle < 0:
             print('is_pair() math: {}'.format(ca.angle + cb.angle))
             return 0 < abs(ca.angle + cb.angle) < 10
         else:
@@ -311,13 +311,6 @@ def vision():
             cv2.imshow('Mask', mask)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
-
-        if cv2.waitKey(1) & 0xFF == ord('p'):
-            print('Paused!')
-            time.sleep(1)
-            while True:
-                if cv2.waitKey(1) & 0xFF == ord('p'):
-                    break
 
 
 def image_capture():
