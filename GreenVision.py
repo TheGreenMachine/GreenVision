@@ -197,8 +197,8 @@ def vision():
             self.angle = theta
 
     def is_pair(ca, cb):
-        if cb.angle < 0:
-            return abs(ca.angle - cb.angle) < 7
+        if cb.angle < 0 or ca.angle < 0:
+            return abs(ca.angle - cb.angle) < 10
         else:
             return False
 
