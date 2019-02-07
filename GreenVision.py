@@ -197,14 +197,17 @@ def vision():
             self.angle = theta
 
     def is_pair(ca, cb):
-        return abs(ca.angle - cb.angle) < 7
+        if cb.angle < 0:
+            return abs(ca.angle - cb.angle) < 7
+        else:
+            return False
 
     def calc_angle(con):
         _, _, theta = cv2.minAreaRect(con)
         if theta < -50:
             angle = abs(theta + 90)
         else:
-            angle = round(abs(theta))
+            angle = round(theta)
 
         return angle
 
@@ -275,7 +278,7 @@ def vision():
                 rec2 = Rect(rec_list[1], theta_list[1])
                 print('Is pair: {}'.format(is_pair(rec1, rec2)))
                 avg_c1_x, avg_c1_y = get_avg_points(rec1, rec2)
-                if True:
+                if is_pair(rec1, rec2):
                     draw_points(rec1, rec2, avg_c1_x, avg_c1_y)
                     distance = calc_distance(contour_area_arr[0], contour_area_arr[1])
                     yaw = calc_yaw(avg_c1_x, screen_c_x, h_focal_length)
