@@ -264,7 +264,7 @@ def vision():
         theta_list = []
         for contour in contours:
             if cv2.contourArea(contour) > 75:
-                print('Contour area:', cv2.contourArea(contour))
+                print('Contour area:'.format(cv2.contourArea(contour)))
                 contour_area_arr.append(cv2.contourArea(contour))
                 theta_list.append(calc_angle(contour))
                 ncontours.append(contour)
@@ -345,7 +345,7 @@ def image_capture():
 
 
 def video_capture():
-    src = args['source']
+    src = args['src']
     file_name = args['name']
     cwd = os.path.join(os.getcwd(), 'Video_Capture')  # /home/pi/Desktop/GreenVision/Video_Capture
     if not os.path.exists(cwd):
