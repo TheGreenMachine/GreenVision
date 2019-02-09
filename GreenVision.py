@@ -152,14 +152,12 @@ def vision():
         cap = WebcamVideoStream(src)
         cap.stream.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
         cap.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
-        cap.stream.set(cv2.CAP_PROP_AUTO_EXPOSURE, 10)
         cap.start()
 
     else:
         cap = cv2.VideoCapture(src)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
-        cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 10)
 
     if net_table:
         nt.NetworkTables.initialize(server=data['server-ip'])
