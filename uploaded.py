@@ -63,7 +63,7 @@ def get_rec(rec_l, theta_l, contour_l):
 def is_pair(ca, cb):
     if ca.angle < 0:
         print('is_pair() math: {}'.format(ca.angle + cb.angle))
-        return 0 < abs(ca.angle + cb.angle) < 10
+        return 0 < abs(ca.angle + cb.angle) < 15
     else:
         return False
 
