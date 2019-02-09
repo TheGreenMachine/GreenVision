@@ -126,7 +126,8 @@ while True:
         counter = 0
     if counter == 0:
         print('=========================================================')
-    frame = cap.read()
+    frame = cv2.flip(cap.read(), -1)
+
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(hsv, lower_color, upper_color)
 
