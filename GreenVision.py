@@ -68,10 +68,6 @@ def init_parser_image():
                               required=True,
                               type=int,
                               help='set source for processing: [int] for camera')
-    parser_image.add_argument('-d', '--distance',
-                              type=int,
-                              required=True,
-                              help='set distance of target in inches')
     parser_image.add_argument('-cw', '--width',
                               type=int,
                               default=data['image-width'],
@@ -82,7 +78,8 @@ def init_parser_image():
                               help='set height of the camera resolution')
     parser_image.add_argument('-n', '--name',
                               type=str,
-                              default='opencv_image_{}',
+                              required=True,
+                              default='opencv_image',
                               help='choose a different name for the file')
 
 
@@ -349,7 +346,7 @@ def vision():
 
 
 def image_capture():
-    cap = cv2.VideoCapture(args['source'])
+    cap = cv2.VideoCapture(args['src'])
     width = args['width']
     height = args['height']
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
@@ -364,8 +361,7 @@ def image_capture():
             break
 
         if cv2.waitKey(1) & 0xFF == ord('c'):
-            distance = args['distance']
-            file_name = args['name'] + '{}in.jpg'.format(distance)
+            file_name = args['name']
             cwd = os.path.join(os.getcwd(), 'Image_Capture')  # /home/pi/Desktop/GreenVision/Image_Capture
             if not os.path.exists(cwd):
                 os.makedirs(cwd)
