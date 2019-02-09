@@ -40,6 +40,11 @@ def init_parser_vision():
                                required=True,
                                type=str,
                                help='set source for processing: [int] for camera, [path] for file')
+
+    parser_vision.add_argument('-f', '--flip',
+                               action='store_true',
+                               default=False,
+                               help='flip camera image')
     parser_vision.add_argument('-v', '--view',
                                action='store_true',
                                help='toggle contour and mask window')
@@ -141,6 +146,7 @@ def init_parser_distance_table():
 
 def vision():
     src = int(args['source']) if args['source'].isdigit() else args['source']
+    flip = args['flip']
     model = args['model']
     view = args['view']
     debug = args['debug']
@@ -274,6 +280,9 @@ def vision():
             frame = cap.read()
         else:
             _, frame = cap.read()
+
+        if flip:
+            frame = cv2.flip(frame, -1)
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, lower_color, upper_color)
 
