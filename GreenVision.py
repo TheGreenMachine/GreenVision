@@ -152,7 +152,7 @@ def vision():
         cap = WebcamVideoStream(src)
         cap.stream.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
         cap.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
-        cap.stream.set(cv2.CAP_PROP_EXPOSURE, 10)
+        cap.stream.set(cv2.CAP_PROP_EXPOSURE, 20)
         cap.start()
 
     else:
