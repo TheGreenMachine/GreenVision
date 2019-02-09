@@ -15,7 +15,7 @@ threshold = 0
 cap = WebcamVideoStream(src)
 cap.stream.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
 cap.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
-cap.stream.set(cv2.CAP_PROP_APERTURE, 10)
+cap.stream.set(cv2.CAP_PROP_AUTO_EXPOSURE, 10)
 cap.start()
 
 nt.NetworkTables.initialize(server=data['server-ip'])
