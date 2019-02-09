@@ -438,7 +438,6 @@ def distance_table():
                     n_contours.append(contour)
             if len(n_contours) == 2:
                 print('{} is a valid image!'.format(file))
-                # contour_area = cv2.contourArea(np.mean(n_contours))
                 contour_area = cv2.contourArea(n_contours[0])
                 contour_area1 = cv2.contourArea(n_contours[1])
                 contour_area_average = (contour_area + contour_area1) / 2
