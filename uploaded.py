@@ -11,22 +11,20 @@ with open('values.json') as json_file:
 src = 0
 model = 'power'
 threshold = 0
-net_table = True
 
 cap = WebcamVideoStream(src)
 cap.stream.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
 cap.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
 cap.start()
 
-if net_table:
-    nt.NetworkTables.initialize(server=data['server-ip'])
-    table = nt.NetworkTables.getTable('SmartDashboard')
-    if table:
-        print('table OK')
-    table.putNumber('visionX', -1)
-    table.putNumber('visionY', -1)
-    table.putNumber('width', data['width'])
-    table.putNumber('height', data['height'])
+nt.NetworkTables.initialize(server=data['server-ip'])
+table = nt.NetworkTables.getTable('SmartDashboard')
+if table:
+    print('table OK')
+table.putNumber('visionX', -1)
+table.putNumber('visionY', -1)
+table.putNumber('width', data['width'])
+table.putNumber('height', data['height'])
 
 horizontal_aspect = data['horizontal-aspect']
 horizontal_fov = data['fish-eye-cam-HFOV']
@@ -153,7 +151,6 @@ while True:
         if len(rec_list) > 1:
             if counter == 0:
                 print('Angles: {}'.format(theta_list))
-
             rec1 = get_rec(rec_list, theta_list, contour_area_arr)
             rec2 = get_rec(rec_list, theta_list, contour_area_arr)
             if counter == 0:
