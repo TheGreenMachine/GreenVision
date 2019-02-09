@@ -295,17 +295,6 @@ def vision():
             cv2.drawContours(frame, [contour], -1, (0, 0, 255), 3)
             if len(rec_list) > 1:
                 print('Angles: {}'.format(theta_list))
-                # biggest_contour = max(contour_area_arr)
-                # biggest_index = contour_area_arr.index(biggest_contour)
-                # rec1 = Rect(rec_list[biggest_index], theta_list[biggest_index], contour_area_arr[biggest_index])
-                #
-                # rec_list.pop(biggest_index)
-                # theta_list.pop(biggest_index)
-                # contour_area_arr.pop(biggest_index)
-
-                # biggest_contour = max(contour_area_arr)
-                # biggest_index = contour_area_arr.index(biggest_contour)
-                # rec2 = Rect(rec_list[biggest_index], theta_list[biggest_index], contour_area_arr[biggest_index])
 
                 rec1 = get_rec(rec_list, theta_list, contour_area_arr)
                 rec2 = get_rec(rec_list, theta_list, contour_area_arr)
