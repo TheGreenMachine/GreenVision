@@ -9,7 +9,6 @@ import argparse
 import os
 import pandas as pd
 import imutils
-import copy
 
 with open('values.json') as json_file:
     data = json.load(json_file)
@@ -159,7 +158,6 @@ def vision():
     threshold = args['threshold'] if 0 < args['threshold'] < 50 else 0
     multi = args['multithread']
     net_table = args['networktables']
-
     if multi:
         cap = WebcamVideoStream(src)
         cap.stream.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
@@ -282,6 +280,10 @@ def vision():
             print('distance_esti', dis)
 
     while True:
+        yaw, yaw1, yaw2 = -99, -99, -99
+        avg_c1_x, avg_c1_y, avg_c2_x, avg_c2_y, avg_c3_x, avg_c3_y = 0, 0, 0, 0, 0, 0
+        rec1, rec2, rec3, rec4, rec5, rec6 = 0, 0, 0, 0, 0, 0
+
         print('=========================================================')
         if multi:
             frame = cap.read()
@@ -312,7 +314,8 @@ def vision():
                 rec_list.append(cv2.boundingRect(contour))
         print("Number of contours: ", len(ncontours))
         for contour in ncontours:
-            cv2.drawContours(frame, [contour], -1, (0, 0, 255), 3)
+            #cv2.drawContours(frame, [contour], -1, (0, 0, 255), 3)
+            rec_list1 = rec_list.copy()
             if len(rec_list) > 1:
 
                 print('Angles: {}'.format(theta_list))
@@ -323,7 +326,7 @@ def vision():
                 print('Is pair: {}'.format(is_pair(rec1, rec2)))
                 avg_c1_x, avg_c1_y = get_avg_points(rec1, rec2)
                 if is_pair(rec1, rec2):
-                    draw_points(rec1, rec2, avg_c1_x, avg_c1_y, (255, 0, 0))  # (255, 0, 0) == blue (bgr)
+                    #draw_points(rec1, rec2, avg_c1_x, avg_c1_y, (255, 0, 0))  # (255, 0, 0) == blue (bgr)
                     distance = calc_distance(rec1.cont_area, rec2.cont_area)
                     yaw = calc_yaw(avg_c1_x, screen_c_x, h_focal_length)
                     if debug:
@@ -334,8 +337,9 @@ def vision():
                     rec3 = get_rec(rec_list, theta_list, cont_input)
                     rec4 = get_rec(rec_list, theta_list, cont_input)
                     avg_c2_x, avg_c2_y = get_avg_points(rec3, rec4)
+                    yaw1 = calc_yaw(avg_c2_x, screen_c_x, h_focal_length)
                     if is_pair(rec3, rec4):
-                        draw_points(rec3, rec4, avg_c2_x, avg_c2_y, (0, 204, 204))  # (0, 204, 204) == yellow (bgr)
+                        #draw_points(rec3, rec4, avg_c2_x, avg_c2_y, (0, 204, 204))  # (0, 204, 204) == yellow (bgr)
                         if net_table:
                             update_net_table(2, rec3.cx, rec3.cy, rec4.cx, rec4.cy, avg_c2_x, avg_c2_y)
 
@@ -343,12 +347,26 @@ def vision():
                         rec5 = get_rec(rec_list, theta_list, cont_input)
                         rec6 = get_rec(rec_list, theta_list, cont_input)
                         avg_c3_x, avg_c3_y = get_avg_points(rec5, rec6)
+                        yaw2 = calc_yaw(avg_c3_x, screen_c_x, h_focal_length)
                         if is_pair(rec5, rec6):
                             if net_table:
                                 update_net_table(3, rec5.cx, rec5.cy, rec6.cx, rec6.cy, avg_c3_x,
                                                  avg_c3_y)
-                            draw_points(rec5, rec6, avg_c3_x, avg_c3_y, (255, 0, 255))  # (255, 0, 255) == fuschia
+                            #draw_points(rec5, rec6, avg_c3_x, avg_c3_y, (255, 0, 255))  # (255, 0, 255) == fuschia
+                yaw_list = [math.fabs(yaw), math.fabs(yaw1), math.fabs(yaw2)]
+                if yaw_list[0] != yaw_list[1] or yaw_list[1] != yaw_list[2]:
+                    yaw_selection = min(yaw_list)
+                else:
+                    continue
+                if yaw_selection == yaw_list[0] and is_pair(rec1, rec2) and len(rec_list1) > 1:
+                    draw_points(rec1, rec2, avg_c1_x, avg_c1_y, (255, 0, 0))  # (255, 0, 0) == blue (bgr)
+                elif yaw_selection == yaw_list[1] and is_pair(rec3, rec4) and len(rec_list1) > 3:
+                    draw_points(rec3, rec4, avg_c2_x, avg_c2_y, (0, 204, 204))  # (0, 204, 204) == yellow (bgr)
+                elif yaw_selection == yaw_list[2] and is_pair(rec5, rec6) and len(rec_list1) > 5:
+                    draw_points(rec5, rec6, avg_c3_x, avg_c3_y, (255, 0, 255))  # (255, 0, 255) == fuschia
+
         if view:
+            cv2.putText(frame, 'Yaws: {} {} {}'.format(yaw, yaw1, yaw2), (10, 500), cv2.FONT_HERSHEY_COMPLEX, .5, (255, 255, 255), 2)
             cv2.putText(frame, 'Contour areas: {}'.format(contour_area_arr), (10, 600), cv2.FONT_HERSHEY_COMPLEX, .5, (255, 255, 255), 2)
             cv2.imshow('Contour Window', frame)
             cv2.imshow('Mask', mask)
