@@ -370,7 +370,7 @@ def vision():
             cv2.putText(frame, 'Contour areas: {}'.format(contour_area_arr), (10, 600), cv2.FONT_HERSHEY_COMPLEX, .5, (255, 255, 255), 2)
             cv2.imshow('Contour Window', frame)
             cv2.imshow('Mask', mask)
-            cv2.waitKey(25)
+            cv2.waitKey(40)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
