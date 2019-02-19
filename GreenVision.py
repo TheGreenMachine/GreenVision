@@ -8,6 +8,8 @@ import time
 import argparse
 import os
 import pandas as pd
+import imutils
+import copy
 
 with open('values.json') as json_file:
     data = json.load(json_file)
@@ -40,7 +42,10 @@ def init_parser_vision():
                                required=True,
                                type=str,
                                help='set source for processing: [int] for camera, [path] for file')
-
+    parser_vision.add_argument('-r', '--rotate',
+                               action='store_true',
+                               default=False,
+                               help='rotate 90 degrees')
     parser_vision.add_argument('-f', '--flip',
                                action='store_true',
                                default=False,
@@ -147,6 +152,7 @@ def init_parser_distance_table():
 def vision():
     src = int(args['source']) if args['source'].isdigit() else args['source']
     flip = args['flip']
+    rotate = args['rotate']
     model = args['model']
     view = args['view']
     debug = args['debug']
@@ -219,7 +225,8 @@ def vision():
     def is_pair(ca, cb):
         if (ca.angle < 0 and cb.angle > 0) or (ca.angle > 0 and cb.angle < 0):
             print('is_pair() math: {}'.format(ca.angle + cb.angle))
-            return 0 < abs(ca.angle + cb.angle) < 15
+            are_opposite = np.sign(ca.angle) != np.sign(cb.angle)
+            return are_opposite
         else:
             return False
 
@@ -283,30 +290,36 @@ def vision():
 
         if flip:
             frame = cv2.flip(frame, -1)
+        if rotate:
+            frame = imutils.rotate_bound(frame, 90)
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, lower_color, upper_color)
 
         screen_c_x = data['image-width'] / 2 - 0.5
-        _, contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         ncontours = []
+
         contour_area_arr = []
+
         theta_list = []
         rec_list = []
         for contour in contours:
-            if cv2.contourArea(contour) > 75:
-                print('Contour area:'.format(cv2.contourArea(contour)))
+            if cv2.contourArea(contour) > 50 and cv2.contourArea(contour) < 6000:
                 theta_list.append(calc_angle(contour))
                 contour_area_arr.append(cv2.contourArea(contour))
+                cont_input = contour_area_arr.copy()
                 ncontours.append(contour)
                 rec_list.append(cv2.boundingRect(contour))
         print("Number of contours: ", len(ncontours))
         for contour in ncontours:
             cv2.drawContours(frame, [contour], -1, (0, 0, 255), 3)
             if len(rec_list) > 1:
+
                 print('Angles: {}'.format(theta_list))
 
-                rec1 = get_rec(rec_list, theta_list, contour_area_arr)
-                rec2 = get_rec(rec_list, theta_list, contour_area_arr)
+                rec1 = get_rec(rec_list, theta_list, cont_input)
+                rec2 = get_rec(rec_list, theta_list, cont_input)
+                print(contour_area_arr)
                 print('Is pair: {}'.format(is_pair(rec1, rec2)))
                 avg_c1_x, avg_c1_y = get_avg_points(rec1, rec2)
                 if is_pair(rec1, rec2):
@@ -317,10 +330,9 @@ def vision():
                         print('Distance = {} \t Yaw = {} \t is_pair() = {}'.format(distance, yaw, is_pair(rec1, rec2)))
                     if net_table:
                         update_net_table(1, rec1.cx, rec1.cy, rec2.cx, rec2.cy, avg_c1_x, avg_c1_y, distance)
-
                 if len(rec_list) > 3:
-                    rec3 = get_rec(rec_list, theta_list, contour_area_arr)
-                    rec4 = get_rec(rec_list, theta_list, contour_area_arr)
+                    rec3 = get_rec(rec_list, theta_list, cont_input)
+                    rec4 = get_rec(rec_list, theta_list, cont_input)
                     avg_c2_x, avg_c2_y = get_avg_points(rec3, rec4)
                     if is_pair(rec3, rec4):
                         draw_points(rec3, rec4, avg_c2_x, avg_c2_y, (0, 204, 204))  # (0, 204, 204) == yellow (bgr)
@@ -328,8 +340,8 @@ def vision():
                             update_net_table(2, rec3.cx, rec3.cy, rec4.cx, rec4.cy, avg_c2_x, avg_c2_y)
 
                     if len(rec_list) > 5:
-                        rec5 = get_rec(rec_list, theta_list, contour_area_arr)
-                        rec6 = get_rec(rec_list, theta_list, contour_area_arr)
+                        rec5 = get_rec(rec_list, theta_list, cont_input)
+                        rec6 = get_rec(rec_list, theta_list, cont_input)
                         avg_c3_x, avg_c3_y = get_avg_points(rec5, rec6)
                         if is_pair(rec5, rec6):
                             if net_table:
@@ -337,8 +349,10 @@ def vision():
                                                  avg_c3_y)
                             draw_points(rec5, rec6, avg_c3_x, avg_c3_y, (255, 0, 255))  # (255, 0, 255) == fuschia
         if view:
+            cv2.putText(frame, 'Contour areas: {}'.format(contour_area_arr), (10, 600), cv2.FONT_HERSHEY_COMPLEX, .5, (255, 255, 255), 2)
             cv2.imshow('Contour Window', frame)
             cv2.imshow('Mask', mask)
+            cv2.waitKey(25)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
