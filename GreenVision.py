@@ -172,8 +172,8 @@ def vision():
             print('table OK')
         table.putNumber('visionX', -1)
         table.putNumber('visionY', -1)
-        table.putNumber('width', data['width'])
-        table.putNumber('height', data['height'])
+        table.putNumber('width', data['image-width'])
+        table.putNumber('height', data['image-height'])
 
     if debug:
         print('----------------------------------------------------------------')
