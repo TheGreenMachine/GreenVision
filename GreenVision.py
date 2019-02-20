@@ -313,6 +313,9 @@ def vision():
                 ncontours.append(contour)
                 rec_list.append(cv2.boundingRect(contour))
         print("Number of contours: ", len(ncontours))
+        if len(rec_list) == 0:
+            update_net_table(1)
+            continue
         for contour in ncontours:
             #cv2.drawContours(frame, [contour], -1, (0, 0, 255), 3)
             rec_list1 = rec_list.copy()
@@ -370,7 +373,7 @@ def vision():
             cv2.putText(frame, 'Contour areas: {}'.format(contour_area_arr), (10, 600), cv2.FONT_HERSHEY_COMPLEX, .5, (255, 255, 255), 2)
             cv2.imshow('Contour Window', frame)
             cv2.imshow('Mask', mask)
-            cv2.waitKey(40)
+            cv2.waitKey(30)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
