@@ -10,7 +10,7 @@ import os
 import pandas as pd
 import imutils
 
-with open('values.json') as json_file:
+with open('/home/pi/GreenVision/values.json') as json_file:
     data = json.load(json_file)
 
 
