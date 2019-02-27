@@ -4,11 +4,11 @@ import networktables as nt
 from imutils.video import WebcamVideoStream
 import json
 import math
-import time
 import argparse
 import os
 import pandas as pd
 import imutils
+import threading
 
 with open('/home/pi/GreenVision/values.json') as json_file:
     data = json.load(json_file)
@@ -42,13 +42,13 @@ def init_parser_vision():
                                type=str,
                                help='set source for processing: [int] for camera, [path] for file')
     parser_vision.add_argument('-r', '--rotate',
-                               action='store_true',
-                               default=False,
-                               help='rotate 90 degrees')
-    parser_vision.add_argument('-f', '--flip',
-                               action='store_true',
-                               default=False,
-                               help='flip camera image')
+                               type=str,
+                               default='none',
+                               help='rotate image to the [left], [right], or [flip]')
+    # parser_vision.add_argument('-f', '--flip',
+    #                            action='store_true',
+    #                            default=False,
+    #                            help='flip camera image')
     parser_vision.add_argument('-v', '--view',
                                action='store_true',
                                help='toggle contour and mask window')
@@ -170,7 +170,23 @@ def vision():
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
 
     if net_table:
+        cond = threading.Condition()
+        notified = [False]
+
+        def connection_listener(connected, info):
+            print('{}; Connected={}'.format(info, connected))
+            with cond:
+                notified[0] = True
+                cond.notify()
+
         nt.NetworkTables.initialize(server=data['server-ip'])
+        nt.NetworkTables.addConnectionListener(connection_listener, immediateNotify=True)
+        with cond:
+            print('Waiting...')
+            if not notified[0]:
+                cond.wait()
+
+        print('Connected!')
         table = nt.NetworkTables.getTable('SmartDashboard')
         if table:
             print('table OK')
@@ -290,10 +306,18 @@ def vision():
         else:
             _, frame = cap.read()
 
-        if flip:
-            frame = cv2.flip(frame, -1)
-        if rotate:
-            frame = imutils.rotate_bound(frame, 90)
+        # if flip:
+        #     frame = cv2.flip(frame, -1)
+        if not rotate == 'none':
+            if rotate == 'left':
+                frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+            elif rotate == 'right':
+                frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+            elif rotate == 'flip':
+                frame = cv2.flip(frame, -1)
+            else:
+                raise ValueError('Incorrect rotate keyword!')
+            # frame = imutils.rotate_bound(frame, 90)
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, lower_color, upper_color)
 
@@ -306,7 +330,7 @@ def vision():
         theta_list = []
         rec_list = []
         for contour in contours:
-            if cv2.contourArea(contour) > 50 and cv2.contourArea(contour) < 6000:
+            if 50 < cv2.contourArea(contour) < 6000:
                 theta_list.append(calc_angle(contour))
                 contour_area_arr.append(cv2.contourArea(contour))
                 cont_input = contour_area_arr.copy()
@@ -317,7 +341,7 @@ def vision():
             update_net_table(1)
             continue
         for contour in ncontours:
-            #cv2.drawContours(frame, [contour], -1, (0, 0, 255), 3)
+            # cv2.drawContours(frame, [contour], -1, (0, 0, 255), 3)
             rec_list1 = rec_list.copy()
             if len(rec_list) > 1:
 
@@ -329,7 +353,7 @@ def vision():
                 print('Is pair: {}'.format(is_pair(rec1, rec2)))
                 avg_c1_x, avg_c1_y = get_avg_points(rec1, rec2)
                 if is_pair(rec1, rec2):
-                    #draw_points(rec1, rec2, avg_c1_x, avg_c1_y, (255, 0, 0))  # (255, 0, 0) == blue (bgr)
+                    # draw_points(rec1, rec2, avg_c1_x, avg_c1_y, (255, 0, 0))  # (255, 0, 0) == blue (bgr)
                     distance = calc_distance(rec1.cont_area, rec2.cont_area)
                     yaw = calc_yaw(avg_c1_x, screen_c_x, h_focal_length)
                     if debug:
@@ -342,7 +366,7 @@ def vision():
                     avg_c2_x, avg_c2_y = get_avg_points(rec3, rec4)
                     yaw1 = calc_yaw(avg_c2_x, screen_c_x, h_focal_length)
                     if is_pair(rec3, rec4):
-                        #draw_points(rec3, rec4, avg_c2_x, avg_c2_y, (0, 204, 204))  # (0, 204, 204) == yellow (bgr)
+                        # draw_points(rec3, rec4, avg_c2_x, avg_c2_y, (0, 204, 204))  # (0, 204, 204) == yellow (bgr)
                         if net_table:
                             update_net_table(2, rec3.cx, rec3.cy, rec4.cx, rec4.cy, avg_c2_x, avg_c2_y)
 
@@ -355,7 +379,7 @@ def vision():
                             if net_table:
                                 update_net_table(3, rec5.cx, rec5.cy, rec6.cx, rec6.cy, avg_c3_x,
                                                  avg_c3_y)
-                            #draw_points(rec5, rec6, avg_c3_x, avg_c3_y, (255, 0, 255))  # (255, 0, 255) == fuschia
+                            # draw_points(rec5, rec6, avg_c3_x, avg_c3_y, (255, 0, 255))  # (255, 0, 255) == fuschia
                 yaw_list = [math.fabs(yaw), math.fabs(yaw1), math.fabs(yaw2)]
                 if yaw_list[0] != yaw_list[1] or yaw_list[1] != yaw_list[2]:
                     yaw_selection = min(yaw_list)
@@ -369,8 +393,10 @@ def vision():
                     draw_points(rec5, rec6, avg_c3_x, avg_c3_y, (255, 0, 255))  # (255, 0, 255) == fuschia
 
         if view:
-            cv2.putText(frame, 'Yaws: {} {} {}'.format(yaw, yaw1, yaw2), (10, 500), cv2.FONT_HERSHEY_COMPLEX, .5, (255, 255, 255), 2)
-            cv2.putText(frame, 'Contour areas: {}'.format(contour_area_arr), (10, 600), cv2.FONT_HERSHEY_COMPLEX, .5, (255, 255, 255), 2)
+            cv2.putText(frame, 'Yaws: {} {} {}'.format(yaw, yaw1, yaw2), (10, 500), cv2.FONT_HERSHEY_COMPLEX, .5,
+                        (255, 255, 255), 2)
+            cv2.putText(frame, 'Contour areas: {}'.format(contour_area_arr), (10, 600), cv2.FONT_HERSHEY_COMPLEX, .5,
+                        (255, 255, 255), 2)
             cv2.imshow('Contour Window', frame)
             cv2.imshow('Mask', mask)
             cv2.waitKey(30)
