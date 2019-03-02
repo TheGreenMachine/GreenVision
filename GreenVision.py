@@ -206,6 +206,7 @@ def vision():
             self.theta = theta
             self.box = cv2.boxPoints(cv2.minAreaRect(contur))
             self.area = cv2.contourArea(contur)
+            self.draw = np.int0(self.box)
 
     def calc_distance(ca, cb):
         avg_contour = (ca + cb) / 2
