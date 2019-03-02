@@ -208,6 +208,13 @@ def vision():
             self.area = cv2.contourArea(contur)
             self.draw = np.int0(self.box)
 
+    def sort_contours(cnts):
+        reverse = False
+        i = 0
+        bounding_boxes = [cv2.boundingRect(c) for c in cnts]
+        (cnts, bounding_boxes) = zip(*sorted(zip(cnts, bounding_boxes), key=lambda b: b[1][i], reverse=reverse))
+        return cnts, bounding_boxes
+
     def calc_distance(ca, cb):
         avg_contour = (ca + cb) / 2
         if debug:
@@ -221,22 +228,12 @@ def vision():
         ya = math.degrees(math.atan((pixel_x - center_x) / h_foc_len))
         return round(ya)
 
-    def update_net_table(n, c1_x=-1, c1_y=-1, c2_x=-1, c2_y=-1, avgc_x=-1, avgc_y=-1, dis=-1):
-        table.putNumber("center{}_x".format(n), c1_x)
-        table.putNumber("center{}_y".format(n), c1_y)
-        table.putNumber("center{}_x".format(n + 1), c2_x)
-        table.putNumber("center{}_y".format(n + 1), c2_y)
+    def update_net_table(avgc_x=-1, dis=-1):
         table.putNumber("center_x", avgc_x)
-        table.putNumber("center_y", avgc_y)
-        table.putNumber('distance_esti', dis)
+        # table.putNumber('distance_esti', dis)
         if debug:
-            print("center{}_x".format(n), c1_x)
-            print("center{}_y".format(n), c1_y)
-            print("center{}_x".format(n + 1), c2_x)
-            print("center{}_y".format(n + 1), c2_y)
             print("center_x", avgc_x)
-            print("center_y", avgc_y)
-            print('distance_esti', dis)
+            # print('distance_esti', dis)
 
     while True:
         yaw, yaw1, yaw2 = -99, -99, -99
@@ -259,12 +256,31 @@ def vision():
         screen_c_x = data['image-width'] / 2 - 0.5
         all_contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         filtered_contours = []
+        rectangle_list = []
+        average_cx_list = []
+        sorted_contours = None
         for contour in all_contours:
             if 50 < cv2.contourArea(contour) < 10000:
                 filtered_contours.append(contour)
+        if len(filtered_contours) != 0:
+            sorted_contours, _ = sort_contours(filtered_contours)
         print("Number of contours: ", len(filtered_contours))
-        for contour in filtered_contours:
-            cv2.drawContours(frame, [contour], -1, (0, 0, 255), 3)
+        if sorted_contours is not None:
+            for contour in sorted_contours:
+                rectangle_list.append(Rect(contour))
+            if len(rectangle_list) > 1:
+                for index, rect in enumerate(rectangle_list):
+                    # positive angle means it's the left tape of a pair
+                    if rect.theta > 0 and index != len(rectangle_list) - 1:
+                        average_cx_list.append((rect.center + rectangle_list[index + 1].center) / 2)
+        best_center_average = min(average_cx_list, key=lambda x: abs(x - 320))
+        if net_table:
+            update_net_table(best_center_average)
+        #  TODO:
+        #  Create logic to create a proper pair,
+        #  Find averaged center that is closest to the center of the screen,
+        #  Send center coords closest to the center of the crosshair/screen
+
         # rec_list1 = rec_list.copy()
         # if len(rec_list) > 1:
         #
