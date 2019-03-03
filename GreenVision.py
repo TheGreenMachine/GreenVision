@@ -295,11 +295,14 @@ def vision():
             if len(rectangle_list) > 1:
                 for index, rect in enumerate(rectangle_list):
                     # positive angle means it's the left tape of a pair
-                    if abs(rect.theta) > 45 and index != len(rectangle_list) - 1:
-                        draw_points(rect, (0, 255, 0))
-                        # average_cx_list.append((rect.center + rectangle_list[index + 1].center[0]) / 2)
+                    if abs(rect.theta) > 40 and index != len(rectangle_list) - 1:
+                        draw_points(rect, (0, 0, 255))
+                        # Only add rect if the second rect is the right mark
+                        if abs(rectangle_list[index + 1].theta) < 40:
+                            average_cx_list.append(int((rect.center[0] + rectangle_list[index + 1].center[0]) / 2) + 1)
         if len(average_cx_list) > 0:
             best_center_average = min(average_cx_list, key=lambda x: abs(x - 320))
+            cv2.line(frame, (best_center_average, 0), (best_center_average, data['image-height']), (0, 255, 0), 2)
         if net_table:
             update_net_table(best_center_average)
         #  TODO:
