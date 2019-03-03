@@ -10,7 +10,7 @@ import os
 import pandas as pd
 import imutils
 
-with open('/home/pi/GreenVision/values.json') as json_file:
+with open('./values.json') as json_file:
     data = json.load(json_file)
 
 
@@ -158,6 +158,7 @@ def vision():
     threshold = args['threshold'] if 0 < args['threshold'] < 50 else 0
     multi = args['multithread']
     net_table = args['networktables']
+    sequence = False
     if multi:
         cap = WebcamVideoStream(src)
         cap.stream.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
@@ -168,6 +169,8 @@ def vision():
         cap = cv2.VideoCapture(src)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
+        if cap.get(cv2.CAP_PROP_FRAME_COUNT) < 50:
+            sequence = True
 
     if net_table:
         nt.NetworkTables.initialize(server=data['server-ip'])
@@ -235,16 +238,31 @@ def vision():
             print("center_x", avgc_x)
             # print('distance_esti', dis)
 
+    firstRead = True
+
     while True:
         yaw, yaw1, yaw2 = -99, -99, -99
         avg_c1_x, avg_c1_y, avg_c2_x, avg_c2_y, avg_c3_x, avg_c3_y = 0, 0, 0, 0, 0, 0
         rec1, rec2, rec3, rec4, rec5, rec6 = 0, 0, 0, 0, 0, 0
 
-        print('=========================================================')
+        if not firstRead:
+            key = cv2.waitKey(30) & 0xFF
+            if key == ord('q'):
+                break
+            if sequence and key != ord(' '):
+                continue
+
+        firstRead = False
+
         if multi:
             frame = cap.read()
         else:
             _, frame = cap.read()
+
+        if frame is None:
+            continue
+
+        print('=========================================================')
 
         if flip:
             frame = cv2.flip(frame, -1)
@@ -265,7 +283,7 @@ def vision():
         if len(filtered_contours) != 0:
             sorted_contours, _ = sort_contours(filtered_contours)
         print("Number of contours: ", len(filtered_contours))
-        if sorted_contours is not None:
+        if sorted_contours is not None and len(sorted_contours) > 0:
             for contour in sorted_contours:
                 rectangle_list.append(Rect(contour))
             if len(rectangle_list) > 1:
@@ -273,7 +291,8 @@ def vision():
                     # positive angle means it's the left tape of a pair
                     if rect.theta > 0 and index != len(rectangle_list) - 1:
                         average_cx_list.append((rect.center + rectangle_list[index + 1].center) / 2)
-        best_center_average = min(average_cx_list, key=lambda x: abs(x - 320))
+        if len(average_cx_list) > 0:
+            best_center_average = min(average_cx_list, key=lambda x: abs(x - 320))
         if net_table:
             update_net_table(best_center_average)
         #  TODO:
