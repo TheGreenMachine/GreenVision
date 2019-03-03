@@ -231,6 +231,12 @@ def vision():
         ya = math.degrees(math.atan((pixel_x - center_x) / h_foc_len))
         return round(ya)
 
+    def draw_points(rect, color):
+        cv2.line(frame, (rect.box[0][0], rect.box[0][1]), (rect.box[1][0], rect.box[1][1]), color, 2)
+        cv2.line(frame, (rect.box[1][0], rect.box[1][1]), (rect.box[2][0], rect.box[2][1]), color, 2)
+        cv2.line(frame, (rect.box[2][0], rect.box[2][1]), (rect.box[3][0], rect.box[3][1]), color, 2)
+        cv2.line(frame, (rect.box[3][0], rect.box[3][1]), (rect.box[0][0], rect.box[0][1]), color, 2)
+
     def update_net_table(avgc_x=-1, dis=-1):
         table.putNumber("center_x", avgc_x)
         # table.putNumber('distance_esti', dis)
@@ -289,8 +295,9 @@ def vision():
             if len(rectangle_list) > 1:
                 for index, rect in enumerate(rectangle_list):
                     # positive angle means it's the left tape of a pair
-                    if rect.theta > 0 and index != len(rectangle_list) - 1:
-                        average_cx_list.append((rect.center + rectangle_list[index + 1].center) / 2)
+                    if abs(rect.theta) > 45 and index != len(rectangle_list) - 1:
+                        draw_points(rect, (0, 255, 0))
+                        # average_cx_list.append((rect.center + rectangle_list[index + 1].center[0]) / 2)
         if len(average_cx_list) > 0:
             best_center_average = min(average_cx_list, key=lambda x: abs(x - 320))
         if net_table:
