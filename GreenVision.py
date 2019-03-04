@@ -294,10 +294,12 @@ def vision():
                 for index, rect in enumerate(rectangle_list):
                     # positive angle means it's the left tape of a pair
                     if abs(rect.theta) > 40 and index != len(rectangle_list) - 1:
-                        draw_points(rect, (0, 255, 255))
+                        if view:
+                            draw_points(rect, (0, 255, 255))
                         # only add rect if the second rect is the correct pair
                         if abs(rectangle_list[index + 1].theta) < 40:
-                            draw_points(rectangle_list[index + 1], (0, 0, 255))
+                            if view:
+                                draw_points(rectangle_list[index + 1], (0, 0, 255))
                             average_cx_list.append(int((rect.center[0] + rectangle_list[index + 1].center[0]) / 2) + 1)
                             average_cy_list.append(int((rect.center[1] + rectangle_list[index + 1].center[1]) / 2) + 1)
         if len(average_cx_list) > 0:
@@ -305,8 +307,13 @@ def vision():
             best_center_average_x = average_cx_list[bisect.bisect_left(average_cx_list, 320) - 1]
             best_center_average_y = average_cy_list[bisect.bisect_left(average_cy_list, 240) - 1]
             best_center_average_coords = (best_center_average_x, best_center_average_y)
+            if debug:
+                print('Avg_cx_list: {}'.format(average_cx_list))
+                print('Avg_cy_list: {}'.format(average_cy_list))
+                print('Best Center Coords: {}'.format(best_center_average_coords))
             # cv2.line(frame, (best_center_average, 0), (best_center_average, data['image-height']), (0, 255, 0), 2)
-            cv2.line(frame, best_center_average_coords, center_coords, (0, 255, 0), 2)
+            if view:
+                cv2.line(frame, best_center_average_coords, center_coords, (0, 255, 0), 2)
             if net_table:
                 update_net_table(best_center_average_coords[0])
 
@@ -317,7 +324,8 @@ def vision():
             break
 
         end = time.time()
-        print('Execute time: {}'.format(end - start))
+        if debug:
+            print('Execute time: {}'.format(end - start))
 
     cap.release()
     cv2.destroyAllWindows()
