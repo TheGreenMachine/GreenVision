@@ -9,6 +9,7 @@ import argparse
 import os
 import pandas as pd
 import imutils
+import bisect
 
 with open('./values.json') as json_file:
     data = json.load(json_file)
@@ -149,6 +150,48 @@ def init_parser_distance_table():
 
 
 def vision():
+    class Rect:
+        def __init__(self, contur):
+            center, wid_hei, theta = cv2.minAreaRect(contur)
+            self.center = center
+            self.width = wid_hei[0]
+            self.height = wid_hei[1]
+            self.theta = theta
+            self.box = cv2.boxPoints(cv2.minAreaRect(contur))
+            self.area = cv2.contourArea(contur)
+            self.draw = np.int0(self.box)
+
+    def sort_contours(cnts):
+        bounding_boxes = [cv2.boundingRect(c) for c in cnts]
+        (cnts, bounding_boxes) = zip(*sorted(zip(cnts, bounding_boxes), key=lambda b: b[1][0], reverse=False))
+        return cnts, bounding_boxes
+
+    def calc_distance(ca, cb):
+        avg_contour = (ca + cb) / 2
+        if debug:
+            print('Coeff A: {}, Coeff B: {}, Avg Contour Area: {}'.format(data['A'], data['B'], avg_contour))
+        if model == 'power':
+            return data['A'] * avg_contour ** data['B']
+        elif model == 'exponential':
+            return data['A'] * data['B'] ** avg_contour
+
+    def calc_yaw(pixel_x, center_x, h_foc_len):
+        ya = math.degrees(math.atan((pixel_x - center_x) / h_foc_len))
+        return round(ya)
+
+    def draw_points(rect, color):
+        cv2.line(frame, (rect.box[0][0], rect.box[0][1]), (rect.box[1][0], rect.box[1][1]), color, 2)
+        cv2.line(frame, (rect.box[1][0], rect.box[1][1]), (rect.box[2][0], rect.box[2][1]), color, 2)
+        cv2.line(frame, (rect.box[2][0], rect.box[2][1]), (rect.box[3][0], rect.box[3][1]), color, 2)
+        cv2.line(frame, (rect.box[3][0], rect.box[3][1]), (rect.box[0][0], rect.box[0][1]), color, 2)
+
+    def update_net_table(avgc_x=-1, dis=-1):
+        table.putNumber("center_x", avgc_x)
+        # table.putNumber('distance_esti', dis)
+        if debug:
+            print("center_x", avgc_x)
+            # print('distance_esti', dis)
+
     src = int(args['source']) if args['source'].isdigit() else args['source']
     flip = args['flip']
     rotate = args['rotate']
@@ -200,65 +243,18 @@ def vision():
     lower_color = np.array(data['lower-color-list']) - threshold
     upper_color = np.array([data['upper-color-list'][0] + threshold, 255, 255])
 
-    class Rect:
-        def __init__(self, contur):
-            center, wid_hei, theta = cv2.minAreaRect(contur)
-            self.center = center
-            self.width = wid_hei[0]
-            self.height = wid_hei[1]
-            self.theta = theta
-            self.box = cv2.boxPoints(cv2.minAreaRect(contur))
-            self.area = cv2.contourArea(contur)
-            self.draw = np.int0(self.box)
-
-    def sort_contours(cnts):
-        reverse = False
-        i = 0
-        bounding_boxes = [cv2.boundingRect(c) for c in cnts]
-        (cnts, bounding_boxes) = zip(*sorted(zip(cnts, bounding_boxes), key=lambda b: b[1][i], reverse=reverse))
-        return cnts, bounding_boxes
-
-    def calc_distance(ca, cb):
-        avg_contour = (ca + cb) / 2
-        if debug:
-            print('Coeff A: {}, Coeff B: {}, Avg Contour Area: {}'.format(data['A'], data['B'], avg_contour))
-        if model == 'power':
-            return data['A'] * avg_contour ** data['B']
-        elif model == 'exponential':
-            return data['A'] * data['B'] ** avg_contour
-
-    def calc_yaw(pixel_x, center_x, h_foc_len):
-        ya = math.degrees(math.atan((pixel_x - center_x) / h_foc_len))
-        return round(ya)
-
-    def draw_points(rect, color):
-        cv2.line(frame, (rect.box[0][0], rect.box[0][1]), (rect.box[1][0], rect.box[1][1]), color, 2)
-        cv2.line(frame, (rect.box[1][0], rect.box[1][1]), (rect.box[2][0], rect.box[2][1]), color, 2)
-        cv2.line(frame, (rect.box[2][0], rect.box[2][1]), (rect.box[3][0], rect.box[3][1]), color, 2)
-        cv2.line(frame, (rect.box[3][0], rect.box[3][1]), (rect.box[0][0], rect.box[0][1]), color, 2)
-
-    def update_net_table(avgc_x=-1, dis=-1):
-        table.putNumber("center_x", avgc_x)
-        # table.putNumber('distance_esti', dis)
-        if debug:
-            print("center_x", avgc_x)
-            # print('distance_esti', dis)
-
-    firstRead = True
+    first_read = True
 
     while True:
-        yaw, yaw1, yaw2 = -99, -99, -99
-        avg_c1_x, avg_c1_y, avg_c2_x, avg_c2_y, avg_c3_x, avg_c3_y = 0, 0, 0, 0, 0, 0
-        rec1, rec2, rec3, rec4, rec5, rec6 = 0, 0, 0, 0, 0, 0
-
-        if not firstRead:
+        start = time.time()
+        if not first_read:
             key = cv2.waitKey(30) & 0xFF
             if key == ord('q'):
                 break
             if sequence and key != ord(' '):
                 continue
 
-        firstRead = False
+        first_read = False
 
         if multi:
             frame = cap.read()
@@ -277,19 +273,20 @@ def vision():
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, lower_color, upper_color)
 
-        screen_c_x = data['image-width'] / 2 - 0.5
         all_contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         filtered_contours = []
         rectangle_list = []
-        average_cx_list = []
-        sorted_contours = None
+        average_center_list = []
+        # average_cx_list = []
+        # average_cy_list = []
+        sorted_contours = []
         for contour in all_contours:
             if 50 < cv2.contourArea(contour) < 10000:
                 filtered_contours.append(contour)
         if len(filtered_contours) != 0:
             sorted_contours, _ = sort_contours(filtered_contours)
         print("Number of contours: ", len(filtered_contours))
-        if sorted_contours is not None and len(sorted_contours) > 0:
+        if len(sorted_contours) > 1:
             for contour in sorted_contours:
                 rectangle_list.append(Rect(contour))
             if len(rectangle_list) > 1:
@@ -297,24 +294,36 @@ def vision():
                     # positive angle means it's the left tape of a pair
                     if abs(rect.theta) > 40 and index != len(rectangle_list) - 1:
                         draw_points(rect, (0, 0, 255))
-                        # Only add rect if the second rect is the right mark
+                        # only add rect if the second rect is the correct pair
                         if abs(rectangle_list[index + 1].theta) < 40:
-                            average_cx_list.append(int((rect.center[0] + rectangle_list[index + 1].center[0]) / 2) + 1)
-        if len(average_cx_list) > 0:
-            best_center_average = min(average_cx_list, key=lambda x: abs(x - 320))
-            cv2.line(frame, (best_center_average, 0), (best_center_average, data['image-height']), (0, 255, 0), 2)
-        if net_table:
-            update_net_table(best_center_average)
-        #  TODO:
-        #  Create logic to create a proper pair,
-        #  Find averaged center that is closest to the center of the screen,
-        #  Send center coords closest to the center of the crosshair/screen
+                            average_center_list.append(rect.center)
+                            average_center_list.append(rectangle_list[index + 1].center)
+                            # average_cx_list.append(int((rect.center[0] + rectangle_list[index + 1].center[0]) / 2) + 1)
+                            # average_cy_list.append(int((rect.center[1] + rectangle_list[index + 1].center[1]) / 2) + 1)
+        # if len(average_cx_list) > 0:
+            # finds c_x that is closest to the center of the center
+            # best_center_average = min(average_cx_list, key=lambda x: abs(x - 320))
+            # could use bisect algorithm to find best center if you want O(ln n) instead of O(n)
+            # best_center_average = bisect.bisect((average_cx_list, 320))
+        if len(average_center_list) > 1:
+            best_center_average = min(average_center_list[0], key=lambda x: abs(x - 320))
+
+            # cv2.line(frame, (best_center_average, 0), (best_center_average, data['image-height']), (0, 255, 0), 2)
+            cv2.line(frame, best_center_average, (data['image-width'], data['image-height']), (0, 255, 0), 2)
+            if net_table:
+                update_net_table(best_center_average)
 
         if view:
             cv2.imshow('Contour Window', frame)
             cv2.imshow('Mask', mask)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
+
+        end = time.time()
+        print('Execute time: {}'.format(end - start))
+
+    cap.release()
+    cv2.destroyAllWindows()
 
 
 def image_capture():
