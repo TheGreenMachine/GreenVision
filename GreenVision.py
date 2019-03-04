@@ -4,13 +4,14 @@ import networktables as nt
 from imutils.video import WebcamVideoStream
 import json
 import math
+import time
 import argparse
 import os
 import pandas as pd
 import imutils
-import threading
+import bisect
 
-with open('/home/pi/GreenVision/values.json') as json_file:
+with open('./values.json') as json_file:
     data = json.load(json_file)
 
 
@@ -42,13 +43,13 @@ def init_parser_vision():
                                type=str,
                                help='set source for processing: [int] for camera, [path] for file')
     parser_vision.add_argument('-r', '--rotate',
-                               type=str,
-                               default='none',
-                               help='rotate image to the [left], [right], or [flip]')
-    # parser_vision.add_argument('-f', '--flip',
-    #                            action='store_true',
-    #                            default=False,
-    #                            help='flip camera image')
+                               action='store_true',
+                               default=False,
+                               help='rotate 90 degrees')
+    parser_vision.add_argument('-f', '--flip',
+                               action='store_true',
+                               default=False,
+                               help='flip camera image')
     parser_vision.add_argument('-v', '--view',
                                action='store_true',
                                help='toggle contour and mask window')
@@ -149,6 +150,48 @@ def init_parser_distance_table():
 
 
 def vision():
+    class Rect:
+        def __init__(self, contur):
+            center, wid_hei, theta = cv2.minAreaRect(contur)
+            self.center = center
+            self.width = wid_hei[0]
+            self.height = wid_hei[1]
+            self.theta = theta
+            self.box = cv2.boxPoints(cv2.minAreaRect(contur))
+            self.area = cv2.contourArea(contur)
+            self.draw = np.int0(self.box)
+
+    def sort_contours(cnts):
+        bounding_boxes = [cv2.boundingRect(c) for c in cnts]
+        (cnts, bounding_boxes) = zip(*sorted(zip(cnts, bounding_boxes), key=lambda b: b[1][0], reverse=False))
+        return cnts, bounding_boxes
+
+    def calc_distance(ca, cb):
+        avg_contour = (ca + cb) / 2
+        if debug:
+            print('Coeff A: {}, Coeff B: {}, Avg Contour Area: {}'.format(data['A'], data['B'], avg_contour))
+        if model == 'power':
+            return data['A'] * avg_contour ** data['B']
+        elif model == 'exponential':
+            return data['A'] * data['B'] ** avg_contour
+
+    def calc_yaw(pixel_x, center_x, h_foc_len):
+        ya = math.degrees(math.atan((pixel_x - center_x) / h_foc_len))
+        return round(ya)
+
+    def draw_points(rect, color):
+        cv2.line(frame, (rect.box[0][0], rect.box[0][1]), (rect.box[1][0], rect.box[1][1]), color, 2)
+        cv2.line(frame, (rect.box[1][0], rect.box[1][1]), (rect.box[2][0], rect.box[2][1]), color, 2)
+        cv2.line(frame, (rect.box[2][0], rect.box[2][1]), (rect.box[3][0], rect.box[3][1]), color, 2)
+        cv2.line(frame, (rect.box[3][0], rect.box[3][1]), (rect.box[0][0], rect.box[0][1]), color, 2)
+
+    def update_net_table(avgc_x=-1, dis=-1):
+        table.putNumber("center_x", avgc_x)
+        # table.putNumber('distance_esti', dis)
+        if debug:
+            print("center_x", avgc_x)
+            # print('distance_esti', dis)
+
     src = int(args['source']) if args['source'].isdigit() else args['source']
     flip = args['flip']
     rotate = args['rotate']
@@ -158,35 +201,24 @@ def vision():
     threshold = args['threshold'] if 0 < args['threshold'] < 50 else 0
     multi = args['multithread']
     net_table = args['networktables']
+    sequence = False
     if multi:
         cap = WebcamVideoStream(src)
         cap.stream.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
         cap.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
+        if cap.stream.get(cv2.CAP_PROP_FRAME_COUNT) < 50:
+            sequence = True
         cap.start()
 
     else:
         cap = cv2.VideoCapture(src)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
+        if cap.get(cv2.CAP_PROP_FRAME_COUNT) < 50:
+            sequence = True
 
     if net_table:
-        cond = threading.Condition()
-        notified = [False]
-
-        def connection_listener(connected, info):
-            print('{}; Connected={}'.format(info, connected))
-            with cond:
-                notified[0] = True
-                cond.notify()
-
         nt.NetworkTables.initialize(server=data['server-ip'])
-        nt.NetworkTables.addConnectionListener(connection_listener, immediateNotify=True)
-        with cond:
-            print('Waiting...')
-            if not notified[0]:
-                cond.wait()
-
-        print('Connected!')
         table = nt.NetworkTables.getTable('SmartDashboard')
         if table:
             print('table OK')
@@ -212,196 +244,83 @@ def vision():
 
     lower_color = np.array(data['lower-color-list']) - threshold
     upper_color = np.array([data['upper-color-list'][0] + threshold, 255, 255])
-
-    class Rect:
-        def __init__(self, rectangle, theta, area):
-            self.tlx = rectangle[0]
-            self.tly = rectangle[1]
-            self.width = rectangle[2]
-            self.height = rectangle[3]
-            self.brx = self.tlx + self.width
-            self.bry = self.tly + self.height
-            self.cx = int((self.tlx + self.brx) / 2)
-            self.cy = int((self.tly + self.bry) / 2)
-            self.angle = theta
-            self.cont_area = area
-
-    def get_rec(rec_l, theta_l, contour_l):
-        big_cont = max(contour_l)
-        big_index = contour_l.index(big_cont)
-        rec = Rect(rec_l[big_index], theta_l[big_index], contour_l[big_index])
-
-        rec_l.pop(big_index)
-        theta_l.pop(big_index)
-        contour_l.pop(big_index)
-        return rec
-
-    def is_pair(ca, cb):
-        if (ca.angle < 0 and cb.angle > 0) or (ca.angle > 0 and cb.angle < 0):
-            print('is_pair() math: {}'.format(ca.angle + cb.angle))
-            are_opposite = np.sign(ca.angle) != np.sign(cb.angle)
-            return are_opposite
-        else:
-            return False
-
-    def calc_angle(con):
-        _, _, theta = cv2.minAreaRect(con)
-        if theta < -50:
-            angle = abs(theta + 90)
-        else:
-            angle = round(theta)
-
-        return angle
-
-    def calc_distance(ca, cb):
-        avg_contour = (ca + cb) / 2
-        if debug:
-            print('Coeff A: {}, Coeff B: {}, Avg Contour Area: {}'.format(data['A'], data['B'], avg_contour))
-        if model == 'power':
-            return data['A'] * avg_contour ** data['B']
-        elif model == 'exponential':
-            return data['A'] * data['B'] ** avg_contour
-
-    def calc_yaw(pixel_x, center_x, h_foc_len):
-        ya = math.degrees(math.atan((pixel_x - center_x) / h_foc_len))
-        return round(ya)
-
-    def draw_points(rec_a, rec_b, acx, acy, color):
-        cv2.line(frame, (rec_a.cx, rec_a.cy), (rec_a.cx, rec_a.cy), color, 8)
-        cv2.line(frame, (rec_b.cx, rec_b.cy), (rec_b.cx, rec_b.cy), color, 8)
-        cv2.line(frame, (acx, acy), (acx, acy), (255, 0, 0), 8)
-
-    def get_avg_points(rec_a, rec_b):
-        avgcx = int((rec_a.cx + rec_b.cx) / 2)
-        avgcy = int((rec_a.cy + rec_b.cy) / 2)
-        if debug:
-            print('Average Center (x , y): ({} , {})'.format(avgcx, avgcy))
-        return avgcx, avgcy
-
-    def update_net_table(n, c1_x=-1, c1_y=-1, c2_x=-1, c2_y=-1, avgc_x=-1, avgc_y=-1, dis=-1):
-        table.putNumber("center{}_x".format(n), c1_x)
-        table.putNumber("center{}_y".format(n), c1_y)
-        table.putNumber("center{}_x".format(n + 1), c2_x)
-        table.putNumber("center{}_y".format(n + 1), c2_y)
-        table.putNumber("center_x", avgc_x)
-        table.putNumber("center_y", avgc_y)
-        table.putNumber('distance_esti', dis)
-        if debug:
-            print("center{}_x".format(n), c1_x)
-            print("center{}_y".format(n), c1_y)
-            print("center{}_x".format(n + 1), c2_x)
-            print("center{}_y".format(n + 1), c2_y)
-            print("center_x", avgc_x)
-            print("center_y", avgc_y)
-            print('distance_esti', dis)
+    center_coords = (int(data['image-width'] / 2), int(data['image-height'] / 2))
+    first_read = True
 
     while True:
-        yaw, yaw1, yaw2 = -99, -99, -99
-        avg_c1_x, avg_c1_y, avg_c2_x, avg_c2_y, avg_c3_x, avg_c3_y = 0, 0, 0, 0, 0, 0
-        rec1, rec2, rec3, rec4, rec5, rec6 = 0, 0, 0, 0, 0, 0
+        start = time.time()
+        if not first_read:
+            key = cv2.waitKey(30) & 0xFF
+            if key == ord('q'):
+                break
+            if sequence and key != ord(' '):
+                continue
 
-        print('=========================================================')
+        first_read = False
+
         if multi:
             frame = cap.read()
         else:
             _, frame = cap.read()
 
-        # if flip:
-        #     frame = cv2.flip(frame, -1)
-        if not rotate == 'none':
-            if rotate == 'left':
-                frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
-            elif rotate == 'right':
-                frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
-            elif rotate == 'flip':
-                frame = cv2.flip(frame, -1)
-            else:
-                raise ValueError('Incorrect rotate keyword!')
-            # frame = imutils.rotate_bound(frame, 90)
+        if frame is None:
+            continue
+
+        print('=========================================================')
+
+        if flip:
+            frame = cv2.flip(frame, -1)
+        if rotate:
+            frame = imutils.rotate_bound(frame, 90)
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, lower_color, upper_color)
 
-        screen_c_x = data['image-width'] / 2 - 0.5
-        contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        ncontours = []
-
-        contour_area_arr = []
-
-        theta_list = []
-        rec_list = []
-        for contour in contours:
-            if 50 < cv2.contourArea(contour) < 6000:
-                theta_list.append(calc_angle(contour))
-                contour_area_arr.append(cv2.contourArea(contour))
-                cont_input = contour_area_arr.copy()
-                ncontours.append(contour)
-                rec_list.append(cv2.boundingRect(contour))
-        print("Number of contours: ", len(ncontours))
-        if len(rec_list) == 0:
-            update_net_table(1)
-            continue
-        for contour in ncontours:
-            # cv2.drawContours(frame, [contour], -1, (0, 0, 255), 3)
-            rec_list1 = rec_list.copy()
-            if len(rec_list) > 1:
-
-                print('Angles: {}'.format(theta_list))
-
-                rec1 = get_rec(rec_list, theta_list, cont_input)
-                rec2 = get_rec(rec_list, theta_list, cont_input)
-                print(contour_area_arr)
-                print('Is pair: {}'.format(is_pair(rec1, rec2)))
-                avg_c1_x, avg_c1_y = get_avg_points(rec1, rec2)
-                if is_pair(rec1, rec2):
-                    # draw_points(rec1, rec2, avg_c1_x, avg_c1_y, (255, 0, 0))  # (255, 0, 0) == blue (bgr)
-                    distance = calc_distance(rec1.cont_area, rec2.cont_area)
-                    yaw = calc_yaw(avg_c1_x, screen_c_x, h_focal_length)
-                    if debug:
-                        print('Distance = {} \t Yaw = {} \t is_pair() = {}'.format(distance, yaw, is_pair(rec1, rec2)))
-                    if net_table:
-                        update_net_table(1, rec1.cx, rec1.cy, rec2.cx, rec2.cy, avg_c1_x, avg_c1_y, distance)
-                if len(rec_list) > 3:
-                    rec3 = get_rec(rec_list, theta_list, cont_input)
-                    rec4 = get_rec(rec_list, theta_list, cont_input)
-                    avg_c2_x, avg_c2_y = get_avg_points(rec3, rec4)
-                    yaw1 = calc_yaw(avg_c2_x, screen_c_x, h_focal_length)
-                    if is_pair(rec3, rec4):
-                        # draw_points(rec3, rec4, avg_c2_x, avg_c2_y, (0, 204, 204))  # (0, 204, 204) == yellow (bgr)
-                        if net_table:
-                            update_net_table(2, rec3.cx, rec3.cy, rec4.cx, rec4.cy, avg_c2_x, avg_c2_y)
-
-                    if len(rec_list) > 5:
-                        rec5 = get_rec(rec_list, theta_list, cont_input)
-                        rec6 = get_rec(rec_list, theta_list, cont_input)
-                        avg_c3_x, avg_c3_y = get_avg_points(rec5, rec6)
-                        yaw2 = calc_yaw(avg_c3_x, screen_c_x, h_focal_length)
-                        if is_pair(rec5, rec6):
-                            if net_table:
-                                update_net_table(3, rec5.cx, rec5.cy, rec6.cx, rec6.cy, avg_c3_x,
-                                                 avg_c3_y)
-                            # draw_points(rec5, rec6, avg_c3_x, avg_c3_y, (255, 0, 255))  # (255, 0, 255) == fuschia
-                yaw_list = [math.fabs(yaw), math.fabs(yaw1), math.fabs(yaw2)]
-                if yaw_list[0] != yaw_list[1] or yaw_list[1] != yaw_list[2]:
-                    yaw_selection = min(yaw_list)
-                else:
-                    continue
-                if yaw_selection == yaw_list[0] and is_pair(rec1, rec2) and len(rec_list1) > 1:
-                    draw_points(rec1, rec2, avg_c1_x, avg_c1_y, (255, 0, 0))  # (255, 0, 0) == blue (bgr)
-                elif yaw_selection == yaw_list[1] and is_pair(rec3, rec4) and len(rec_list1) > 3:
-                    draw_points(rec3, rec4, avg_c2_x, avg_c2_y, (0, 204, 204))  # (0, 204, 204) == yellow (bgr)
-                elif yaw_selection == yaw_list[2] and is_pair(rec5, rec6) and len(rec_list1) > 5:
-                    draw_points(rec5, rec6, avg_c3_x, avg_c3_y, (255, 0, 255))  # (255, 0, 255) == fuschia
+        all_contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        filtered_contours = []
+        rectangle_list = []
+        average_cx_list = []
+        average_cy_list = []
+        sorted_contours = []
+        for contour in all_contours:
+            if 50 < cv2.contourArea(contour) < 10000:
+                filtered_contours.append(contour)
+        if len(filtered_contours) != 0:
+            sorted_contours, _ = sort_contours(filtered_contours)
+        print("Number of contours: ", len(filtered_contours))
+        if len(sorted_contours) > 1:
+            for contour in sorted_contours:
+                rectangle_list.append(Rect(contour))
+            if len(rectangle_list) > 1:
+                for index, rect in enumerate(rectangle_list):
+                    # positive angle means it's the left tape of a pair
+                    if abs(rect.theta) > 40 and index != len(rectangle_list) - 1:
+                        draw_points(rect, (0, 255, 255))
+                        # only add rect if the second rect is the correct pair
+                        if abs(rectangle_list[index + 1].theta) < 40:
+                            draw_points(rectangle_list[index + 1], (0, 0, 255))
+                            average_cx_list.append(int((rect.center[0] + rectangle_list[index + 1].center[0]) / 2) + 1)
+                            average_cy_list.append(int((rect.center[1] + rectangle_list[index + 1].center[1]) / 2) + 1)
+        if len(average_cx_list) > 0:
+            # finds c_x that is closest to the center of the center
+            best_center_average_x = average_cx_list[bisect.bisect_left(average_cx_list, 320) - 1]
+            best_center_average_y = average_cy_list[bisect.bisect_left(average_cy_list, 240) - 1]
+            best_center_average_coords = (best_center_average_x, best_center_average_y)
+            # cv2.line(frame, (best_center_average, 0), (best_center_average, data['image-height']), (0, 255, 0), 2)
+            cv2.line(frame, best_center_average_coords, center_coords, (0, 255, 0), 2)
+            if net_table:
+                update_net_table(best_center_average_coords[0])
 
         if view:
-            cv2.putText(frame, 'Yaws: {} {} {}'.format(yaw, yaw1, yaw2), (10, 500), cv2.FONT_HERSHEY_COMPLEX, .5,
-                        (255, 255, 255), 2)
-            cv2.putText(frame, 'Contour areas: {}'.format(contour_area_arr), (10, 600), cv2.FONT_HERSHEY_COMPLEX, .5,
-                        (255, 255, 255), 2)
             cv2.imshow('Contour Window', frame)
             cv2.imshow('Mask', mask)
-            cv2.waitKey(30)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
+
+        end = time.time()
+        print('Execute time: {}'.format(end - start))
+
+    cap.release()
+    cv2.destroyAllWindows()
 
 
 def image_capture():
