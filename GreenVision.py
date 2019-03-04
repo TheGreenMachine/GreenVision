@@ -296,8 +296,9 @@ def vision():
                         draw_points(rect, (0, 0, 255))
                         # only add rect if the second rect is the correct pair
                         if abs(rectangle_list[index + 1].theta) < 40:
-                            average_center_list.append(rect.center)
-                            average_center_list.append(rectangle_list[index + 1].center)
+                            avg_c_x = (rect.center[0] + rectangle_list[index + 1].center[0]) / 2
+                            avg_c_y = (rect.center[1] + rectangle_list[index + 1].center[1]) / 2
+                            average_center_list.append((avg_c_x, avg_c_y))
                             # average_cx_list.append(int((rect.center[0] + rectangle_list[index + 1].center[0]) / 2) + 1)
                             # average_cy_list.append(int((rect.center[1] + rectangle_list[index + 1].center[1]) / 2) + 1)
         # if len(average_cx_list) > 0:
@@ -307,7 +308,6 @@ def vision():
             # best_center_average = bisect.bisect((average_cx_list, 320))
         if len(average_center_list) > 1:
             best_center_average = min(average_center_list[0], key=lambda x: abs(x - 320))
-
             # cv2.line(frame, (best_center_average, 0), (best_center_average, data['image-height']), (0, 255, 0), 2)
             cv2.line(frame, best_center_average, (data['image-width'], data['image-height']), (0, 255, 0), 2)
             if net_table:
