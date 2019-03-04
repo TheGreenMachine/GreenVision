@@ -296,6 +296,7 @@ def vision():
                         draw_points(rect, (0, 0, 255))
                         # only add rect if the second rect is the correct pair
                         if abs(rectangle_list[index + 1].theta) < 40:
+                            draw_points(rectangle_list[index + 1], (0, 0, 255))
                             avg_c_x = (rect.center[0] + rectangle_list[index + 1].center[0]) / 2
                             avg_c_y = (rect.center[1] + rectangle_list[index + 1].center[1]) / 2
                             average_center_list.append((avg_c_x, avg_c_y))
