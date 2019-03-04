@@ -309,7 +309,7 @@ def vision():
             # best_center_average = min(average_cx_list, key=lambda x: abs(x - 320))
             # could use bisect algorithm to find best center if you want O(ln n) instead of O(n)
             # best_center_average = bisect.bisect((average_cx_list, 320))
-        if len(average_center_list) > 1:
+        if len(average_center_list) > 0:
             best_center_average = min(average_center_list[0], key=lambda x: abs(x - 320))
             # cv2.line(frame, (best_center_average, 0), (best_center_average, data['image-height']), (0, 255, 0), 2)
             cv2.line(frame, best_center_average, (data['image-width'], data['image-height']), (0, 255, 0), 2)
