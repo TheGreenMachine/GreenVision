@@ -206,6 +206,8 @@ def vision():
         cap = WebcamVideoStream(src)
         cap.stream.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
         cap.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
+        if cap.stream.get(cv2.CAP_PROP_FRAME_COUNT) < 50:
+            sequence = True
         cap.start()
 
     else:
@@ -293,7 +295,7 @@ def vision():
                 for index, rect in enumerate(rectangle_list):
                     # positive angle means it's the left tape of a pair
                     if abs(rect.theta) > 40 and index != len(rectangle_list) - 1:
-                        draw_points(rect, (0, 0, 255))
+                        draw_points(rect, (0, 255, 255))
                         # only add rect if the second rect is the correct pair
                         if abs(rectangle_list[index + 1].theta) < 40:
                             draw_points(rectangle_list[index + 1], (0, 0, 255))
