@@ -302,21 +302,9 @@ def vision():
                             average_cy_list.append(int((rect.center[1] + rectangle_list[index + 1].center[1]) / 2) + 1)
         if len(average_cx_list) > 0:
             # finds c_x that is closest to the center of the center
-            start = time.time()
-            best_center_average_x = min(average_cx_list, key=lambda x: abs(x - 320))
-            best_center_average_y = min(average_cy_list, key=lambda y: abs(y - 240))
-            best_center_average_coords = (best_center_average_x, best_center_average_y)
-            end = time.time()
-            diff = (end - start)
-            print('Execution time using lamba: {}s'.format(diff))
-            # could use bisect algorithm to find best center if you want O(ln n) instead of O(n)
-            start = time.time()
             best_center_average_x = average_cx_list[bisect.bisect_left(average_cx_list, 320) - 1]
             best_center_average_y = average_cy_list[bisect.bisect_left(average_cy_list, 240) - 1]
             best_center_average_coords = (best_center_average_x, best_center_average_y)
-            end = time.time()
-            diff = (end - start)
-            print('Execution time using bisect: {}s'.format(diff))
             # cv2.line(frame, (best_center_average, 0), (best_center_average, data['image-height']), (0, 255, 0), 2)
             cv2.line(frame, best_center_average_coords, center_coords, (0, 255, 0), 2)
             if net_table:
