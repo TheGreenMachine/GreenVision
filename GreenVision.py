@@ -324,7 +324,8 @@ def vision():
             break
 
         end = time.time()
-        print('Execute time: {}'.format(end - start))
+        if debug:
+            print('Execute time: {}'.format(end - start))
 
     cap.release()
     cv2.destroyAllWindows()
