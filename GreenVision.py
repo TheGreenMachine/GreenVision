@@ -278,9 +278,8 @@ def vision():
         all_contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         filtered_contours = []
         rectangle_list = []
-        average_center_list = []
-        # average_cx_list = []
-        # average_cy_list = []
+        average_cx_list = []
+        average_cy_list = []
         sorted_contours = []
         for contour in all_contours:
             if 50 < cv2.contourArea(contour) < 10000:
@@ -299,22 +298,22 @@ def vision():
                         # only add rect if the second rect is the correct pair
                         if abs(rectangle_list[index + 1].theta) < 40:
                             draw_points(rectangle_list[index + 1], (0, 0, 255))
-                            avg_c_x = (rect.center[0] + rectangle_list[index + 1].center[0]) / 2
-                            avg_c_y = (rect.center[1] + rectangle_list[index + 1].center[1]) / 2
-                            average_center_list.append((avg_c_x, avg_c_y))
-                            # average_cx_list.append(int((rect.center[0] + rectangle_list[index + 1].center[0]) / 2) + 1)
-                            # average_cy_list.append(int((rect.center[1] + rectangle_list[index + 1].center[1]) / 2) + 1)
-        # if len(average_cx_list) > 0:
+                            average_cx_list.append(int((rect.center[0] + rectangle_list[index + 1].center[0]) / 2) + 1)
+                            average_cy_list.append(int((rect.center[1] + rectangle_list[index + 1].center[1]) / 2) + 1)
+        if len(average_cx_list) > 0:
             # finds c_x that is closest to the center of the center
-            # best_center_average = min(average_cx_list, key=lambda x: abs(x - 320))
+            best_center_average_x = min(average_cx_list, key=lambda x: abs(x - 320))
+            best_center_average_y = min(average_cy_list, key=lambda y: abs(y - 240))
+            best_center_average = (best_center_average_x, best_center_average_y)
             # could use bisect algorithm to find best center if you want O(ln n) instead of O(n)
             # best_center_average = bisect.bisect((average_cx_list, 320))
-        if len(average_center_list) > 0:
-            best_center_average = min(average_center_list[0], key=lambda x: abs(x - 320))
+        # if len(average_center_list) > 0:
+        #     best_center_average = min(average_center_list[0], key=lambda x: abs(x - 320))
+        #     print(type(best_center_average))
             # cv2.line(frame, (best_center_average, 0), (best_center_average, data['image-height']), (0, 255, 0), 2)
-            cv2.line(frame, best_center_average, (data['image-width'], data['image-height']), (0, 255, 0), 2)
+            cv2.line(frame, best_center_average, (int(data['image-width'] / 2), int(data['image-height'] / 2)), (0, 255, 0), 2)
             if net_table:
-                update_net_table(best_center_average)
+                update_net_table(best_center_average[0])
 
         if view:
             cv2.imshow('Contour Window', frame)
