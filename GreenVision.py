@@ -244,7 +244,7 @@ def vision():
 
     lower_color = np.array(data['lower-color-list']) - threshold
     upper_color = np.array([data['upper-color-list'][0] + threshold, 255, 255])
-
+    center_coords = (int(data['image-width'] / 2), int(data['image-height'] / 2))
     first_read = True
 
     while True:
@@ -304,16 +304,13 @@ def vision():
             # finds c_x that is closest to the center of the center
             best_center_average_x = min(average_cx_list, key=lambda x: abs(x - 320))
             best_center_average_y = min(average_cy_list, key=lambda y: abs(y - 240))
-            best_center_average = (best_center_average_x, best_center_average_y)
+            best_center_average_coords = (best_center_average_x, best_center_average_y)
             # could use bisect algorithm to find best center if you want O(ln n) instead of O(n)
             # best_center_average = bisect.bisect((average_cx_list, 320))
-        # if len(average_center_list) > 0:
-        #     best_center_average = min(average_center_list[0], key=lambda x: abs(x - 320))
-        #     print(type(best_center_average))
             # cv2.line(frame, (best_center_average, 0), (best_center_average, data['image-height']), (0, 255, 0), 2)
-            cv2.line(frame, best_center_average, (int(data['image-width'] / 2), int(data['image-height'] / 2)), (0, 255, 0), 2)
+            cv2.line(frame, best_center_average_coords, center_coords, (0, 255, 0), 2)
             if net_table:
-                update_net_table(best_center_average[0])
+                update_net_table(best_center_average_coords[0])
 
         if view:
             cv2.imshow('Contour Window', frame)
