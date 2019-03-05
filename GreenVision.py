@@ -162,12 +162,6 @@ def vision():
             self.area = cv2.contourArea(contur)
             self.draw = np.int0(self.box)
 
-    def connection_listener(connected, info):
-        print('{} ; Connected={}'.format(info, connected))
-        with cond:
-            notified[0] = True
-            cond.notify()
-
     def sort_contours(cnts):
         bounding_boxes = [cv2.boundingRect(c) for c in cnts]
         (cnts, bounding_boxes) = zip(*sorted(zip(cnts, bounding_boxes), key=lambda b: b[1][0], reverse=False))
@@ -232,14 +226,8 @@ def vision():
         #     sequence = True
 
     if net_table:
-        cond = threading.Condition()
-        notified = [False]
         nt.NetworkTables.initialize(server=data['server-ip'])
         nt.NetworkTables.addConnectionListener(connection_listener, immediateNotify=True)
-        with cond:
-            print('Waiting...')
-            if not notified[0]:
-                cond.wait()
         table = nt.NetworkTables.getTable('SmartDashboard')
         if table:
             print('table OK')
