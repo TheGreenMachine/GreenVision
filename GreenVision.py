@@ -11,7 +11,7 @@ import pandas as pd
 import imutils
 import bisect
 
-with open('./values.json') as json_file:
+with open('/home/pi/GreenVision/values.json') as json_file:
     data = json.load(json_file)
 
 
@@ -185,12 +185,16 @@ def vision():
         cv2.line(frame, (rect.box[2][0], rect.box[2][1]), (rect.box[3][0], rect.box[3][1]), color, 2)
         cv2.line(frame, (rect.box[3][0], rect.box[3][1]), (rect.box[0][0], rect.box[0][1]), color, 2)
 
-    def update_net_table(avgc_x=-1, dis=-1):
-        table.putNumber("center_x", avgc_x)
-        # table.putNumber('distance_esti', dis)
+    def update_net_table(avgc_x=-1, avgc_y=-1, yaaw=-1, dis=-1):
+        table.putNumber('center_x', avgc_x)
+        table.putNumber('center_y', avgc_y)
+        table.putNumber('yaw', yaaw)
+        table.putNumber('distance_esti', dis)
         if debug:
             print("center_x", avgc_x)
-            # print('distance_esti', dis)
+            print('center_y', avgc_y)
+            print('yaw', yaaw)
+            print('distance_esti', dis)
 
     src = int(args['source']) if args['source'].isdigit() else args['source']
     flip = args['flip']
@@ -214,8 +218,8 @@ def vision():
         cap = cv2.VideoCapture(src)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
-        if cap.get(cv2.CAP_PROP_FRAME_COUNT) < 50:
-            sequence = True
+        # if cap.get(cv2.CAP_PROP_FRAME_COUNT) < 50:
+        #     sequence = True
 
     if net_table:
         nt.NetworkTables.initialize(server=data['server-ip'])
@@ -245,9 +249,12 @@ def vision():
     lower_color = np.array(data['lower-color-list']) - threshold
     upper_color = np.array([data['upper-color-list'][0] + threshold, 255, 255])
     center_coords = (int(data['image-width'] / 2), int(data['image-height'] / 2))
+    screen_c_x = data['image-width'] / 2 - 0.5
     first_read = True
 
     while True:
+        best_center_average_coords = (-1, -1)
+        yaw = -1
         start = time.time()
         if not first_read:
             key = cv2.waitKey(30) & 0xFF
@@ -282,7 +289,7 @@ def vision():
         average_cy_list = []
         sorted_contours = []
         for contour in all_contours:
-            if 50 < cv2.contourArea(contour) < 10000:
+            if 50 < cv2.contourArea(contour) < 12000:
                 filtered_contours.append(contour)
         if len(filtered_contours) != 0:
             sorted_contours, _ = sort_contours(filtered_contours)
@@ -300,13 +307,15 @@ def vision():
                         if abs(rectangle_list[index + 1].theta) < 40:
                             if view:
                                 draw_points(rectangle_list[index + 1], (0, 0, 255))
-                            average_cx_list.append(int((rect.center[0] + rectangle_list[index + 1].center[0]) / 2) + 1)
-                            average_cy_list.append(int((rect.center[1] + rectangle_list[index + 1].center[1]) / 2) + 1)
+                            average_cx_list.append(int((rect.center[0] + rectangle_list[index + 1].center[0]) / 2))
+                            average_cy_list.append(int((rect.center[1] + rectangle_list[index + 1].center[1]) / 2))
         if len(average_cx_list) > 0:
             # finds c_x that is closest to the center of the center
-            best_center_average_x = average_cx_list[bisect.bisect_left(average_cx_list, 320) - 1]
-            best_center_average_y = average_cy_list[bisect.bisect_left(average_cy_list, 240) - 1]
+            best_center_average_x = average_cx_list[bisect.bisect_left(average_cx_list, 320)]
+            best_center_average_y = average_cy_list[bisect.bisect_left(average_cy_list, 240)]
+
             best_center_average_coords = (best_center_average_x, best_center_average_y)
+            yaw = calc_yaw(best_center_average_x, screen_c_x, h_focal_length)
             if debug:
                 print('Avg_cx_list: {}'.format(average_cx_list))
                 print('Avg_cy_list: {}'.format(average_cy_list))
@@ -314,8 +323,8 @@ def vision():
             # cv2.line(frame, (best_center_average, 0), (best_center_average, data['image-height']), (0, 255, 0), 2)
             if view:
                 cv2.line(frame, best_center_average_coords, center_coords, (0, 255, 0), 2)
-            if net_table:
-                update_net_table(best_center_average_coords[0])
+        if net_table:
+            update_net_table(best_center_average_coords[0], yaw)
 
         if view:
             cv2.imshow('Contour Window', frame)
