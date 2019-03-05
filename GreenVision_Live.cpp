@@ -1,6 +1,7 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include <networktables/NetworkTableInstance.h>
+#include <json.hpp>
 #include "RectCoordinates.h"
 
 using namespace cv;
