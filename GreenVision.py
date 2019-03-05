@@ -179,11 +179,14 @@ def vision():
         ya = math.degrees(math.atan((pixel_x - center_x) / h_foc_len))
         return round(ya)
 
-    def draw_points(rect, color):
+    def draw_rect(rect, color):
         cv2.line(frame, (rect.box[0][0], rect.box[0][1]), (rect.box[1][0], rect.box[1][1]), color, 2)
         cv2.line(frame, (rect.box[1][0], rect.box[1][1]), (rect.box[2][0], rect.box[2][1]), color, 2)
         cv2.line(frame, (rect.box[2][0], rect.box[2][1]), (rect.box[3][0], rect.box[3][1]), color, 2)
         cv2.line(frame, (rect.box[3][0], rect.box[3][1]), (rect.box[0][0], rect.box[0][1]), color, 2)
+
+    def draw_center_dot(cord, color):
+        cv2.line(frame, cord, cord, color, 2)
 
     def update_net_table(avgc_x=-1, avgc_y=-1, yaaw=-1, dis=-1):
         table.putNumber('center_x', avgc_x)
@@ -302,17 +305,18 @@ def vision():
                     # positive angle means it's the left tape of a pair
                     if abs(rect.theta) > 40 and index != len(rectangle_list) - 1:
                         if view:
-                            draw_points(rect, (0, 255, 255))
+                            draw_rect(rect, (0, 255, 255))
                         # only add rect if the second rect is the correct pair
                         if abs(rectangle_list[index + 1].theta) < 40:
                             if view:
-                                draw_points(rectangle_list[index + 1], (0, 0, 255))
+                                draw_rect(rectangle_list[index + 1], (0, 0, 255))
+
                             average_cx_list.append(int((rect.center[0] + rectangle_list[index + 1].center[0]) / 2))
                             average_cy_list.append(int((rect.center[1] + rectangle_list[index + 1].center[1]) / 2))
         if len(average_cx_list) > 0:
             # finds c_x that is closest to the center of the center
-            best_center_average_x = average_cx_list[bisect.bisect_left(average_cx_list, 320)]
-            best_center_average_y = average_cy_list[bisect.bisect_left(average_cy_list, 240)]
+            best_center_average_x = average_cx_list[bisect.bisect_left(average_cx_list, 320) - 1]
+            best_center_average_y = average_cy_list[bisect.bisect_left(average_cy_list, 240) - 1]
 
             best_center_average_coords = (best_center_average_x, best_center_average_y)
             yaw = calc_yaw(best_center_average_x, screen_c_x, h_focal_length)
@@ -323,6 +327,8 @@ def vision():
             # cv2.line(frame, (best_center_average, 0), (best_center_average, data['image-height']), (0, 255, 0), 2)
             if view:
                 cv2.line(frame, best_center_average_coords, center_coords, (0, 255, 0), 2)
+                for index, x in enumerate(average_cx_list):
+                    draw_center_dot((x, average_cy_list[index]), (255, 0, 0))
         if net_table:
             update_net_table(best_center_average_coords[0], yaw)
 
