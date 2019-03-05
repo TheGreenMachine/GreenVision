@@ -10,6 +10,7 @@ import os
 import pandas as pd
 import imutils
 import bisect
+import threading
 
 with open('/home/pi/GreenVision/values.json') as json_file:
     data = json.load(json_file)
@@ -161,6 +162,12 @@ def vision():
             self.area = cv2.contourArea(contur)
             self.draw = np.int0(self.box)
 
+    def connection_listener(connected, info):
+        print('{} ; Connected={}'.format(info, connected))
+        with cond:
+            notified[0] = True
+            cond.notify()
+
     def sort_contours(cnts):
         bounding_boxes = [cv2.boundingRect(c) for c in cnts]
         (cnts, bounding_boxes) = zip(*sorted(zip(cnts, bounding_boxes), key=lambda b: b[1][0], reverse=False))
@@ -213,8 +220,8 @@ def vision():
         cap = WebcamVideoStream(src)
         cap.stream.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
         cap.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
-        if cap.stream.get(cv2.CAP_PROP_FRAME_COUNT) < 50:
-            sequence = True
+        # if cap.stream.get(cv2.CAP_PROP_FRAME_COUNT) < 50:
+        #     sequence = True
         cap.start()
 
     else:
@@ -225,7 +232,14 @@ def vision():
         #     sequence = True
 
     if net_table:
+        cond = threading.Condition()
+        notified = [False]
         nt.NetworkTables.initialize(server=data['server-ip'])
+        nt.NetworkTables.addConnectionListener(connection_listener, immediateNotify=True)
+        with cond:
+            print('Waiting...')
+            if not notified[0]:
+                cond.wait()
         table = nt.NetworkTables.getTable('SmartDashboard')
         if table:
             print('table OK')
@@ -310,7 +324,6 @@ def vision():
                         if abs(rectangle_list[index + 1].theta) < 40:
                             if view:
                                 draw_rect(rectangle_list[index + 1], (0, 0, 255))
-
                             average_cx_list.append(int((rect.center[0] + rectangle_list[index + 1].center[0]) / 2))
                             average_cy_list.append(int((rect.center[1] + rectangle_list[index + 1].center[1]) / 2))
         if len(average_cx_list) > 0:
