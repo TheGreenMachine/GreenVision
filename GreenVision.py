@@ -199,7 +199,7 @@ def vision():
 
     def undistort_frame(frame):
         cam_constants = None  # TODO: Pull cam constants from values.json; should be matrix
-        cam_dist_coeffs = None  # TODO: Pull dist coeffs from values.json; should be matrix
+        cam_dist_coeffs = None  # TODO: Pull dist co-effs from values.json; should be matrix
         dim = (data['image-height'], data['image-width'])
         map1, map2 = cv2.fisheye.initUndistortRectifyMap(cam_constants, cam_dist_coeffs, np.eye(3), cam_constants, dim,
                                                          cv2.CV_16SC2)
