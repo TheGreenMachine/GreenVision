@@ -203,6 +203,30 @@ def vision():
         cv2.line(frame, (rect.box[2][0], rect.box[2][1]), (rect.box[3][0], rect.box[3][1]), color, 2)
         cv2.line(frame, (rect.box[3][0], rect.box[3][1]), (rect.box[0][0], rect.box[0][1]), color, 2)
 
+    def solve_thing(rect1, rect2, cy):
+
+        model_points = [
+            # Left target
+            (-5.938, 2.938, 0.0),  # top left
+            (-4.063, 2.375, 0.0),  # top right
+            (-5.438, -2.938, 0.0),  # bottom left
+            (-7.375, -2.500, 0.0),  # bottom right
+
+            # Right target
+            (3.938, 2.375, 0.0),  # top left
+            (5.875, 2.875, 0.0),  # top right
+            (7.313, -2.500, 0.0),  # bottom left
+            (5.375, -2.938, 0.0),  # bottom right
+        ]
+
+        image_points = np.concatenate((rect1.box, rect2.box))
+        image_points[:, 0] -= data['image-width'] / 2
+        image_points[:, 1] -= cy
+        image_points[:, 1] *= -1
+
+
+        ret, rvec, tvec = cv2.solvePnP(model_points, image_points. )
+
     def draw_center_dot(cord, color):
         cv2.line(frame, cord, cord, color, 2)
 
