@@ -4,6 +4,7 @@
 
 - Take lots of pictures at the camera's default values
 - Get camera calibration values/matrices from images
+- Store constants and camera matrix in values.json
 - Undistort frame using camera calibration values
 - Implement frame undistortion into main processing code
 - Implement solvePnP() code
@@ -39,19 +40,19 @@ model_points =
 ### Relevant links and documentation ###
 ########################################
 
-https://docs.opencv.org/3.4/d7/d53/tutorial_py_pose.html
-https://www.chiefdelphi.com/t/finding-camera-location-with-solvepnp/159685/6
-https://www.learnopencv.com/head-pose-estimation-using-opencv-and-dlib/
 Liger Bots White Paper
+https://www.chiefdelphi.com/t/finding-camera-location-with-solvepnp/159685/6
 https://www.chiefdelphi.com/t/how-to-know-your-robot-angle-compared-to-vision-taget/340707/10
-https://docs.opencv.org/3.0-beta/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html#solvepnp
-https://docs.opencv.org/3.4/dc/dbb/tutorial_py_calibration.html
-https://gist.github.com/andrewda/f2461ebffdaabd7b37f3b4af15182acd
-https://www.chiefdelphi.com/t/vision-following-while-incoming-at-angle/345034/2
-https://github.com/ligerbots/VisionServer/blob/master/utils/camera_calibration.py
+** https://www.chiefdelphi.com/t/vision-following-while-incoming-at-angle/345034/2
 https://www.chiefdelphi.com/t/how-does-opencv-camera-calibration-work/346585/2
 https://www.chiefdelphi.com/t/camera-pose-estimation-help/137045/2
-https://github.com/team3997/ChickenVision/blob/master/ChickenVision.py
 https://www.chiefdelphi.com/t/using-pixy/343335
 https://www.chiefdelphi.com/t/solvepnp-angle-quesiton/348029
 https://www.chiefdelphi.com/t/calculating-a-distance-between-bot-and-point-on-image-from-camera-and-finding-an-angle-to-that-point/348580/2
+https://docs.opencv.org/3.4/d7/d53/tutorial_py_pose.html
+https://docs.opencv.org/3.0-beta/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html#solvepnp
+https://docs.opencv.org/3.4/dc/dbb/tutorial_py_calibration.html
+https://gist.github.com/andrewda/f2461ebffdaabd7b37f3b4af15182acd
+https://github.com/ligerbots/VisionServer/blob/master/utils/camera_calibration.py
+https://github.com/team3997/ChickenVision/blob/master/ChickenVision.py
+https://www.learnopencv.com/head-pose-estimation-using-opencv-and-dlib/
