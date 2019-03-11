@@ -200,8 +200,11 @@ def vision():
     def undistort_frame(frame):
         cam_constants = None  # TODO: Pull cam constants from values.json; should be matrix
         cam_dist_coeffs = None  # TODO: Pull dist coeffs from values.json; should be matrix
-
-        undst = cv2.undistort(frame, cam_constants, cam_dist_coeffs, None, )
+        dim = (data['image-height'], data['image-width'])
+        map1, map2 = cv2.fisheye.initUndistortRectifyMap(cam_constants, cam_dist_coeffs, np.eye(3), cam_constants, dim,
+                                                         cv2.CV_16SC2)
+        undst = cv2.remap(frame, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+        return undst
 
     def draw_rect(rect, color):
         cv2.line(frame, (rect.box[0][0], rect.box[0][1]), (rect.box[1][0], rect.box[1][1]), color, 2)
@@ -515,7 +518,7 @@ def camera_calibration():
 
     # Writing JSON data
     with open('output.json', 'w') as f:
-        json.dump({"camera_matrix": mtx, "distortion": dist}, f)
+        json.dump({"camera_matrix": mtx, "distortion": dist, "xfov": fov_x, "yfov": fov_y}, f)
 
 
 def distance_table():
