@@ -4,7 +4,7 @@ import json
 import math
 import os
 import time
-
+import glob
 import cv2
 import imutils
 import networktables as nt
@@ -197,6 +197,12 @@ def vision():
         ya = math.degrees(math.atan((pixel_x - center_x) / h_foc_len))
         return round(ya)
 
+    def undistort_frame(frame):
+        cam_constants = None  # TODO: Pull cam constants from values.json; should be matrix
+        cam_dist_coeffs = None  # TODO: Pull dist coeffs from values.json; should be matrix
+
+        undst = cv2.undistort(frame, cam_constants, cam_dist_coeffs, None, )
+
     def draw_rect(rect, color):
         cv2.line(frame, (rect.box[0][0], rect.box[0][1]), (rect.box[1][0], rect.box[1][1]), color, 2)
         cv2.line(frame, (rect.box[1][0], rect.box[1][1]), (rect.box[2][0], rect.box[2][1]), color, 2)
@@ -204,6 +210,8 @@ def vision():
         cv2.line(frame, (rect.box[3][0], rect.box[3][1]), (rect.box[0][0], rect.box[0][1]), color, 2)
 
     def solve_thing(rect1, rect2, cy):
+        cam_constants = None  # TODO: pull constants from values.json; should be a matrix
+        cam_dist_coeffs = None  # TODO: pull coeffs from values.json; should be a matrix
 
         model_points = [
             # Left target
@@ -224,8 +232,24 @@ def vision():
         image_points[:, 1] -= cy
         image_points[:, 1] *= -1
 
+        ret, rvec, tvec = cv2.solvePnP(model_points, image_points, cam_constants, cam_dist_coeffs)
 
-        ret, rvec, tvec = cv2.solvePnP(model_points, image_points. )
+        x = tvec[0][0]
+        y = tvec[1][0]
+        z = tvec[2][0]
+
+        distance = math.sqrt(x ** 2 + z ** 2)
+        angle1 = math.atan2(x, z)
+        rot, _ = cv2.Rodrigues(rvec)
+        rot_inv = rot.transpose()
+        pzero_world = np.matmul(rot_inv, -tvec)
+        angle2 = math.atan2(pzero_world[0][0], pzero_world[2][0])
+        if debug:
+            print('Distance: {}, Angle1: {}, X: {}, Y: {}, Z: {}, cy: {}'.format(distance, angle1, angle2, x, y, z, cy))
+        if net_table:
+            pass
+            # TODO: Implement table update depending on the data that Andrew wants
+        return distance, angle1, angle2
 
     def draw_center_dot(cord, color):
         cv2.line(frame, cord, cord, color, 2)
@@ -446,86 +470,44 @@ def video_capture():
 
 
 def camera_calibration():
-    class CameraCalibration(object):
-        """Calibrates a distorted camera courtesy of Ligerbots"""
+    CHECKERBOARD = (6, 9)
+    subpix_criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.1)
+    calibration_flags = cv2.fisheye.CALIB_RECOMPUTE_EXTRINSIC + cv2.fisheye.CALIB_CHECK_COND + cv2.fisheye.CALIB_FIX_SKEW
+    objp = np.zeros((1, CHECKERBOARD[0] * CHECKERBOARD[1], 3), np.float32)
+    objp[0, :, :2] = np.mgrid[0:CHECKERBOARD[0], 0:CHECKERBOARD[1]].T.reshape(-1, 2)
+    _img_shape = None
+    objpoints = []  # 3d point in real world space
+    imgpoints = []  # 2d points in image plane.
+    images = glob.glob('~/Camera_Calibration/*.jpg')
+    for fname in images:
+        img = cv2.imread(fname)
+        if _img_shape is None:
+            _img_shape = img.shape[:2]
+        else:
+            assert _img_shape == img.shape[:2], "All images must share the same size."
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        # Find the chess board corners
+        ret, corners = cv2.findChessboardCorners(gray, CHECKERBOARD,
+                                                 cv2.CALIB_CB_ADAPTIVE_THRESH + cv2.CALIB_CB_FAST_CHECK + cv2.CALIB_CB_NORMALIZE_IMAGE)
+        # If found, add object points, image points (after refining them)
+        if ret:
+            objpoints.append(objp)
+            cv2.cornerSubPix(gray, corners, (3, 3), (-1, -1), subpix_criteria)
+            imgpoints.append(corners)
+    N_OK = len(objpoints)
+    K = np.zeros((3, 3))
+    D = np.zeros((4, 1))
+    rvecs = [np.zeros((1, 1, 3), dtype=np.float64) for i in range(N_OK)]
+    tvecs = [np.zeros((1, 1, 3), dtype=np.float64) for i in range(N_OK)]
 
-        def __init__(self):
-            # number of inside corners in the chessboard (height and width)
-            self.checkerboard_height = 9
-            self.checkerboard_width = 6
-
-            # size of chessboard square in physical units
-            self.square_size = 1.0
-
-            self.shape = None
-            return
-
-        def calibrate_camera(self):
-            cwd = os.path.join(os.getcwd(), 'Camera_Calibration')  # /home/pi/GreenVision/Camera_Calibration
-            if not os.path.exists(cwd):
-                os.makedirs(cwd)
-            # Calculates the distortion co-efficients
-            # termination criteria
-            criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
-            # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
-            objp = np.zeros((self.checkerboard_height * self.checkerboard_width, 3), np.float32)
-            objp[:, :2] = np.mgrid[0:self.checkerboard_width, 0:self.checkerboard_height].T.reshape(-1, 2)
-            # calibrate coordinates to the physical size of the square
-            objp *= self.square_size
-            # Arrays to store object points and image points from all the images.
-            objpoints = []  # 3d point in real world space
-            imgpoints = []  # 2d points in image plane.
-
-            for fname in cwd:
-                print('Processing file', fname)
-                img = cv2.imread(fname)
-
-                if img is None:
-                    print("ERROR: Unable to read file", fname)
-                    continue
-                self.shape = img.shape
-
-                gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-                # Find the chess board corners
-                ret, corners = cv2.findChessboardCorners(gray, (self.checkerboard_width, self.checkerboard_height),
-                                                         None)
-
-                # If found, add object points, image points (after refining them)
-                if ret:
-                    objpoints.append(objp)
-                    corners2 = cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1), criteria)
-                    imgpoints.append(corners2)
-                    # Draw and display the corners
-                    img = cv2.drawChessboardCorners(img, (self.checkerboard_width, self.checkerboard_height), corners2,
-                                                    ret)
-                    cv2.imshow('img', img)
-                    cv2.waitKey(500)
-                else:
-                    print(fname, 'failed')
-
-            cv2.destroyAllWindows()
-
-            if not objpoints:
-                print("No useful images. Quitting...")
-                return None
-
-            print('Found {} useful images'.format(len(objpoints)))
-            ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
-
-            return ret, mtx.tolist(), dist.tolist(), rvecs, tvecs
-
-    calibrate = CameraCalibration()
-    calibrate.checkerboard_width = args['width']
-    calibrate.checkerboard_height = args['height']
-    calibrate.square_size = args['size']
-
-    ret, mtx, dist, rvecs, tvecs = calibrate.calibrate_camera()
+    ret, mtx, dist, rvecs, tvecs = cv2.fisheye.calibrate(objpoints, imgpoints, gray.shape[::-1], K, D, rvecs, tvecs,
+                                                         calibration_flags,
+                                                         (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 1e-6))
     print('reprojection error =', ret)
     print('image center = ({:.2f}, {:.2f})'.format(mtx[0][2], mtx[1][2]))
 
-    fov_x = math.degrees(2.0 * math.atan(calibrate.shape[1] / 2.0 / mtx[0][0]))
-    fov_y = math.degrees(2.0 * math.atan(calibrate.shape[0] / 2.0 / mtx[1][1]))
+    fov_x = math.degrees(2.0 * math.atan(data['image-height'] / 2.0 / mtx[0][0]))
+    fov_y = math.degrees(2.0 * math.atan(data['image-width'] / 2.0 / mtx[1][1]))
     print('FOV = ({:.2f}, {:.2f}) degrees'.format(fov_x, fov_y))
 
     print('mtx =', mtx)
