@@ -30,7 +30,6 @@ model_points =
 ```
 ```
 camera matrix format:
-    s = skew
     c_ = optical center of axis
     f_ = focal length along axis
 
