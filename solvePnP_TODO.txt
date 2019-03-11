@@ -33,7 +33,14 @@ model_points =
 
 (ret, rvec, tvec) = cv2.solvePnP(model_points, image_points, camera_matrix, dist_coeffs)
 
+camera matrix format:
+    s = skew
+    c_ = optical center of axis
+    f_ = focal length along axis
 
+    f_x  0    c_x
+    0    f_y  c_y
+    0    0    1
 
 
 ########################################
