@@ -12,7 +12,9 @@ import numpy as np
 import pandas as pd
 from imutils.video import WebcamVideoStream
 
-with open('/home/pi/GreenVision/values.json') as json_file:
+cwd = os.getcwd()
+file_path = os.path.join(cwd, 'values.json')
+with open(file_path) as json_file:
     data = json.load(json_file)
 
 
@@ -586,6 +588,7 @@ init_parser_vision()
 init_parser_image()
 init_parser_video()
 init_parser_distance_table()
+init_camera_calibration()
 
 args = vars(parser.parse_args())
 prog = args['program']
@@ -610,3 +613,7 @@ elif prog == 'distance_table':
     del args['program']
     del args['help']
     distance_table()
+elif prog == 'calibrate_camera':
+    del args['program']
+    del args['help']
+    camera_calibration()
