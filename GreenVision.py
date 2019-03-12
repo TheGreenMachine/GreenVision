@@ -318,7 +318,7 @@ def vision():
     lower_color = np.array(data['lower-color-list']) - threshold
     upper_color = np.array([data['upper-color-list'][0] + threshold, 255, 255])
     center_coords = (int(data['image-width'] / 2), int(data['image-height'] / 2))
-    screen_c_x = data['image-width'] / 2 - 0.5
+    screen_c_x = data['image-width'] / 2 + 0.5
     first_read = True
 
     while True:
@@ -476,7 +476,8 @@ def video_capture():
 def camera_calibration():
     CHECKERBOARD = (6, 9)
     subpix_criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.1)
-    calibration_flags = cv2.fisheye.CALIB_RECOMPUTE_EXTRINSIC + cv2.fisheye.CALIB_CHECK_COND + cv2.fisheye.CALIB_FIX_SKEW
+    #
+    calibration_flags = cv2.fisheye.CALIB_RECOMPUTE_EXTRINSIC + cv2.fisheye.CALIB_FIX_SKEW
     objp = np.zeros((1, CHECKERBOARD[0] * CHECKERBOARD[1], 3), np.float32)
     objp[0, :, :2] = np.mgrid[0:CHECKERBOARD[0], 0:CHECKERBOARD[1]].T.reshape(-1, 2)
     _img_shape = None
@@ -504,23 +505,31 @@ def camera_calibration():
     D = np.zeros((4, 1))
     rvecs = [np.zeros((1, 1, 3), dtype=np.float64) for i in range(N_OK)]
     tvecs = [np.zeros((1, 1, 3), dtype=np.float64) for i in range(N_OK)]
-    dim = (data['image-height'], data['image-width'])
-    ret, mtx, dist, rvecs, tvecs = cv2.fisheye.calibrate(objpoints, imgpoints, dim, K, D, rvecs, tvecs,
+    # dim = (data['image-height'], data['image-width'])
+    dim = (data['image-width'], data['image-height'])
+    ret, mtx, dist, rvecs, tvecs = cv2.fisheye.calibrate(objpoints,
+                                                         imgpoints,
+                                                         gray.shape[::-1],
+                                                         K,
+                                                         D,
+                                                         rvecs,
+                                                         tvecs,
                                                          calibration_flags,
                                                          (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 1e-6))
-    print('reprojection error =', ret)
-    print('image center = ({:.2f}, {:.2f})'.format(mtx[0][2], mtx[1][2]))
+    print('Found {} valid images for calibration'.format(N_OK))
+    print('Reprojection error =', ret)
+    print('Image center = ({:.2f}, {:.2f})'.format(mtx[0][2], mtx[1][2]))
 
     fov_x = math.degrees(2.0 * math.atan(data['image-height'] / 2.0 / mtx[0][0]))
     fov_y = math.degrees(2.0 * math.atan(data['image-width'] / 2.0 / mtx[1][1]))
     print('FOV = ({:.2f}, {:.2f}) degrees'.format(fov_x, fov_y))
 
-    print('mtx =', mtx)
-    print('dist =', dist)
+    print('Mtx =\n', mtx)
+    print('Dist =\n', dist)
 
     # Writing JSON data
     with open('output.json', 'w') as f:
-        json.dump({"camera_matrix": mtx, "distortion": dist, "xfov": fov_x, "yfov": fov_y}, f)
+        json.dump({"camera_matrix": mtx.tolist(), "distortion": dist.tolist(), "xfov": fov_x, "yfov": fov_y}, f)
 
 
 def distance_table():
