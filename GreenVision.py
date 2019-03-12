@@ -89,11 +89,6 @@ def init_parser_image():
                               type=int,
                               default=data['image-height'],
                               help='set height of the camera resolution')
-    parser_image.add_argument('-n', '--name',
-                              type=str,
-                              required=True,
-                              default='opencv_image',
-                              help='choose a different name for the file')
 
 
 def init_parser_video():
@@ -123,7 +118,7 @@ def init_parser_video():
 
 
 def init_camera_calibration():
-    parser_calibration = subparsers.add_parser('camera_calibration')
+    parser_calibration = subparsers.add_parser('calibrate')
     parser_calibration.add_argument_group('Camera Calibration Arguments')
     parser_calibration.add_argument('--length', '-l',
                                     type=int,
@@ -424,6 +419,8 @@ def image_capture():
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
     cv2.namedWindow('Image Capture')
 
+    n = 0
+
     while True:
         print('Hold C to capture, Hold Q to quit')
         ret, frame = cap.read()
@@ -431,15 +428,17 @@ def image_capture():
         if not ret:
             break
 
-        if cv2.waitKey(1) & 0xFF == ord('c'):
-            file_name = args['name']
-            cwd = os.path.join(os.getcwd(), 'Image_Capture')  # /home/pi/Desktop/GreenVision/Image_Capture
+        if cv2.waitKey(5) & 0xFF == ord('c'):
+            # file_name = input('Enter file name: ') + '.jpg'
+            file_name = str(n) + '.jpg'
+            cwd = os.path.join(os.getcwd(), 'Image_Capture/')  # /home/pi/Desktop/GreenVision/Image_Capture
             if not os.path.exists(cwd):
                 os.makedirs(cwd)
             path = os.path.join(cwd, file_name)
             cv2.imwrite(path, frame)
             print("{} saved!".format(file_name))
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+            n += 1
+        if cv2.waitKey(5) & 0xFF == ord('q'):
             break
 
     cap.release()
@@ -483,7 +482,8 @@ def camera_calibration():
     _img_shape = None
     objpoints = []  # 3d point in real world space
     imgpoints = []  # 2d points in image plane.
-    images = glob.glob('~/Camera_Calibration/*.jpg')
+    f_path = os.path.join(os.getcwd(), 'Camera_Calibration')
+    images = glob.glob(f_path + '/*.jpg')
     for fname in images:
         img = cv2.imread(fname)
         if _img_shape is None:
@@ -504,8 +504,8 @@ def camera_calibration():
     D = np.zeros((4, 1))
     rvecs = [np.zeros((1, 1, 3), dtype=np.float64) for i in range(N_OK)]
     tvecs = [np.zeros((1, 1, 3), dtype=np.float64) for i in range(N_OK)]
-
-    ret, mtx, dist, rvecs, tvecs = cv2.fisheye.calibrate(objpoints, imgpoints, gray.shape[::-1], K, D, rvecs, tvecs,
+    dim = (data['image-height'], data['image-width'])
+    ret, mtx, dist, rvecs, tvecs = cv2.fisheye.calibrate(objpoints, imgpoints, dim, K, D, rvecs, tvecs,
                                                          calibration_flags,
                                                          (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 1e-6))
     print('reprojection error =', ret)
@@ -613,7 +613,7 @@ elif prog == 'distance_table':
     del args['program']
     del args['help']
     distance_table()
-elif prog == 'calibrate_camera':
+elif prog == 'calibrate':
     del args['program']
     del args['help']
     camera_calibration()
