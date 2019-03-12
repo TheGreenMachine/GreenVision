@@ -196,11 +196,7 @@ def vision():
         return round(ya)
 
     def undistort_frame(frame):
-        cam_constants = None  # TODO: Pull cam constants from values.json; should be matrix
-        cam_dist_coeffs = None  # TODO: Pull dist co-effs from values.json; should be matrix
-        dim = (data['image-height'], data['image-width'])
-        map1, map2 = cv2.fisheye.initUndistortRectifyMap(cam_constants, cam_dist_coeffs, np.eye(3), cam_constants, dim,
-                                                         cv2.CV_16SC2)
+        map1, map2 = cv2.fisheye.initUndistortRectifyMap(K, D, np.eye(3), K, DIM, cv2.CV_16SC2)
         undst = cv2.remap(frame, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
         return undst
 
@@ -211,8 +207,6 @@ def vision():
         cv2.line(frame, (rect.box[3][0], rect.box[3][1]), (rect.box[0][0], rect.box[0][1]), color, 2)
 
     def solve_thing(rect1, rect2, cy):
-        cam_constants = None  # TODO: pull constants from values.json; should be a matrix
-        cam_dist_coeffs = None  # TODO: pull coeffs from values.json; should be a matrix
 
         model_points = [
             # Left target
@@ -233,7 +227,7 @@ def vision():
         image_points[:, 1] -= cy
         image_points[:, 1] *= -1
 
-        ret, rvec, tvec = cv2.solvePnP(model_points, image_points, cam_constants, cam_dist_coeffs)
+        ret, rvec, tvec = cv2.solvePnP(model_points, image_points, K, D)
 
         x = tvec[0][0]
         y = tvec[1][0]
