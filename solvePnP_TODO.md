@@ -52,7 +52,11 @@ camera matrix format:
 * https://docs.opencv.org/3.4/d7/d53/tutorial_py_pose.html
 * https://docs.opencv.org/3.0-beta/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html#solvepnp
 * https://docs.opencv.org/3.4/dc/dbb/tutorial_py_calibration.html
+* https://docs.opencv.org/trunk/db/d58/group__calib3d__fisheye.html#gga287a8008e05b4cc9a4dfbb1883a4e30da0899eaa2f96d6eed9927c4b4f4464e05
 * https://gist.github.com/andrewda/f2461ebffdaabd7b37f3b4af15182acd
 * https://github.com/ligerbots/VisionServer/blob/master/utils/camera_calibration.py
 * https://github.com/team3997/ChickenVision/blob/master/ChickenVision.py
 * https://www.learnopencv.com/head-pose-estimation-using-opencv-and-dlib/
+* **https://medium.com/@kennethjiang/calibrate-fisheye-lens-using-opencv-333b05afa0b0**
+* https://medium.com/@kennethjiang/calibrate-fisheye-lens-using-opencv-part-2-13990f1b157f
+
