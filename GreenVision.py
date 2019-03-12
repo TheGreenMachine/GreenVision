@@ -312,16 +312,17 @@ def vision():
         print('Network Tables Flag: {}'.format(net_table))
         print('----------------------------------------------------------------')
 
-    horizontal_aspect = data['horizontal-aspect']
-    horizontal_fov = data['fish-eye-cam-HFOV']
-    h_focal_length = data['image-width'] / (2 * math.tan((horizontal_fov / 2)))
-
+    # horizontal_fov = data['xfov']
+    # h_focal_length = data['image-width'] / (2 * math.tan((horizontal_fov / 2)))
+    h_focal_length = data['camera_matrix'][0][0]
     lower_color = np.array(data['lower-color-list']) - threshold
     upper_color = np.array([data['upper-color-list'][0] + threshold, 255, 255])
     center_coords = (int(data['image-width'] / 2), int(data['image-height'] / 2))
     screen_c_x = data['image-width'] / 2 + 0.5
 
-    DIM = tuple()
+    DIM = tuple(data['dim'])
+    K = np.array(data['camera_matrix'])
+    D = np.array(data['distortion'])
     first_read = True
 
     while True:
