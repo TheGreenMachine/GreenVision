@@ -320,6 +320,8 @@ def vision():
     upper_color = np.array([data['upper-color-list'][0] + threshold, 255, 255])
     center_coords = (int(data['image-width'] / 2), int(data['image-height'] / 2))
     screen_c_x = data['image-width'] / 2 + 0.5
+
+    DIM = tuple()
     first_read = True
 
     while True:
