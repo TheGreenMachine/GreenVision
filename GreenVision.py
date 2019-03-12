@@ -32,6 +32,7 @@ vision              start vision processing
 image_capture       save frame from camera
 video_capture       save video from camera
 distance_table      generate CSV containing contour area and distance
+calibrate           generate json containing camera matrix and distortion values
 """)
 
 
