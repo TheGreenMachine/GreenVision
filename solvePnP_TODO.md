@@ -1,11 +1,11 @@
 ## Tasks
 
-- Take lots of pictures at the camera's default values
-- Get camera calibration values/matrices from images
-- Store constants and camera matrix in values.json
-- Undistort frame using camera calibration values
-- Implement frame undistortion into main processing code
-- Implement solvePnP() code
+- ~~Take lots of pictures at the camera's default values~~
+- ~~Get camera calibration values/matrices from images~~
+- ~~Store constants and camera matrix in values.json~~
+- ~~Undistort frame using camera calibration values~~
+- ~~Implement frame undistortion into main processing code~~
+- ~~Implement solvePnP() code~~
 
 
 ## Random Notes
