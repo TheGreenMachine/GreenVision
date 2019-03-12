@@ -517,18 +517,18 @@ def camera_calibration():
                                                          calibration_flags,
                                                          (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 1e-6))
     print('Found {} valid images for calibration'.format(N_OK))
-    print('Reprojection error =', ret)
+    print('Reprojection error = {}'.format(ret))
     print('Image center = ({:.2f}, {:.2f})'.format(mtx[0][2], mtx[1][2]))
 
     fov_x = math.degrees(2.0 * math.atan(data['image-height'] / 2.0 / mtx[0][0]))
     fov_y = math.degrees(2.0 * math.atan(data['image-width'] / 2.0 / mtx[1][1]))
     print('FOV = ({:.2f}, {:.2f}) degrees'.format(fov_x, fov_y))
 
-    print('Mtx =\n', mtx)
-    print('Dist =\n', dist)
+    print('Mtx = {}\n'.format(mtx))
+    print('Dist = {}\n'.format(dist))
 
     # Writing JSON data
-    with open('output.json', 'w') as f:
+    with open('calibration_output.json', 'w') as f:
         json.dump({"camera_matrix": mtx.tolist(), "distortion": dist.tolist(), "xfov": fov_x, "yfov": fov_y}, f)
 
 
