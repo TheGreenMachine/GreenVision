@@ -529,7 +529,11 @@ def camera_calibration():
 
     # Writing JSON data
     with open('calibration_output.json', 'w') as f:
-        json.dump({"camera_matrix": mtx.tolist(), "distortion": dist.tolist(), "xfov": fov_x, "yfov": fov_y}, f)
+        json.dump({"camera_matrix": mtx.tolist(),
+                   "distortion": dist.tolist(),
+                   "xfov": fov_x,
+                   "yfov": fov_y,
+                   "dim": gray.shape[::-1]}, f)
 
 
 def distance_table():
@@ -601,8 +605,7 @@ init_camera_calibration()
 
 args = vars(parser.parse_args())
 prog = args['program']
-if args['help']:
-    program_help()
+if args['help']: program_help()
 if prog is None and not args['help']:
     print('No command selected, please rerun the script with the "-h" flag to see available commands.')
     print('To see the flags of each command, include a "-h" after choosing a command')
