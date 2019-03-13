@@ -518,8 +518,8 @@ def camera_calibration():
     print('Reprojection error = {}'.format(ret))
     print('Image center = ({:.2f}, {:.2f})'.format(mtx[0][2], mtx[1][2]))
 
-    fov_x = math.degrees(2.0 * math.atan(data['image-height'] / 2.0 / mtx[0][0]))
-    fov_y = math.degrees(2.0 * math.atan(data['image-width'] / 2.0 / mtx[1][1]))
+    fov_x = math.degrees(2.0 * math.atan(data['image-width'] / 2.0 / mtx[0][0]))
+    fov_y = math.degrees(2.0 * math.atan(data['image-height'] / 2.0 / mtx[1][1]))
     print('FOV = ({:.2f}, {:.2f}) degrees'.format(fov_x, fov_y))
 
     print('Mtx = {}\n'.format(mtx))
