@@ -343,8 +343,8 @@ def vision():
         if len(average_cx_list) > 0:
             # finds c_x that is closest to the center of the center
             index = bisect.bisect_left(average_cx_list, 320) if len(average_cx_list) > 1 else 0
-            best_center_average_x = average_cx_list[index]
-            best_center_average_y = average_cy_list[index]
+            best_center_average_x = average_cx_list[index] if index < len(average_cx_list) else index - 1
+            best_center_average_y = average_cy_list[index] if index < len(average_cx_list) else index - 1
 
             best_center_average_coords = (best_center_average_x, best_center_average_y)
             yaw = calc_yaw(best_center_average_x, screen_c_x, h_focal_length)
