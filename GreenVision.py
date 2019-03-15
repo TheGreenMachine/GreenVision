@@ -68,9 +68,6 @@ def init_parser_vision():
                                default=0,
                                type=int,
                                help='adjust color thresholds by 50.0 or less')
-    parser_vision.add_argument('-mt', '--multithread',
-                               action='store_true',
-                               help='toggle multi-threading')
     parser_vision.add_argument('-nt', '--networktables',
                                action='store_true',
                                help='toggle network tables')
@@ -267,23 +264,12 @@ def vision():
     view = args['view']
     debug = args['debug']
     threshold = args['threshold'] if 0 < args['threshold'] < 50 else 0
-    multi = args['multithread']
     net_table = args['networktables']
     sequence = False
-    if multi:
-        cap = WebcamVideoStream(src)
-        cap.stream.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
-        cap.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
-        # if cap.stream.get(cv2.CAP_PROP_FRAME_COUNT) < 50:
-        #     sequence = True
-        cap.start()
 
-    else:
-        cap = cv2.VideoCapture(src)
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
-        # if cap.get(cv2.CAP_PROP_FRAME_COUNT) < 50:
-        #     sequence = True
+    cap = cv2.VideoCapture(src)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
 
     if net_table:
         nt.NetworkTables.initialize(server=data['server-ip'])
@@ -302,7 +288,6 @@ def vision():
         print('Debug Flag: {}'.format(debug))
         print('Threshold Value: {}'.format(threshold))
         print('Function Model Value: {}'.format(model))
-        print('Multi-Thread Flag: {}'.format(multi))
         print('Network Tables Flag: {}'.format(net_table))
         print('----------------------------------------------------------------')
 
@@ -332,10 +317,7 @@ def vision():
 
         first_read = False
 
-        if multi:
-            frame = cap.read()
-        else:
-            _, frame = cap.read()
+        _, frame = cap.read()
 
         if frame is None:
             continue
