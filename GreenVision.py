@@ -179,14 +179,29 @@ def vision():
         (cnts, bounding_boxes) = zip(*sorted(zip(cnts, bounding_boxes), key=lambda b: b[1][0], reverse=False))
         return cnts, bounding_boxes
 
-    def calc_distance(ca, cb):
-        avg_contour = (ca + cb) / 2
-        if debug:
-            print('Coeff A: {}, Coeff B: {}, Avg Contour Area: {}'.format(data['A'], data['B'], avg_contour))
-        if model == 'power':
-            return data['A'] * avg_contour ** data['B']
-        elif model == 'exponential':
-            return data['A'] * data['B'] ** avg_contour
+    def calc_pitch(pixY, cY, vFov):
+        pitch = math.degrees(math.atan((pixY - cY) / vFov)) * -1
+        return round(pitch)
+
+    def calc_distance(heightOfCamera, heightOfTarget, pitch):
+
+        # d = distance
+        # h = height between camera and target
+        # a = angle = pitch
+        # tan a = h/d (opposite over adjacent)
+        # d = h / tan a
+        #                      .
+        #                     /|
+        #                    / |
+        #                   /  |h
+        #                  /a  |
+        #           camera -----
+        #                    d
+
+        h = heightOfTarget - heightOfCamera
+        distance = math.fabs(h / math.tan(math.radians(pitch)))
+
+        return distance
 
     def calc_yaw(pixel_x, center_x, h_foc_len):
         ya = math.degrees(math.atan((pixel_x - center_x) / h_foc_len))
@@ -303,9 +318,9 @@ def vision():
     first_read = True
 
     while True:
+        start = time.time()
         best_center_average_coords = (-1, -1)
         yaw = -1
-        start = time.time()
         if not first_read:
             key = cv2.waitKey(30) & 0xFF
             if key == ord('q'):
