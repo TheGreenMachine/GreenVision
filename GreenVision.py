@@ -31,7 +31,7 @@ Available Programs:
 vision              start vision processing
 image_capture       save frame from camera
 video_capture       save video from camera
-calibrate           generate json containing camera matrix and distortion values
+calibration           generate json containing camera matrix and distortion values
 """)
 
 
@@ -115,7 +115,7 @@ def init_parser_video():
 
 
 def init_camera_calibration():
-    parser_calibration = subparsers.add_parser('calibrate')
+    parser_calibration = subparsers.add_parser('calibration')
     parser_calibration.add_argument_group('Camera Calibration Arguments')
     parser_calibration.add_argument('--length', '-l',
                                     type=int,
@@ -468,8 +468,6 @@ def camera_calibration():
     D = np.zeros((4, 1))
     rvecs = [np.zeros((1, 1, 3), dtype=np.float64) for i in range(N_OK)]
     tvecs = [np.zeros((1, 1, 3), dtype=np.float64) for i in range(N_OK)]
-    # dim = (data['image-height'], data['image-width'])
-    dim = (data['image-width'], data['image-height'])
     ret, mtx, dist, rvecs, tvecs = cv2.fisheye.calibrate(objpoints,
                                                          imgpoints,
                                                          gray.shape[::-1],
@@ -482,11 +480,9 @@ def camera_calibration():
     print('Found {} valid images for calibration'.format(N_OK))
     print('Reprojection error = {}'.format(ret))
     print('Image center = ({:.2f}, {:.2f})'.format(mtx[0][2], mtx[1][2]))
-
     fov_x = math.degrees(2.0 * math.atan(data['image-width'] / 2.0 / mtx[0][0]))
     fov_y = math.degrees(2.0 * math.atan(data['image-height'] / 2.0 / mtx[1][1]))
     print('FOV = ({:.2f}, {:.2f}) degrees'.format(fov_x, fov_y))
-
     print('Mtx = {}\n'.format(mtx))
     print('Dist = {}\n'.format(dist))
 
@@ -525,7 +521,7 @@ elif prog == 'video_capture':
     del args['program']
     del args['help']
     video_capture()
-elif prog == 'calibrate':
+elif prog == 'calibration':
     del args['program']
     del args['help']
     camera_calibration()
