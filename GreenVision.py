@@ -291,8 +291,6 @@ def vision():
         print('Network Tables Flag: {}'.format(net_table))
         print('----------------------------------------------------------------')
 
-    # horizontal_fov = data['xfov']
-    # h_focal_length = data['image-width'] / (2 * math.tan((horizontal_fov / 2)))
     h_focal_length = data['camera_matrix'][0][0]
     lower_color = np.array(data['lower-color-list']) - threshold
     upper_color = np.array([data['upper-color-list'][0] + threshold, 255, 255])
@@ -360,8 +358,6 @@ def vision():
                             average_cy_list.append(int((rect.center[1] + rectangle_list[index + 1].center[1]) / 2))
         if len(average_cx_list) > 0:
             # finds c_x that is closest to the center of the center
-            # best_center_average_x = average_cx_list[bisect.bisect_left(average_cx_list, 320) - 1]
-            # best_center_average_y = average_cy_list[bisect.bisect_left(average_cy_list, 240) - 1]
             index = bisect.bisect_left(average_cx_list, 320)
             best_center_average_x = average_cx_list[index]
             best_center_average_y = average_cy_list[index]
@@ -369,11 +365,10 @@ def vision():
             best_center_average_coords = (best_center_average_x, best_center_average_y)
             yaw = calc_yaw(best_center_average_x, screen_c_x, h_focal_length)
             if debug:
-                # print('Index: {}'.format(index))
+                print('Index: {}'.format(index))
                 print('Avg_cx_list: {}'.format(average_cx_list))
                 print('Avg_cy_list: {}'.format(average_cy_list))
                 print('Best Center Coords: {}'.format(best_center_average_coords))
-            # cv2.line(frame, (best_center_average, 0), (best_center_average, data['image-height']), (0, 255, 0), 2)
             if view:
                 cv2.line(frame, best_center_average_coords, center_coords, (0, 255, 0), 2)
                 for index, x in enumerate(average_cx_list):
