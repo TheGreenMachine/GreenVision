@@ -31,13 +31,12 @@ Available Programs:
 vision              start vision processing
 image_capture       save frame from camera
 video_capture       save video from camera
-distance_table      generate CSV containing contour area and distance
 calibrate           generate json containing camera matrix and distortion values
 """)
 
 
 def program_usage():
-    return 'Greenvision.py [vision] or [image_capture] or [video_capture] or [distance_table]'
+    return 'Greenvision.py [vision] or [image_capture] or [video_capture] or [calibrate]'
 
 
 def init_parser_vision():
@@ -130,36 +129,6 @@ def init_camera_calibration():
                                     type=float,
                                     default=1.0,
                                     help='size of square')
-
-
-def init_parser_distance_table():
-    parser_distance_table = subparsers.add_parser('distance_table')
-    parser_distance_table.add_argument_group('Distance table Arguments')
-    parser_distance_table.add_argument('-s', '--src', '--source',
-                                       type=int,
-                                       default=0,
-                                       required=True,
-                                       help='set source for processing: [int] for camera')
-    parser_distance_table.add_argument('-c', '--capture',
-                                       action='store_true',
-                                       default=False,
-                                       help='toggle capture of new images')
-    parser_distance_table.add_argument('-th', '--threshold',
-                                       default=0,
-                                       type=float,
-                                       help='adjust color thresholds by 50.0 or less')
-    parser_distance_table.add_argument('-cw', '--width',
-                                       type=int,
-                                       default=data['image-width'],
-                                       help='set width of the camera resolution')
-    parser_distance_table.add_argument('-ch', '--height',
-                                       type=int,
-                                       default=data['image-height'],
-                                       help='set height of the camera resolution')
-    parser_distance_table.add_argument('-o', '--output',
-                                       type=str,
-                                       default='distance_table',
-                                       help='choose name for csv file')
 
 
 def vision():
@@ -530,71 +499,12 @@ def camera_calibration():
                    "dim": gray.shape[::-1]}, f)
 
 
-def distance_table():
-    def capture():
-        length = input('Hold camera still and enter distance in inches from target: ')
-        img_name = os.path.join(cwd, 'distance_{}in.jpg'.format(length))
-        cv2.imwrite(img_name, frame)
-        print('{} saved!'.format(img_name))
-
-    src = args['src']
-    cwd = os.path.join(os.getcwd(), 'Distance_Table')  # /home/pi/Desktop/GreenVision/Distance_Table
-    if not os.path.exists(cwd):
-        os.makedirs(cwd)
-    threshold = args['threshold']
-    lower_color = np.array(data['lower-color-list']) - threshold
-    upper_color = np.array([data['upper-color-list'][0] + threshold, 255, 255])
-    distance_arr = np.array([], dtype=np.float64)
-    contour_area_arr = np.array([], dtype=np.float64)
-
-    if args['capture']:
-        cap = cv2.VideoCapture(src)
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, args['width'])
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, args['height'])
-        while True:
-            print('Press [C] to capture frame | Press [Q] to exit capture mode')
-            ret, frame = cap.read()
-            cv2.imshow('Image Capture', frame)
-            if cv2.waitKey(1) & 0xFF == ord('c'):
-                capture()
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-
-    files = []
-    for _, _, filenames in os.walk(cwd, topdown=False):
-        files = filenames.copy()
-    for file in files:
-        if file.endswith('in.jpg'):
-            inches = int(file[9:-6])
-            img = cv2.imread(os.path.join(cwd, file))
-            hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-            mask = cv2.inRange(hsv, lower_color, upper_color)
-            _, contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-            n_contours = []
-            for contour in contours:
-                if cv2.contourArea(contour) > 75:
-                    n_contours.append(contour)
-            if len(n_contours) == 2:
-                print('{} is a valid image!'.format(file))
-                contour_area = cv2.contourArea(n_contours[0])
-                contour_area1 = cv2.contourArea(n_contours[1])
-                contour_area_average = (contour_area + contour_area1) / 2
-                contour_area_arr = np.append(contour_area_arr, contour_area_average)
-                distance_arr = np.append(distance_arr, inches)
-            else:
-                print('{} is not a valid image! Please retake the image from that distance.'.format(file))
-
-    df = pd.DataFrame({'x': contour_area_arr, 'y': distance_arr})
-    df.to_csv(os.path.join(cwd, 'Distance_Table.csv'), index=False)
-
-
 parser = argparse.ArgumentParser(description=program_description(), add_help=False)
 parser.add_argument('-h', '--help', action='store_true')
 subparsers = parser.add_subparsers(help='commands', dest='program')
 init_parser_vision()
 init_parser_image()
 init_parser_video()
-init_parser_distance_table()
 init_camera_calibration()
 
 args = vars(parser.parse_args())
@@ -615,10 +525,6 @@ elif prog == 'video_capture':
     del args['program']
     del args['help']
     video_capture()
-elif prog == 'distance_table':
-    del args['program']
-    del args['help']
-    distance_table()
 elif prog == 'calibrate':
     del args['program']
     del args['help']
