@@ -342,7 +342,7 @@ def vision():
                             average_cy_list.append(int((rect.center[1] + rectangle_list[index + 1].center[1]) / 2))
         if len(average_cx_list) > 0:
             # finds c_x that is closest to the center of the center
-            index = bisect.bisect_left(average_cx_list, 320)
+            index = bisect.bisect_left(average_cx_list, 320) if len(average_cy_list) > 1 else 0
             best_center_average_x = average_cx_list[index]
             best_center_average_y = average_cy_list[index]
 
