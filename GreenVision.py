@@ -9,8 +9,6 @@ import cv2
 import imutils
 import networktables as nt
 import numpy as np
-import pandas as pd
-from imutils.video import WebcamVideoStream
 
 cwd = os.getcwd()
 file_path = os.path.join(cwd, 'values.json')
@@ -29,14 +27,14 @@ Usage: GreenVision.py [program] [-optional arguments]
      
 Available Programs:
 vision              start vision processing
-image_capture       save frame from camera
-video_capture       save video from camera
+image       save frame from camera
+video       save video from camera
 calibration           generate json containing camera matrix and distortion values
 """)
 
 
 def program_usage():
-    return 'Greenvision.py [vision] or [image_capture] or [video_capture] or [calibrate]'
+    return 'Greenvision.py [vision] or [image] or [video] or [calibrate]'
 
 
 def init_parser_vision():
@@ -73,7 +71,7 @@ def init_parser_vision():
 
 
 def init_parser_image():
-    parser_image = subparsers.add_parser('image_capture')
+    parser_image = subparsers.add_parser('image')
     parser_image.add_argument('-s', '--src', '--source',
                               required=True,
                               type=int,
@@ -89,7 +87,7 @@ def init_parser_image():
 
 
 def init_parser_video():
-    parser_video = subparsers.add_parser('video_capture')
+    parser_video = subparsers.add_parser('video')
     parser_video.add_argument_group('Video Capture Arguments')
     parser_video.add_argument('-s', '--src', '--source',
                               required=True,
@@ -107,15 +105,10 @@ def init_parser_video():
                               type=int,
                               default=data['image-height'],
                               help='set height of the camera resolution')
-    parser_video.add_argument('-n', '--name',
-                              type=str,
-                              default='opencv_video',
-                              required=True,
-                              help='choose a different name for the file')
 
 
 def init_camera_calibration():
-    parser_calibration = subparsers.add_parser('calibration')
+    parser_calibration = subparsers.add_parser('calibrate')
     parser_calibration.add_argument_group('Camera Calibration Arguments')
     parser_calibration.add_argument('--length', '-l',
                                     type=int,
@@ -148,8 +141,8 @@ def vision():
         (cnts, bounding_boxes) = zip(*sorted(zip(cnts, bounding_boxes), key=lambda b: b[1][0], reverse=False))
         return cnts, bounding_boxes
 
-    def calc_pitch(pixY, cY, vFov):
-        pitch = math.degrees(math.atan((pixY - cY) / vFov)) * -1
+    def calc_pitch(pixel_y, center_y, v_fov):
+        pitch = math.degrees(math.atan((pixel_y - center_y) / v_fov)) * -1
         return round(pitch)
 
     def calc_distance(heightOfCamera, heightOfTarget, pitch):
@@ -391,9 +384,9 @@ def image_capture():
         if not ret:
             break
 
-        if cv2.waitKey(5) & 0xFF == ord('c'):
+        if cv2.waitKey(1) & 0xFF == ord('c'):
             # file_name = input('Enter file name: ') + '.jpg'
-            file_name = str(n) + '.jpg'
+            file_name = input('Enter file name: ') + '.jpg'
             cwd = os.path.join(os.getcwd(), 'Image_Capture/')  # /home/pi/Desktop/GreenVision/Image_Capture
             if not os.path.exists(cwd):
                 os.makedirs(cwd)
@@ -410,7 +403,7 @@ def image_capture():
 
 def video_capture():
     src = args['src']
-    file_name = args['name']
+    file_name = input('Enter file name:')
     cwd = os.path.join(os.getcwd(), 'Video_Capture')  # /home/pi/Desktop/GreenVision/Video_Capture
     if not os.path.exists(cwd):
         os.makedirs(cwd)
@@ -513,11 +506,11 @@ elif prog == 'vision':
     del args['program']
     del args['help']
     vision()
-elif prog == 'image_capture':
+elif prog == 'image':
     del args['program']
     del args['help']
     image_capture()
-elif prog == 'video_capture':
+elif prog == 'video':
     del args['program']
     del args['help']
     video_capture()
