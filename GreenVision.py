@@ -141,11 +141,11 @@ def vision():
         (cnts, bounding_boxes) = zip(*sorted(zip(cnts, bounding_boxes), key=lambda b: b[1][0], reverse=False))
         return cnts, bounding_boxes
 
-    def calc_pitch(pixel_y, center_y, v_fov):
-        pitch = math.degrees(math.atan((pixel_y - center_y) / v_fov)) * -1
+    def calc_pitch(center_y):
+        pitch = math.degrees(math.atan((240 - center_y) / vfov)) * -1
         return round(pitch)
 
-    def calc_distance(heightOfCamera, heightOfTarget, pitch):
+    def calc_distance(cy):
 
         # d = distance
         # h = height between camera and target
@@ -159,11 +159,12 @@ def vision():
         #                  /a  |
         #           camera -----
         #                    d
+        target_height = data['target-height']
+        cam_height = data['camera-height']
+        h = abs(target_height - cam_height)
+        dist = math.fabs(h / math.tan(math.radians(calc_pitch(cy))))
 
-        h = heightOfTarget - heightOfCamera
-        distance = math.fabs(h / math.tan(math.radians(pitch)))
-
-        return distance
+        return dist
 
     def calc_yaw(pixel_x, center_x, h_foc_len):
         ya = math.degrees(math.atan((pixel_x - center_x) / h_foc_len))
@@ -268,6 +269,7 @@ def vision():
         print('Network Tables Flag: {}'.format(net_table))
         print('----------------------------------------------------------------')
 
+    vfov = data['yfov']
     h_focal_length = data['camera_matrix'][0][0]
     lower_color = np.array(data['lower-color-list']) - threshold
     upper_color = np.array([data['upper-color-list'][0] + threshold, 255, 255])
@@ -283,6 +285,7 @@ def vision():
         start = time.time()
         best_center_average_coords = (-1, -1)
         yaw = -1
+        distance = -1
         if not first_read:
             key = cv2.waitKey(30) & 0xFF
             if key == ord('q'):
@@ -340,8 +343,10 @@ def vision():
             best_center_average_y = average_cy_list[index] if index < len(average_cx_list) else index - 1
 
             best_center_average_coords = (best_center_average_x, best_center_average_y)
+            distance = calc_distance(best_center_average_coords[1])
             yaw = calc_yaw(best_center_average_x, screen_c_x, h_focal_length)
             if debug:
+                print('Distance: {}'.format(distance))
                 print('Index: {}'.format(index))
                 print('Avg_cx_list: {}'.format(average_cx_list))
                 print('Avg_cy_list: {}'.format(average_cy_list))
@@ -351,7 +356,7 @@ def vision():
                 for index, x in enumerate(average_cx_list):
                     draw_center_dot((x, average_cy_list[index]), (255, 0, 0))
         if net_table:
-            update_net_table(best_center_average_coords[0], yaw)
+            update_net_table(best_center_average_coords[0], best_center_average_coords[1], yaw, distance)
 
         if view:
             cv2.imshow('Contour Window', frame)
@@ -403,8 +408,10 @@ def image_capture():
 
 def video_capture():
     src = args['src']
-    file_name = input('Enter file name:')
-    cwd = os.path.join(os.getcwd(), 'Video_Capture')  # /home/pi/Desktop/GreenVision/Video_Capture
+    file_name = input('Enter file name: ')
+    cwd = '/home/pi/GreenVison/Video_Capture'
+    # cwd = os.path.join(os.getcwd(), 'Video_Capture')
+    # /home/pi/Desktop/GreenVision/Video_Capture
     if not os.path.exists(cwd):
         os.makedirs(cwd)
     path = os.path.join(cwd, (file_name + '.avi'))
