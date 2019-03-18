@@ -336,14 +336,28 @@ def vision():
                                 draw_rect(rectangle_list[index + 1], (0, 0, 255))
                             average_cx_list.append(int((rect.center[0] + rectangle_list[index + 1].center[0]) / 2))
                             average_cy_list.append(int((rect.center[1] + rectangle_list[index + 1].center[1]) / 2))
-        if len(average_cx_list) > 0:
+        if len(average_cx_list) == 1:
+            best_center_average_coords = (average_cx_list[0], average_cy_list[0])
+            yaw = calc_yaw(average_cx_list[0], screen_c_x, h_focal_length)
+            if debug:
+                print('Distance: {}'.format(distance))
+                print('Index: {}'.format(0))
+                print('Avg_cx_list: {}'.format(average_cx_list))
+                print('Avg_cy_list: {}'.format(average_cy_list))
+                print('Best Center Coords: {}'.format(best_center_average_coords))
+            if view:
+                cv2.line(frame, best_center_average_coords, center_coords, (0, 255, 0), 2)
+                for index, x in enumerate(average_cx_list):
+                    draw_center_dot((x, average_cy_list[index]), (255, 0, 0))
+
+        else:
             # finds c_x that is closest to the center of the center
             index = bisect.bisect_left(average_cx_list, 320) if len(average_cx_list) > 1 else 0
             best_center_average_x = average_cx_list[index] if index < len(average_cx_list) else index - 1
             best_center_average_y = average_cy_list[index] if index < len(average_cx_list) else index - 1
 
             best_center_average_coords = (best_center_average_x, best_center_average_y)
-            distance = calc_distance(best_center_average_coords[1])
+            # distance = calc_distance(best_center_average_coords[1]) if best_center_average_coords[1] != 0 else -1
             yaw = calc_yaw(best_center_average_x, screen_c_x, h_focal_length)
             if debug:
                 print('Distance: {}'.format(distance))
