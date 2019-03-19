@@ -371,7 +371,7 @@ def vision():
                 print('Avg_cx_list: {}'.format(average_cx_list))
                 print('Avg_cy_list: {}'.format(average_cy_list))
                 print('Best Center Coords: {}'.format(best_center_average_coords))
-                print('Index: {}'.format(0))
+                print('Index: {}'.format(index))
                 print('Distance: {}'.format(distance))
                 print('Pitch: {}'.format(pitch))
                 print('Yaw: {}'.format(yaw))
