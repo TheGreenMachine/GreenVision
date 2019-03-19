@@ -141,7 +141,7 @@ def vision():
         (cnts, bounding_boxes) = zip(*sorted(zip(cnts, bounding_boxes), key=lambda b: b[1][0], reverse=False))
         return cnts, bounding_boxes
 
-    def calc_distance(cy):
+    def calc_distance(c_y, screen_y, v_foc_len):
 
         # d = distance
         # h = height between camera and target
@@ -158,7 +158,7 @@ def vision():
         target_height = data['target-height']
         cam_height = data['camera-height']
         h = abs(target_height - cam_height)
-        temp = math.tan(math.radians(calc_pitch(cy)))
+        temp = math.tan(math.radians(calc_pitch(c_y, screen_y, v_foc_len)))
         dist = math.fabs(h / temp) if temp != 0 else -1
 
         return dist
@@ -355,7 +355,6 @@ def vision():
                 cv2.line(frame, best_center_average_coords, center_coords, (0, 255, 0), 2)
                 for index, x in enumerate(average_cx_list):
                     draw_center_dot((x, average_cy_list[index]), (255, 0, 0))
-
         elif len(average_cx_list) > 1:
             # finds c_x that is closest to the center of the center
             index = bisect.bisect_left(average_cx_list, 320) if len(average_cx_list) > 1 else 0
@@ -379,11 +378,11 @@ def vision():
                 cv2.line(frame, best_center_average_coords, center_coords, (0, 255, 0), 2)
                 for index, x in enumerate(average_cx_list):
                     draw_center_dot((x, average_cy_list[index]), (255, 0, 0))
+
         if net_table:
             # update_net_table(avgc_x=-1, avgc_y=-1, yaaw=-1, dis=-1, conts=-1, targets=-1, pitch=-1)
             update_net_table(best_center_average_coords[0], best_center_average_coords[1], yaw, distance,
                              len(sorted_contours), len(average_cx_list), pitch)
-
         if view:
             cv2.imshow('Contour Window', frame)
             cv2.imshow('Mask', mask)
