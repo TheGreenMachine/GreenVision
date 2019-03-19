@@ -224,16 +224,20 @@ def vision():
     def draw_center_dot(cord, color):
         cv2.line(frame, cord, cord, color, 2)
 
-    def update_net_table(avgc_x=-1, avgc_y=-1, yaaw=-1, dis=-1):
+    def update_net_table(avgc_x=-1, avgc_y=-1, yaaw=-1, dis=-1, conts=-1, targets=-1):
         table.putNumber('center_x', avgc_x)
         table.putNumber('center_y', avgc_y)
         table.putNumber('yaw', yaaw)
         table.putNumber('distance_esti', dis)
+        table.putNumber('contours', conts)
+        table.putNumber('targets', targets)
         if debug:
-            print("center_x", avgc_x)
-            print('center_y', avgc_y)
-            print('yaw', yaaw)
-            print('distance_esti', dis)
+            print("center_x:", avgc_x)
+            print('center_y:', avgc_y)
+            print('yaw:', yaaw)
+            print('distance_esti:', dis)
+            print('contours:', conts)
+            print('targets:', targets)
 
     src = int(args['source']) if args['source'].isdigit() else args['source']
     flip = args['flip']
@@ -324,18 +328,17 @@ def vision():
         if len(sorted_contours) > 1:
             for contour in sorted_contours:
                 rectangle_list.append(Rect(contour))
-            if len(rectangle_list) > 1:
-                for index, rect in enumerate(rectangle_list):
-                    # positive angle means it's the left tape of a pair
-                    if abs(rect.theta) > 40 and index != len(rectangle_list) - 1:
+            for index, rect in enumerate(rectangle_list):
+                # positive angle means it's the left tape of a pair
+                if abs(rect.theta) > 40 and index != len(rectangle_list) - 1:
+                    if view:
+                        draw_rect(rect, (0, 255, 255))
+                    # only add rect if the second rect is the correct pair
+                    if abs(rectangle_list[index + 1].theta) < 40:
                         if view:
-                            draw_rect(rect, (0, 255, 255))
-                        # only add rect if the second rect is the correct pair
-                        if abs(rectangle_list[index + 1].theta) < 40:
-                            if view:
-                                draw_rect(rectangle_list[index + 1], (0, 0, 255))
-                            average_cx_list.append(int((rect.center[0] + rectangle_list[index + 1].center[0]) / 2))
-                            average_cy_list.append(int((rect.center[1] + rectangle_list[index + 1].center[1]) / 2))
+                            draw_rect(rectangle_list[index + 1], (0, 0, 255))
+                        average_cx_list.append(int((rect.center[0] + rectangle_list[index + 1].center[0]) / 2))
+                        average_cy_list.append(int((rect.center[1] + rectangle_list[index + 1].center[1]) / 2))
         if len(average_cx_list) == 1:
             best_center_average_coords = (average_cx_list[0], average_cy_list[0])
             yaw = calc_yaw(average_cx_list[0], screen_c_x, h_focal_length)
@@ -350,14 +353,13 @@ def vision():
                 for index, x in enumerate(average_cx_list):
                     draw_center_dot((x, average_cy_list[index]), (255, 0, 0))
 
-        else:
+        elif len(average_cx_list) > 1:
             # finds c_x that is closest to the center of the center
             index = bisect.bisect_left(average_cx_list, 320) if len(average_cx_list) > 1 else 0
             best_center_average_x = average_cx_list[index] if index < len(average_cx_list) else index - 1
             best_center_average_y = average_cy_list[index] if index < len(average_cx_list) else index - 1
 
             best_center_average_coords = (best_center_average_x, best_center_average_y)
-            # distance = calc_distance(best_center_average_coords[1]) if best_center_average_coords[1] != 0 else -1
             yaw = calc_yaw(best_center_average_x, screen_c_x, h_focal_length)
             if debug:
                 print('Distance: {}'.format(distance))
@@ -370,7 +372,7 @@ def vision():
                 for index, x in enumerate(average_cx_list):
                     draw_center_dot((x, average_cy_list[index]), (255, 0, 0))
         if net_table:
-            update_net_table(best_center_average_coords[0], best_center_average_coords[1], yaw, distance)
+            update_net_table(best_center_average_coords[0], best_center_average_coords[1], yaw)
 
         if view:
             cv2.imshow('Contour Window', frame)
