@@ -160,21 +160,15 @@ def vision():
         h = abs(target_height - cam_height)
         temp = math.tan(math.radians(calc_pitch(c_y, screen_y, v_foc_len)))
         dist = math.fabs(h / temp) if temp != 0 else -1
-
         return dist
 
     def calc_pitch(c_y, screen_y, v_foc_len):
-        pitch = math.degrees(math.atan((c_y - screen_y) / v_foc_len)) * -1
-        return round(pitch)
+        pitch = math.degrees(math.atan((c_y - screen_y) / v_foc_len))
+        return pitch
 
     def calc_yaw(c_x, screen_x, h_foc_len):
         ya = math.degrees(math.atan((c_x - screen_x) / h_foc_len))
         return round(ya)
-
-    def undistort_frame(frame):
-        map1, map2 = cv2.fisheye.initUndistortRectifyMap(K, D, np.eye(3), K, DIM, cv2.CV_16SC2)
-        undst = cv2.remap(frame, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
-        return undst
 
     def draw_rect(rect, color):
         cv2.line(frame, (rect.box[0][0], rect.box[0][1]), (rect.box[1][0], rect.box[1][1]), color, 2)
@@ -182,7 +176,12 @@ def vision():
         cv2.line(frame, (rect.box[2][0], rect.box[2][1]), (rect.box[3][0], rect.box[3][1]), color, 2)
         cv2.line(frame, (rect.box[3][0], rect.box[3][1]), (rect.box[0][0], rect.box[0][1]), color, 2)
 
-    def solve_thing(rect1, rect2, cy):
+    def undistort_frame(frame):
+        map1, map2 = cv2.fisheye.initUndistortRectifyMap(K, D, np.eye(3), K, DIM, cv2.CV_16SC2)
+        undst = cv2.remap(frame, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+        return undst
+
+    def solve_pnp(rect1, rect2, cy):
 
         model_points = [
             # Left target
@@ -198,12 +197,14 @@ def vision():
             (5.375, -2.938, 0.0),  # bottom right
         ]
 
+        mp = np.array(model_points)
+
         image_points = np.concatenate((rect1.box, rect2.box))
         image_points[:, 0] -= data['image-width'] / 2
         image_points[:, 1] -= cy
         image_points[:, 1] *= -1
 
-        ret, rvec, tvec = cv2.solvePnP(model_points, image_points, K, D)
+        ret, rvec, tvec = cv2.solvePnP(mp, image_points, K, D)
 
         x = tvec[0][0]
         y = tvec[1][0]
@@ -307,6 +308,7 @@ def vision():
             frame = cv2.flip(frame, -1)
         if rotate:
             frame = imutils.rotate_bound(frame, 90)
+        # frame = undistort_frame(frame)
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, lower_color, upper_color)
 
@@ -321,7 +323,7 @@ def vision():
                 filtered_contours.append(contour)
         if len(filtered_contours) != 0:
             sorted_contours, _ = sort_contours(filtered_contours)
-        print("Number of contours: ", len(filtered_contours))
+        # print("Number of contours: ", len(filtered_contours))
         if len(sorted_contours) > 1:
             for contour in sorted_contours:
                 rectangle_list.append(Rect(contour))
@@ -340,6 +342,7 @@ def vision():
             best_center_average_coords = (average_cx_list[0], average_cy_list[0])
             pitch = calc_pitch(average_cy_list[0], screen_c_y, v_focal_length)
             yaw = calc_yaw(average_cx_list[0], screen_c_x, h_focal_length)
+            distance = calc_distance(best_center_average_coords[1], screen_c_y, v_focal_length)
             if debug:
                 print('Contours: {}'.format(len(sorted_contours)))
                 print('Targets: {}'.format(len(average_cx_list)))
@@ -364,6 +367,7 @@ def vision():
             best_center_average_coords = (best_center_average_x, best_center_average_y)
             pitch = calc_pitch(best_center_average_y, screen_c_y, v_focal_length)
             yaw = calc_yaw(best_center_average_x, screen_c_x, h_focal_length)
+            distance = calc_distance(best_center_average_coords[index], screen_c_y, v_focal_length)
             if debug:
                 print('Contours: {}'.format(len(sorted_contours)))
                 print('Targets: {}'.format(len(average_cx_list)))
