@@ -59,4 +59,5 @@ camera matrix format:
 * https://www.learnopencv.com/head-pose-estimation-using-opencv-and-dlib/
 * **https://medium.com/@kennethjiang/calibrate-fisheye-lens-using-opencv-333b05afa0b0**
 * https://medium.com/@kennethjiang/calibrate-fisheye-lens-using-opencv-part-2-13990f1b157f
+* https://docs.google.com/presentation/d/1ediRsI-oR3-kwawFJZ34_ZTlQS2SDBLjZasjzZ-eXbQ/pub?start=false&loop=false&slide=id.g12c083cffa_0_298
 
