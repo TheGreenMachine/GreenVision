@@ -141,10 +141,6 @@ def vision():
         (cnts, bounding_boxes) = zip(*sorted(zip(cnts, bounding_boxes), key=lambda b: b[1][0], reverse=False))
         return cnts, bounding_boxes
 
-    def calc_pitch(center_y):
-        pitch = math.degrees(math.atan((240 - center_y) / vfov)) * -1
-        return round(pitch)
-
     def calc_distance(cy):
 
         # d = distance
@@ -162,12 +158,17 @@ def vision():
         target_height = data['target-height']
         cam_height = data['camera-height']
         h = abs(target_height - cam_height)
-        dist = math.fabs(h / math.tan(math.radians(calc_pitch(cy))))
+        temp = math.tan(math.radians(calc_pitch(cy)))
+        dist = math.fabs(h / temp) if temp != 0 else -1
 
         return dist
 
-    def calc_yaw(pixel_x, center_x, h_foc_len):
-        ya = math.degrees(math.atan((pixel_x - center_x) / h_foc_len))
+    def calc_pitch(c_y, screen_y, v_foc_len):
+        pitch = math.degrees(math.atan((c_y - screen_y) / v_foc_len)) * -1
+        return round(pitch)
+
+    def calc_yaw(c_x, screen_x, h_foc_len):
+        ya = math.degrees(math.atan((c_x - screen_x) / h_foc_len))
         return round(ya)
 
     def undistort_frame(frame):
@@ -224,20 +225,14 @@ def vision():
     def draw_center_dot(cord, color):
         cv2.line(frame, cord, cord, color, 2)
 
-    def update_net_table(avgc_x=-1, avgc_y=-1, yaaw=-1, dis=-1, conts=-1, targets=-1):
+    def update_net_table(avgc_x=-1, avgc_y=-1, yaaw=-1, dis=-1, conts=-1, targets=-1, pitch=-1):
         table.putNumber('center_x', avgc_x)
         table.putNumber('center_y', avgc_y)
         table.putNumber('yaw', yaaw)
         table.putNumber('distance_esti', dis)
         table.putNumber('contours', conts)
         table.putNumber('targets', targets)
-        if debug:
-            print("center_x:", avgc_x)
-            print('center_y:', avgc_y)
-            print('yaw:', yaaw)
-            print('distance_esti:', dis)
-            print('contours:', conts)
-            print('targets:', targets)
+        table.putNumber('pitch', pitch)
 
     src = int(args['source']) if args['source'].isdigit() else args['source']
     flip = args['flip']
@@ -273,12 +268,13 @@ def vision():
         print('Network Tables Flag: {}'.format(net_table))
         print('----------------------------------------------------------------')
 
-    vfov = data['yfov']
+    v_focal_length = data['camera_matrix'][1][1]
     h_focal_length = data['camera_matrix'][0][0]
     lower_color = np.array(data['lower-color-list']) - threshold
     upper_color = np.array([data['upper-color-list'][0] + threshold, 255, 255])
     center_coords = (int(data['image-width'] / 2), int(data['image-height'] / 2))
-    screen_c_x = data['image-width'] / 2 + 0.5
+    screen_c_x = data['image-width'] / 2 - 0.5
+    screen_c_y = data['image-height'] / 2 - 0.5
 
     DIM = tuple(data['dim'])
     K = np.array(data['camera_matrix'])
@@ -288,6 +284,7 @@ def vision():
     while True:
         start = time.time()
         best_center_average_coords = (-1, -1)
+        pitch = -1
         yaw = -1
         distance = -1
         if not first_read:
@@ -341,13 +338,19 @@ def vision():
                         average_cy_list.append(int((rect.center[1] + rectangle_list[index + 1].center[1]) / 2))
         if len(average_cx_list) == 1:
             best_center_average_coords = (average_cx_list[0], average_cy_list[0])
+            pitch = calc_pitch(average_cy_list[0], screen_c_y, v_focal_length)
             yaw = calc_yaw(average_cx_list[0], screen_c_x, h_focal_length)
             if debug:
-                print('Distance: {}'.format(distance))
-                print('Index: {}'.format(0))
+                print('Contours: {}'.format(len(sorted_contours)))
+                print('Targets: {}'.format(len(average_cx_list)))
                 print('Avg_cx_list: {}'.format(average_cx_list))
                 print('Avg_cy_list: {}'.format(average_cy_list))
                 print('Best Center Coords: {}'.format(best_center_average_coords))
+                print('Index: {}'.format(0))
+                print('Distance: {}'.format(distance))
+                print('Pitch: {}'.format(pitch))
+                print('Yaw: {}'.format(yaw))
+
             if view:
                 cv2.line(frame, best_center_average_coords, center_coords, (0, 255, 0), 2)
                 for index, x in enumerate(average_cx_list):
@@ -360,19 +363,26 @@ def vision():
             best_center_average_y = average_cy_list[index] if index < len(average_cx_list) else index - 1
 
             best_center_average_coords = (best_center_average_x, best_center_average_y)
+            pitch = calc_pitch(best_center_average_y, screen_c_y, v_focal_length)
             yaw = calc_yaw(best_center_average_x, screen_c_x, h_focal_length)
             if debug:
-                print('Distance: {}'.format(distance))
-                print('Index: {}'.format(index))
+                print('Contours: {}'.format(len(sorted_contours)))
+                print('Targets: {}'.format(len(average_cx_list)))
                 print('Avg_cx_list: {}'.format(average_cx_list))
                 print('Avg_cy_list: {}'.format(average_cy_list))
                 print('Best Center Coords: {}'.format(best_center_average_coords))
+                print('Index: {}'.format(0))
+                print('Distance: {}'.format(distance))
+                print('Pitch: {}'.format(pitch))
+                print('Yaw: {}'.format(yaw))
             if view:
                 cv2.line(frame, best_center_average_coords, center_coords, (0, 255, 0), 2)
                 for index, x in enumerate(average_cx_list):
                     draw_center_dot((x, average_cy_list[index]), (255, 0, 0))
         if net_table:
-            update_net_table(best_center_average_coords[0], best_center_average_coords[1], yaw)
+            # update_net_table(avgc_x=-1, avgc_y=-1, yaaw=-1, dis=-1, conts=-1, targets=-1, pitch=-1)
+            update_net_table(best_center_average_coords[0], best_center_average_coords[1], yaw, distance,
+                             len(sorted_contours), len(average_cx_list), pitch)
 
         if view:
             cv2.imshow('Contour Window', frame)
