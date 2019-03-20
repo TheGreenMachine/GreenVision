@@ -16,13 +16,13 @@ for setting in settings:
 # set desired values
 print()
 print("------ setting values ----")
-control.set_control_value(9963776, 1)  # brightness
-control.set_control_value(9963777, 8)  # contrast
+control.set_control_value(9963776, -64)  # brightness
+control.set_control_value(9963777, 32)  # contrast
 control.set_control_value(10094849, 1)  # exposure_auto
-control.set_control_value(10094850, 4)  # exposure_absolute
-control.set_control_value(9963778, 8)  # saturation
+control.set_control_value(10094850, 20)  # exposure_absolute
+control.set_control_value(9963778, 64)  # saturation
 control.set_control_value(9963779, 0)  # hue
-control.set_control_value(9963792, 72)  # gamma
+control.set_control_value(9963792, 200)  # gamma
 control.set_control_value(9963802, 3250)  # white_balance_temperature
 control.close()
 print("------    DONE    ----")
