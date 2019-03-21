@@ -342,7 +342,7 @@ def vision():
             best_center_average_coords = (average_cx_list[0], average_cy_list[0])
             pitch = calc_pitch(average_cy_list[0], screen_c_y, v_focal_length)
             yaw = calc_yaw(average_cx_list[0], screen_c_x, h_focal_length)
-            distance = calc_distance(best_center_average_coords[1], screen_c_y, v_focal_length)
+            # distance = calc_distance(best_center_average_coords[1], screen_c_y, v_focal_length)
             if debug:
                 print('Contours: {}'.format(len(sorted_contours)))
                 print('Targets: {}'.format(len(average_cx_list)))
@@ -360,14 +360,15 @@ def vision():
                     draw_center_dot((x, average_cy_list[index]), (255, 0, 0))
         elif len(average_cx_list) > 1:
             # finds c_x that is closest to the center of the center
-            index = bisect.bisect_left(average_cx_list, 320) if len(average_cx_list) > 1 else 0
-            best_center_average_x = average_cx_list[index] if index < len(average_cx_list) else index - 1
-            best_center_average_y = average_cy_list[index] if index < len(average_cx_list) else index - 1
+
+            best_center_average_x = min(average_cx_list, key=lambda x: abs(x - 320))
+            index = average_cx_list.index(best_center_average_x)
+            best_center_average_y = average_cy_list[index]
 
             best_center_average_coords = (best_center_average_x, best_center_average_y)
             pitch = calc_pitch(best_center_average_y, screen_c_y, v_focal_length)
             yaw = calc_yaw(best_center_average_x, screen_c_x, h_focal_length)
-            distance = calc_distance(best_center_average_coords[index], screen_c_y, v_focal_length)
+            # distance = calc_distance(best_center_average_coords[index], screen_c_y, v_focal_length)
             if debug:
                 print('Contours: {}'.format(len(sorted_contours)))
                 print('Targets: {}'.format(len(average_cx_list)))
