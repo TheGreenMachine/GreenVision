@@ -19,7 +19,7 @@ print("------ setting values ----")
 control.set_control_value(9963776, 0)  # brightness
 control.set_control_value(9963777, 32)  # contrast
 control.set_control_value(10094849, 1)  # exposure_auto
-control.set_control_value(10094850, 7)  # exposure_absolute
+control.set_control_value(10094850, 8)  # exposure_absolute
 control.set_control_value(9963778, 64)  # saturation
 control.set_control_value(9963779, 0)  # hue
 control.set_control_value(9963792, 200)  # gamma
