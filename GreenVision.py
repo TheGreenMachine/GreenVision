@@ -384,8 +384,8 @@ def vision():
             update_net_table(best_center_average_coords[0], best_center_average_coords[1], yaw, distance,
                              len(sorted_contours), len(average_cx_list), pitch)
         if view:
-            cv2.imshow('Contour Window', frame)
             cv2.imshow('Mask', mask)
+            cv2.imshow('Contour Window', frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
