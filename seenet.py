@@ -1,46 +1,75 @@
 import networktables as nt
 import time
 import sys
+import csv
+import argparse
 
-values = {}
-values['visionX'] = -99
-values['visionY'] = -99
-values['width'] = -99
-values['height'] = -99
-values['center0_x'] = -99
-values['center0_y'] = -99
-values['center1_x'] = -99
-values['center1_y'] = -99
-values['center_x'] = -99
-values['center_y'] = -99
-values['distance_esti'] = -99
+
+def program_description():
+    return 'Team 1816 Network Tables Viewing Utility for the 2019 Deep Space Season'
 
 
 def view():
-    #global values
-    msg = "\rvis: {:3.1f} {:3.1f}; wid,ht: {:3.1f} {:3.1f}; cent0: {:3.1f} {:3.1f}; cent1: {:3.1f} {:3.1f}, cent: {:3.1f} {:3.1f}; dist: {:3.1f}            ".format( values['visionX'], values['visionY'], values['width'], values['height'], values['center0_x'], values['center0_y'], values['center1_x'], values['center1_y'], values['center_x'], values['center_y'], values['distance_esti'])
+    # global values
+    msg = "\rw, h: ({} {});" \
+          " coords: ({} {});" \
+          " yaw, pitch: ({}, {});" \
+          " dist: {};" \
+          " contours: {};" \
+          " targets: {}".format(
+        int(values['width']), int(values['height']),
+        int(values['center_x']), int(values['center_y']),
+        values['yaw'], values['pitch'],
+        values['distance_esti'],
+        int(values['contours']),
+        int(values['targets']))
+    if args['log']:
+        with open('vision_net_values.csv', mode='a+') as vnv_file:
+            vnv_writer = csv.writer(vnv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            vnv_writer.writerow([int(values['center_x']), int(values['center_y']), int(values['contours']),
+                                 int(values['targets'])])
     sys.stdout.write(msg)
 
 
 def value_changed(table, key, value, isNew):
     global values
     values[key] = value
-    if key == 'distance_esti':
+    if key == 'contours':
         view()
 
+
 def start_listener():
-    table.addEntryListener(value_changed, key="visionX")
-    table.addEntryListener(value_changed, key="visionY")
+    # During vision init
     table.addEntryListener(value_changed, key="width")
     table.addEntryListener(value_changed, key="height")
+    # Updated during match
+    table.addEntryListener(value_changed, key='center_x')
+    table.addEntryListener(value_changed, key='center_y')
+    table.addEntryListener(value_changed, key='yaw')
+    table.addEntryListener(value_changed, key='distance_esti')
+    table.addEntryListener(value_changed, key='contours')
+    table.addEntryListener(value_changed, key='targets')
+    table.addEntryListener(value_changed, key='pitch')
 
-    table.addEntryListener(value_changed, key="center0_x")
-    table.addEntryListener(value_changed, key="center0_y")
-    table.addEntryListener(value_changed, key="center1_x")
-    table.addEntryListener(value_changed, key="center1_y")
-    table.addEntryListener(value_changed, key="center_x")
-    table.addEntryListener(value_changed, key="center_y")
-    table.addEntryListener(value_changed, key="distance_esti")
+
+parser = argparse.ArgumentParser(description=program_description())
+parser.add_argument('-l', '--log',
+                    action='store_true',
+                    default=False,
+                    help='enable logging')
+args = vars(parser.parse_args())
+values = {}
+values['visionX'] = -99
+values['visionY'] = -99
+values['width'] = -99
+values['height'] = -99
+values['center_x'] = -99
+values['center_y'] = -99
+values['distance_esti'] = -99
+values['contours'] = -99
+values['targets'] = -99
+values['yaw'] = -99
+values['pitch'] = -99
 
 nt.NetworkTables.initialize(server='10.18.16.2')
 table = nt.NetworkTables.getTable('SmartDashboard')

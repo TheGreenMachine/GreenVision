@@ -1,7 +1,0 @@
-Code:
-
-====================================================================================
-Docs:
-- add calibration note that function model may change depending on the environment
-- git bash
-
