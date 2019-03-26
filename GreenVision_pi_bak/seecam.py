@@ -10,25 +10,48 @@ control.get_control_value(9963776)
 # get all default settings
 settings = control.get_controls()
 
-for setting in settings:
-    print("Value {} = {}".format(setting['name'], setting['value']))
+# set all to defaults
+#for setting in settings:
+    #print("Setting {} to {}".format(setting['name'], setting['default']))
+    #control.set_control_value(setting['id'], setting['default'])
 
 # set desired values
 print()
 print("------ setting values ----")
-control.set_control_value(9963776,  1)     # brightness
-control.set_control_value(9963777,  8)     # contrast
+control.set_control_value(9963776,  -32)     # brightness
+control.set_control_value(9963777,  32)     # contrast
 control.set_control_value(10094849, 1)     # exposure_auto
-control.set_control_value(10094850, 4)     # exposure_absolute
-control.set_control_value(9963778, 8)     # saturation
+control.set_control_value(10094850, 8)     # exposure_absolute
+control.set_control_value(9963778, 64)     # saturation
 control.set_control_value(9963779, 0)     # hue
-control.set_control_value(9963792, 5)     # gamma
+control.set_control_value(9963792, 250)     # gamma
 control.set_control_value(9963802, 3250)     # white_balance_temperature
 control.close()
 print("------    DONE        ----")
 
+# COMP CAM
+#                     brightness (int)    : min=-64 max=64 step=1 default=-8193 value=1
+#                       contrast (int)    : min=0 max=64 step=1 default=57343 value=8
+#                     saturation (int)    : min=0 max=128 step=1 default=57343 value=8
+#                            hue (int)    : min=-40 max=40 step=1 default=-8193 value=0
+# white_balance_temperature_auto (bool)   : default=1 value=1
+#                          gamma (int)    : min=72 max=500 step=1 default=57343 value=72
+#                           gain (int)    : min=0 max=100 step=1 default=57343 value=0
+#           power_line_frequency (menu)   : min=0 max=2 default=1 value=2
+#                0: Disabled
+#                1: 50 Hz
+#                2: 60 Hz
+#      white_balance_temperature (int)    : min=2800 max=6500 step=1 default=57343 value=3250 flags=inactive
+#                      sharpness (int)    : min=0 max=6 step=1 default=57343 value=2
+#         backlight_compensation (int)    : min=0 max=2 step=1 default=57343 value=1
+#                  exposure_auto (menu)   : min=0 max=3 default=0 value=1
+#                1: Manual Mode
+#                3: Aperture Priority Mode
+#              exposure_absolute (int)    : min=1 max=5000 step=1 default=157 value=4
+#         exposure_auto_priority (bool)   : default=0 value=1
+#
 
-
+# PRACTICE CAM
 #                     brightness (int)    : min=0 max=15 step=1 default=-8193 value=1
 #                       contrast (int)    : min=0 max=15 step=1 default=57343 value=15
 #                     saturation (int)    : min=0 max=15 step=1 default=57343 value=15
@@ -50,3 +73,5 @@ print("------    DONE        ----")
 #                 focus_absolute (int)    : min=0 max=21 step=1 default=57343 value=16 flags=inactive
 #                     focus_auto (bool)   : default=1 value=1
 #
+
+

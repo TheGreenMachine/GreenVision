@@ -1,4 +1,5 @@
 import argparse
+import bisect
 import json
 import math
 import os
@@ -140,7 +141,11 @@ def vision():
         (cnts, bounding_boxes) = zip(*sorted(zip(cnts, bounding_boxes), key=lambda b: b[1][0], reverse=False))
         return cnts, bounding_boxes
 
-    def calc_distance(c_y, screen_y, v_foc_len):
+    def calc_pitch(center_y):
+        pitch = math.degrees(math.atan((240 - center_y) / vfov)) * -1
+        return round(pitch)
+
+    def calc_distance(cy):
 
         # d = distance
         # h = height between camera and target
@@ -157,17 +162,18 @@ def vision():
         target_height = data['target-height']
         cam_height = data['camera-height']
         h = abs(target_height - cam_height)
-        temp = math.tan(math.radians(calc_pitch(c_y, screen_y, v_foc_len)))
-        dist = math.fabs(h / temp) if temp != 0 else -1
+        dist = math.fabs(h / math.tan(math.radians(calc_pitch(cy))))
+
         return dist
 
-    def calc_pitch(c_y, screen_y, v_foc_len):
-        pitch = math.degrees(math.atan((c_y - screen_y) / v_foc_len))
-        return pitch
-
-    def calc_yaw(c_x, screen_x, h_foc_len):
-        ya = math.degrees(math.atan((c_x - screen_x) / h_foc_len))
+    def calc_yaw(pixel_x, center_x, h_foc_len):
+        ya = math.degrees(math.atan((pixel_x - center_x) / h_foc_len))
         return round(ya)
+
+    def undistort_frame(frame):
+        map1, map2 = cv2.fisheye.initUndistortRectifyMap(K, D, np.eye(3), K, DIM, cv2.CV_16SC2)
+        undst = cv2.remap(frame, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+        return undst
 
     def draw_rect(rect, color):
         cv2.line(frame, (rect.box[0][0], rect.box[0][1]), (rect.box[1][0], rect.box[1][1]), color, 2)
@@ -175,12 +181,7 @@ def vision():
         cv2.line(frame, (rect.box[2][0], rect.box[2][1]), (rect.box[3][0], rect.box[3][1]), color, 2)
         cv2.line(frame, (rect.box[3][0], rect.box[3][1]), (rect.box[0][0], rect.box[0][1]), color, 2)
 
-    def undistort_frame(frame):
-        map1, map2 = cv2.fisheye.initUndistortRectifyMap(K, D, np.eye(3), K, DIM, cv2.CV_16SC2)
-        undst = cv2.remap(frame, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
-        return undst
-
-    def solve_pnp(rect1, rect2, cy):
+    def solve_thing(rect1, rect2, cy):
 
         model_points = [
             # Left target
@@ -196,14 +197,12 @@ def vision():
             (5.375, -2.938, 0.0),  # bottom right
         ]
 
-        mp = np.array(model_points)
-
         image_points = np.concatenate((rect1.box, rect2.box))
         image_points[:, 0] -= data['image-width'] / 2
         image_points[:, 1] -= cy
         image_points[:, 1] *= -1
 
-        ret, rvec, tvec = cv2.solvePnP(mp, image_points, K, D)
+        ret, rvec, tvec = cv2.solvePnP(model_points, image_points, K, D)
 
         x = tvec[0][0]
         y = tvec[1][0]
@@ -225,14 +224,16 @@ def vision():
     def draw_center_dot(cord, color):
         cv2.line(frame, cord, cord, color, 2)
 
-    def update_net_table(avgc_x=-1, avgc_y=-1, yaaw=-1, dis=-1, conts=-1, targets=-1, pitch=-1):
+    def update_net_table(avgc_x=-1, avgc_y=-1, yaaw=-1, dis=-1):
         table.putNumber('center_x', avgc_x)
         table.putNumber('center_y', avgc_y)
         table.putNumber('yaw', yaaw)
         table.putNumber('distance_esti', dis)
-        table.putNumber('contours', conts)
-        table.putNumber('targets', targets)
-        table.putNumber('pitch', pitch)
+        if debug:
+            print("center_x", avgc_x)
+            print('center_y', avgc_y)
+            print('yaw', yaaw)
+            print('distance_esti', dis)
 
     src = int(args['source']) if args['source'].isdigit() else args['source']
     flip = args['flip']
@@ -268,13 +269,12 @@ def vision():
         print('Network Tables Flag: {}'.format(net_table))
         print('----------------------------------------------------------------')
 
-    v_focal_length = data['camera_matrix'][1][1]
+    vfov = data['yfov']
     h_focal_length = data['camera_matrix'][0][0]
     lower_color = np.array(data['lower-color-list']) - threshold
     upper_color = np.array([data['upper-color-list'][0] + threshold, 255, 255])
     center_coords = (int(data['image-width'] / 2), int(data['image-height'] / 2))
-    screen_c_x = data['image-width'] / 2 - 0.5
-    screen_c_y = data['image-height'] / 2 - 0.5
+    screen_c_x = data['image-width'] / 2 + 0.5
 
     DIM = tuple(data['dim'])
     K = np.array(data['camera_matrix'])
@@ -284,7 +284,6 @@ def vision():
     while True:
         start = time.time()
         best_center_average_coords = (-1, -1)
-        pitch = -1
         yaw = -1
         distance = -1
         if not first_read:
@@ -307,7 +306,6 @@ def vision():
             frame = cv2.flip(frame, -1)
         if rotate:
             frame = imutils.rotate_bound(frame, 90)
-        # frame = undistort_frame(frame)
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, lower_color, upper_color)
 
@@ -322,67 +320,44 @@ def vision():
                 filtered_contours.append(contour)
         if len(filtered_contours) != 0:
             sorted_contours, _ = sort_contours(filtered_contours)
-        # print("Number of contours: ", len(filtered_contours))
+        print("Number of contours: ", len(filtered_contours))
         if len(sorted_contours) > 1:
             for contour in sorted_contours:
                 rectangle_list.append(Rect(contour))
-            for index, rect in enumerate(rectangle_list):
-                # positive angle means it's the left tape of a pair
-                if abs(rect.theta) > 40 and index != len(rectangle_list) - 1:
-                    if view:
-                        draw_rect(rect, (0, 255, 255))
-                    # only add rect if the second rect is the correct pair
-                    if abs(rectangle_list[index + 1].theta) < 40:
+            if len(rectangle_list) > 1:
+                for index, rect in enumerate(rectangle_list):
+                    # positive angle means it's the left tape of a pair
+                    if abs(rect.theta) > 40 and index != len(rectangle_list) - 1:
                         if view:
-                            draw_rect(rectangle_list[index + 1], (0, 0, 255))
-                        average_cx_list.append(int((rect.center[0] + rectangle_list[index + 1].center[0]) / 2))
-                        average_cy_list.append(int((rect.center[1] + rectangle_list[index + 1].center[1]) / 2))
-        if len(average_cx_list) == 1:
-            best_center_average_coords = (average_cx_list[0], average_cy_list[0])
-            pitch = calc_pitch(average_cy_list[0], screen_c_y, v_focal_length)
-            yaw = calc_yaw(average_cx_list[0], screen_c_x, h_focal_length)
-            if debug:
-                print('Contours: {}'.format(len(sorted_contours)))
-                print('Targets: {}'.format(len(average_cx_list)))
-                print('Avg_cx_list: {}'.format(average_cx_list))
-                print('Avg_cy_list: {}'.format(average_cy_list))
-                print('Best Center Coords: {}'.format(best_center_average_coords))
-                print('Index: {}'.format(0))
-                print('Distance: {}'.format(distance))
-                print('Pitch: {}'.format(pitch))
-                print('Yaw: {}'.format(yaw))
-
-            if view:
-                cv2.line(frame, best_center_average_coords, center_coords, (0, 255, 0), 2)
-                for index, x in enumerate(average_cx_list):
-                    draw_center_dot((x, average_cy_list[index]), (255, 0, 0))
-        elif len(average_cx_list) > 1:
+                            draw_rect(rect, (0, 255, 255))
+                        # only add rect if the second rect is the correct pair
+                        if abs(rectangle_list[index + 1].theta) < 40:
+                            if view:
+                                draw_rect(rectangle_list[index + 1], (0, 0, 255))
+                            average_cx_list.append(int((rect.center[0] + rectangle_list[index + 1].center[0]) / 2))
+                            average_cy_list.append(int((rect.center[1] + rectangle_list[index + 1].center[1]) / 2))
+        if len(average_cx_list) > 0:
             # finds c_x that is closest to the center of the center
-            best_center_average_x = min(average_cx_list, key=lambda x: abs(x - 320))
-            index = average_cx_list.index(best_center_average_x)
-            best_center_average_y = average_cy_list[index]
+            index = bisect.bisect_left(average_cx_list, 320) if len(average_cx_list) > 1 else 0
+            best_center_average_x = average_cx_list[index] if index < len(average_cx_list) else index - 1
+            best_center_average_y = average_cy_list[index] if index < len(average_cx_list) else index - 1
 
             best_center_average_coords = (best_center_average_x, best_center_average_y)
-            pitch = calc_pitch(best_center_average_y, screen_c_y, v_focal_length)
+            #distance = calc_distance(best_center_average_coords[1])
             yaw = calc_yaw(best_center_average_x, screen_c_x, h_focal_length)
             if debug:
-                print('Contours: {}'.format(len(sorted_contours)))
-                print('Targets: {}'.format(len(average_cx_list)))
+                print('Distance: {}'.format(distance))
+                print('Index: {}'.format(index))
                 print('Avg_cx_list: {}'.format(average_cx_list))
                 print('Avg_cy_list: {}'.format(average_cy_list))
                 print('Best Center Coords: {}'.format(best_center_average_coords))
-                print('Index: {}'.format(index))
-                print('Distance: {}'.format(distance))
-                print('Pitch: {}'.format(pitch))
-                print('Yaw: {}'.format(yaw))
             if view:
                 cv2.line(frame, best_center_average_coords, center_coords, (0, 255, 0), 2)
                 for index, x in enumerate(average_cx_list):
                     draw_center_dot((x, average_cy_list[index]), (255, 0, 0))
-
         if net_table:
-            update_net_table(best_center_average_coords[0], best_center_average_coords[1], yaw, distance,
-                             len(sorted_contours), len(average_cx_list), pitch)
+            update_net_table(best_center_average_coords[0], best_center_average_coords[1], yaw, distance)
+
         if view:
             cv2.imshow('Contour Window', frame)
             cv2.imshow('Mask', mask)
