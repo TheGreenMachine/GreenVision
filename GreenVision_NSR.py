@@ -10,6 +10,7 @@ import networktables as nt
 import numpy as np
 import csv
 import logging
+import datetime
 
 logging.basicConfig(level=logging.DEBUG, filename='crash.log')
 cwd = os.getcwd()
@@ -333,6 +334,7 @@ def vision():
                 print('Filtered Contour Area: {}'.format([cv2.contourArea(contour) for contour in filtered_contours]))
                 sorted_contours, _ = sort_contours(filtered_contours)
                 print('Sorted Contours Area: {}'.format([cv2.contourArea(contour) for contour in sorted_contours]))
+
             if len(sorted_contours) > 1:
                 for contour in sorted_contours:
                     rectangle_list.append(Rect(contour))
@@ -349,6 +351,7 @@ def vision():
                                 draw_rect(rectangle_list[index + 1], (0, 0, 255))
                             average_cx_list.append(int((rect.center[0] + rectangle_list[index + 1].center[0]) / 2))
                             average_cy_list.append(int((rect.center[1] + rectangle_list[index + 1].center[1]) / 2))
+
             if len(average_cx_list) == 1:
                 best_center_average_coords = (average_cx_list[0], average_cy_list[0])
                 pitch = calc_pitch(average_cy_list[0], screen_c_y, v_focal_length)
@@ -413,7 +416,8 @@ def vision():
                 #                    str(best_center_average_coords),
                 #                    abs(320 - best_center_average_coords[0])])
                 vl_writer.writerow(
-                    [[cv2.contourArea(contour) for contour in all_contours if cv2.contourArea(contour) > 25],
+                    [datetime.datetime.now(),
+                     [cv2.contourArea(contour) for contour in all_contours if cv2.contourArea(contour) > 25],
                      biggest_contour_area,
                      [cv2.contourArea(contour) for contour in filtered_contours],
                      [cv2.contourArea(contour) for contour in sorted_contours],
