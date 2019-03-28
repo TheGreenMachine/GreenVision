@@ -227,7 +227,7 @@ def vision():
         return distance, angle1, angle2
 
     def draw_center_dot(cord, color):
-        cv2.line(frame, cord, cord, color, 3)
+        cv2.line(frame, cord, cord, color, 5)
 
     def update_net_table(avgc_x=-1, avgc_y=-1, yaaw=-1, dis=-1, conts=-1, targets=-1, pitch=-1):
         table.putNumber('center_x', avgc_x)
