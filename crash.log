@@ -1,0 +1,10 @@
+ERROR:root:Heck: 
+Traceback (most recent call last):
+  File "GreenVision_NSR.py", line 288, in vision
+    raise Exception('Blap')
+Exception: Blap
+ERROR:root:Heck: 
+Traceback (most recent call last):
+  File "GreenVision_NSR.py", line 323, in vision
+    raise Exception('Bruh')
+Exception: Bruh
