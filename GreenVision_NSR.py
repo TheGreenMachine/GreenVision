@@ -403,18 +403,6 @@ def vision():
                 cv2.imshow('Mask', mask)
             with open('vision_log.csv', mode='a+') as vl_file:
                 vl_writer = csv.writer(vl_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-                # vl_writer.writerow([str([cv2.contourArea(contour) for contour in all_contours]),
-                #                    biggest_contour_area,
-                #                    str([cv2.contourArea(contour) for contour in filtered_contours]),
-                #                    str([cv2.contourArea(contour) for contour in sorted_contours]),
-                #                    len(rectangle_list),  # num rectangles
-                #                    len(sorted_contours),  # num contours
-                #                    len(average_cx_list),  # num targets
-                #                    str(average_cx_list),
-                #                    str(average_cy_list),
-                #                    index,
-                #                    str(best_center_average_coords),
-                #                    abs(320 - best_center_average_coords[0])])
                 vl_writer.writerow(
                     [datetime.datetime.now(),
                      [cv2.contourArea(contour) for contour in all_contours if cv2.contourArea(contour) > 25],
