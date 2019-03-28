@@ -321,13 +321,13 @@ def vision():
             average_cy_list = []
             sorted_contours = []
             biggest_contour_area = cv2.contourArea(
-                max(all_contours, key=lambda x: cv2.contourArea(x) if cv2.contourArea(x) < 1750 else 0)) if len(
+                max(all_contours, key=lambda x: cv2.contourArea(x) if 50 < cv2.contourArea(x) < 2000 else 0)) if len(
                 all_contours) != 0 else 0
             print('Biggest Area: {}'.format(biggest_contour_area))
             for contour in all_contours:
                 if cv2.contourArea(contour) > 50:
                     print('Unfiltered Contour Area: {}'.format(cv2.contourArea(contour)))
-                if 50 < cv2.contourArea(contour) < 1750 and cv2.contourArea(contour) > 0.75 * biggest_contour_area:
+                if 50 < cv2.contourArea(contour) < 2000 and cv2.contourArea(contour) > 0.75 * biggest_contour_area:
                     filtered_contours.append(contour)
             if len(filtered_contours) != 0:
                 print('Filtered Contour Area: {}'.format([cv2.contourArea(contour) for contour in filtered_contours]))
