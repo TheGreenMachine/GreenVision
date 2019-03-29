@@ -14,7 +14,10 @@ import datetime
 
 writables_fp = '/media/ethansky/GVLOGGING/'
 
-logging.basicConfig(level=logging.DEBUG, filename=os.path.join(writables_fp, 'crash.log'))
+logging.basicConfig(level=logging.DEBUG,
+                    filename=os.path.join(writables_fp, 'crash.log'),
+                    format='%(asctime)s $(levelname)-8s %(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S')
 # logging.basicConfig(level=logging.DEBUG, filename='crash.log')
 cwd = os.getcwd()
 file_path = os.path.join(cwd, 'values.json')
@@ -289,6 +292,9 @@ def vision():
     first_read = True
     try:
         while True:
+
+            raise Exception('boop')
+
             start = time.time()
             best_center_average_coords = (-1, -1)
             pitch = -1
@@ -299,7 +305,7 @@ def vision():
                 if key == ord('q'):
                     break
                 if sequence and key != ord(' '):
-                    continuec
+                    continue
 
             first_read = False
 
