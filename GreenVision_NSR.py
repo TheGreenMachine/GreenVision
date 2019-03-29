@@ -401,6 +401,7 @@ def vision():
             if view:
                 cv2.imshow('Contour Window', frame)
                 cv2.imshow('Mask', mask)
+            end = time.time()
             with open('vision_log.csv', mode='a+') as vl_file:
                 vl_writer = csv.writer(vl_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                 vl_writer.writerow(
@@ -416,10 +417,10 @@ def vision():
                      average_cy_list,
                      index,
                      best_center_average_coords,
-                     abs(320 - best_center_average_coords[0])])
+                     abs(320 - best_center_average_coords[0]),
+                     end-start])
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
-            end = time.time()
             if debug:
                 print('Execute time: {}'.format(end - start))
     except Exception as err:
