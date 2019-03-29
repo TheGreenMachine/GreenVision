@@ -12,7 +12,10 @@ import csv
 import logging
 import datetime
 
-logging.basicConfig(level=logging.DEBUG, filename='crash.log')
+writables_fp = '/media/ethansky/GVLOGGING/'
+
+logging.basicConfig(level=logging.DEBUG, filename=os.path.join(writables_fp, 'crash.log'))
+# logging.basicConfig(level=logging.DEBUG, filename='crash.log')
 cwd = os.getcwd()
 file_path = os.path.join(cwd, 'values.json')
 with open(file_path) as json_file:
@@ -296,7 +299,7 @@ def vision():
                 if key == ord('q'):
                     break
                 if sequence and key != ord(' '):
-                    continue
+                    continuec
 
             first_read = False
 
@@ -402,7 +405,7 @@ def vision():
                 cv2.imshow('Contour Window', frame)
                 cv2.imshow('Mask', mask)
             end = time.time()
-            with open('vision_log.csv', mode='a+') as vl_file:
+            with open(os.path.join(writables_fp, 'vision_log.csv'), mode='a+') as vl_file:
                 vl_writer = csv.writer(vl_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                 vl_writer.writerow(
                     [datetime.datetime.now(),
@@ -418,7 +421,7 @@ def vision():
                      index,
                      best_center_average_coords,
                      abs(320 - best_center_average_coords[0]),
-                     end-start])
+                     end - start])
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
             if debug:
