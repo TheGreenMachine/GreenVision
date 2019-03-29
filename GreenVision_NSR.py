@@ -11,6 +11,7 @@ import numpy as np
 import csv
 import logging
 import datetime
+import getpass
 
 cwd = os.getcwd()
 file_path = os.path.join(cwd, 'values.json')
@@ -250,17 +251,19 @@ def vision():
     threshold = args['threshold'] if 0 < args['threshold'] < 50 else 0
     net_table = args['networktables']
     pi = args['pi']
+    can_log = False
     sequence = False
 
-    writables_fp = '/media/ethansky/GVLOGGING/'
-    if pi:
-
+    writables_fp = '/media/{}/GVLOGGING/'.format(getpass.getuser())
+    if pi and os.path.exists(writables_fp):
         logging.basicConfig(level=logging.DEBUG,
                             filename=os.path.join(writables_fp, 'crash.log'),
                             format='%(asctime)s %(levelname)-8s %(message)s',
                             datefmt='%Y-%m-%d %H:%M:%S')
-    else:
+        can_log = True
+    elif getpass.getuser() != 'pi':
         logging.basicConfig(level=logging.DEBUG, filename='crash.log')
+        can_log = True
 
     cap = cv2.VideoCapture(src)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
@@ -443,7 +446,8 @@ def vision():
     except Exception as err:
         print('Crashed!: {}'.format(err))
 
-        logging.exception('Vision Machine Broke')
+        if can_log:
+            logging.exception('Vision Machine Broke')
 
     cap.release()
     cv2.destroyAllWindows()
