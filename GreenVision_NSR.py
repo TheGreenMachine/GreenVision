@@ -253,6 +253,7 @@ def vision():
     pi = args['pi']
     can_log = False
     sequence = False
+    image_written = False
 
     logging_fp = '/media/{}/GVLOGGING/'.format(getpass.getuser())
     if pi and os.path.exists(logging_fp):
@@ -419,9 +420,11 @@ def vision():
                 if not os.path.exists(images_fp):
                     os.makedirs(images_fp)
                 biggest_num = max([file[:-3] for file in os.listdir(images_fp)])
-                fname = str(biggest_num + 1)
+                reason = 'odd_' if len(sorted_contours) % 2 == 1 and len(sorted_contours) <= 5 else 'toomany_'
+                fname = '{}{}.jpg'.format(reason, biggest_num)
                 cv2.imwrite(images_fp, fname)
                 print('Frame Captured!')
+                image_written = True
             if net_table:
                 update_net_table(best_center_average_coords[0], best_center_average_coords[1], yaw, distance,
                                  len(sorted_contours), len(average_cx_list), pitch)
@@ -445,7 +448,8 @@ def vision():
                      index,
                      best_center_average_coords,
                      abs(320 - best_center_average_coords[0]),
-                     end - start])
+                     end - start,
+                     image_written])
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
             if debug:
