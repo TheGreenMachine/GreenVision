@@ -301,7 +301,7 @@ def vision():
     try:
         while True:
 
-            raise Exception('boop')
+            # raise Exception('boop')
 
             start = time.time()
             best_center_average_coords = (-1, -1)
