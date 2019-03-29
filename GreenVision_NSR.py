@@ -16,7 +16,7 @@ writables_fp = '/media/ethansky/GVLOGGING/'
 
 logging.basicConfig(level=logging.DEBUG,
                     filename=os.path.join(writables_fp, 'crash.log'),
-                    format='%(asctime)s $(levelname)-8s %(message)s',
+                    format='%(asctime)s %(levelname)-8s %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S')
 # logging.basicConfig(level=logging.DEBUG, filename='crash.log')
 cwd = os.getcwd()
