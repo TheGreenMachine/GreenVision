@@ -3,6 +3,7 @@ import time
 import sys
 import csv
 import argparse
+import datetime
 
 
 def program_description():
@@ -26,7 +27,7 @@ def view():
     if args['log']:
         with open('vision_net_values.csv', mode='a+') as vnv_file:
             vnv_writer = csv.writer(vnv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            vnv_writer.writerow([int(values['center_x']), int(values['center_y']), int(values['contours']),
+            vnv_writer.writerow([datetime.datetime.now(), int(values['center_x']), int(values['center_y']), int(values['contours']),
                                  int(values['targets'])])
     sys.stdout.write(msg)
 

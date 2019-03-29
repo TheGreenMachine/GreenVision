@@ -12,13 +12,6 @@ import csv
 import logging
 import datetime
 
-writables_fp = '/media/ethansky/GVLOGGING/'
-
-logging.basicConfig(level=logging.DEBUG,
-                    filename=os.path.join(writables_fp, 'crash.log'),
-                    format='%(asctime)s %(levelname)-8s %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S')
-# logging.basicConfig(level=logging.DEBUG, filename='crash.log')
 cwd = os.getcwd()
 file_path = os.path.join(cwd, 'values.json')
 with open(file_path) as json_file:
@@ -77,6 +70,10 @@ def init_parser_vision():
     parser_vision.add_argument('-nt', '--networktables',
                                action='store_true',
                                help='toggle network tables')
+    parser_vision.add_argument('--pi',
+                               action='store_true',
+                               default=False,
+                               help='must enable for the script to work the pi -- GVLogging USB must be plugged in')
 
 
 def init_parser_image():
@@ -252,7 +249,18 @@ def vision():
     debug = args['debug']
     threshold = args['threshold'] if 0 < args['threshold'] < 50 else 0
     net_table = args['networktables']
+    pi = args['pi']
     sequence = False
+
+    writables_fp = '/media/ethansky/GVLOGGING/'
+    if pi:
+
+        logging.basicConfig(level=logging.DEBUG,
+                            filename=os.path.join(writables_fp, 'crash.log'),
+                            format='%(asctime)s %(levelname)-8s %(message)s',
+                            datefmt='%Y-%m-%d %H:%M:%S')
+    else:
+        logging.basicConfig(level=logging.DEBUG, filename='crash.log')
 
     cap = cv2.VideoCapture(src)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
@@ -434,7 +442,8 @@ def vision():
                 print('Execute time: {}'.format(end - start))
     except Exception as err:
         print('Crashed!: {}'.format(err))
-        logging.exception('Heck: ')
+
+        logging.exception('Vision Machine Broke')
 
     cap.release()
     cv2.destroyAllWindows()
