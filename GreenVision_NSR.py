@@ -254,10 +254,10 @@ def vision():
     can_log = False
     sequence = False
 
-    writables_fp = '/media/{}/GVLOGGING/'.format(getpass.getuser())
-    if pi and os.path.exists(writables_fp):
+    logging_fp = '/media/{}/GVLOGGING/'.format(getpass.getuser())
+    if pi and os.path.exists(logging_fp):
         logging.basicConfig(level=logging.DEBUG,
-                            filename=os.path.join(writables_fp, 'crash.log'),
+                            filename=os.path.join(logging_fp, 'crash.log'),
                             format='%(asctime)s %(levelname)-8s %(message)s',
                             datefmt='%Y-%m-%d %H:%M:%S')
         can_log = True
@@ -303,10 +303,9 @@ def vision():
     first_read = True
     try:
         while True:
-
-            # raise Exception('boop')
-
             start = time.time()
+            # raise Exception('boop')
+            can_log = os.path.exists(logging_fp)
             best_center_average_coords = (-1, -1)
             pitch = -1
             yaw = -1
@@ -415,6 +414,14 @@ def vision():
                     for index, x in enumerate(average_cx_list):
                         draw_center_dot((x, average_cy_list[index]), (255, 0, 0))
 
+            if can_log and (len(sorted_contours) % 2 == 1 or len(sorted_contours) > 6):
+                images_fp = os.path.join(logging_fp, 'images')
+                if not os.path.exists(images_fp):
+                    os.makedirs(images_fp)
+                biggest_num = max([file[:-3] for file in os.listdir(images_fp)])
+                fname = str(biggest_num + 1)
+                cv2.imwrite(images_fp, fname)
+                print('Frame Captured!')
             if net_table:
                 update_net_table(best_center_average_coords[0], best_center_average_coords[1], yaw, distance,
                                  len(sorted_contours), len(average_cx_list), pitch)
@@ -422,7 +429,7 @@ def vision():
                 cv2.imshow('Contour Window', frame)
                 cv2.imshow('Mask', mask)
             end = time.time()
-            with open(os.path.join(writables_fp, 'vision_log.csv'), mode='a+') as vl_file:
+            with open(os.path.join(logging_fp, 'vision_log.csv'), mode='a+') as vl_file:
                 vl_writer = csv.writer(vl_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                 vl_writer.writerow(
                     [datetime.datetime.now(),
