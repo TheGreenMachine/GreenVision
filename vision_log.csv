@@ -1,2 +1,2 @@
-timestamp, unfiltered_contours, biggest_contour, filtered_contours, sorted_contours, num_rects, num_contours, num_targets, cx_list, cy_list, index, coords, x_diff
+timestamp, unfiltered_contours, biggest_contour, filtered_contours, sorted_contours, num_rects, num_contours, num_targets, cx_list, cy_list, index, coords, x_diff, exec_time
 
