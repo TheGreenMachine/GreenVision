@@ -469,7 +469,8 @@ def vision():
                 print('Execute time: {}'.format(end - start))
     except Exception as err:
 
-        print('Vision has crashed! The error has been logged to {}. The error will now be displayed: \n{}'.format(err))
+        print('Vision has crashed! The error has been logged to {}. The error will now be displayed: \n{}'.format(
+            logging_fp, err))
         if can_log:
             logging.exception('Vision Machine Broke')
 
