@@ -318,20 +318,24 @@ def vision():
     sequence = False
 
     logging_fp = '/media/{}/GVLOGGING/'.format(getpass.getuser()) if is_pi else os.path.join(os.getcwd(), 'Logs')
+    # /media/pi/GVLOGGING or /home/[user]/Documents/GreenVision/Logs
 
-    if is_pi and os.path.exists(logging_fp):
+    if not os.path.exists(logging_fp):
+        os.makedirs(logging_fp)
+    if is_pi:
         logging.basicConfig(level=logging.DEBUG,
                             filename=os.path.join(logging_fp, 'crash.log'),
                             format='%(asctime)s %(levelname)-8s %(message)s',
                             datefmt='%Y-%m-%d %H:%M:%S')
         can_log = True
-    elif not is_pi:
+    else:
         logging.basicConfig(level=logging.DEBUG, filename=os.path.join(logging_fp, 'crash.log'))
         can_log = True
 
     cap = cv2.VideoCapture(src)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
+    cap.set(cv2.CAP_PROP_FPS, data['fps'])
 
     if net_table:
         nt.NetworkTables.initialize(server=data['server-ip'])
@@ -355,7 +359,7 @@ def vision():
 
     v_focal_length = data['camera_matrix'][1][1]
     h_focal_length = data['camera_matrix'][0][0]
-    lower_color = np.array(data['lower-color-list']) - threshold
+    lower_color = np.array(data['lower-color-list']) - threshold  # HSV to test: 0, 220, 25
     upper_color = np.array([data['upper-color-list'][0] + threshold, 255, 255])
     center_coords = (int(data['image-width'] / 2), int(data['image-height'] / 2))
     screen_c_x = data['image-width'] / 2 - 0.5
@@ -414,9 +418,8 @@ def vision():
                     print('Unfiltered Contour Area: {}'.format(cv2.contourArea(contour)))
                 if 50 < cv2.contourArea(contour) < 2000 and cv2.contourArea(contour) > 0.75 * biggest_contour_area:
                     filtered_contours.append(contour)
-            if len(filtered_contours) != 0:
+            if len(filtered_contours) > 1:
                 sorted_contours, _ = sort_contours(filtered_contours)
-
             if len(sorted_contours) > 1:
                 for contour in sorted_contours:
                     rectangle_list.append(Rect(contour))
@@ -457,7 +460,7 @@ def vision():
                         draw_center_dot((x, average_cy_list[index]), (255, 0, 0))
             elif len(average_cx_list) > 1:
                 # finds c_x that is closest to the center of the center
-                best_center_average_x = min(average_cx_list, key=lambda x: abs(x - data['image-width'] / 2))
+                best_center_average_x = min(average_cx_list, key=lambda cx: abs(cx - data['image-width'] / 2))
                 index = average_cx_list.index(best_center_average_x)
                 best_center_average_y = average_cy_list[index]
 

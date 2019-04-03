@@ -15,6 +15,7 @@
   "horizontal-aspect": 4,
   "image-width": 640,
   "image-height": 480,
+  "fps": 30,
   "camera_matrix": [
     [
       568.8838380154359,
