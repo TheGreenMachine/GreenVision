@@ -273,7 +273,7 @@ def vision():
 
         return {'temp': cpu_temp(), 'cpu': cpu_usage(), 'ram': ram_usage()}
 
-    def log_data():
+    def log_data(vl_writer):
         image_written = False
         if can_log and len(sorted_contours) > 6:
             images_fp = os.path.join(logging_fp, 'images')
@@ -284,25 +284,22 @@ def vision():
             cv2.imwrite(images_fp, fname)
             print('Frame Captured!')
             image_written = True
-
-        with open(os.path.join(logging_fp, 'vision_log.csv'), mode='a+') as vl_file:
-            vl_writer = csv.writer(vl_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            vl_writer.writerow(
-                [datetime.datetime.now(),
-                 [cv2.contourArea(c) for c in all_contours if cv2.contourArea(contour) > 25],
-                 biggest_contour_area,
-                 [cv2.contourArea(c) for c in filtered_contours],
-                 [cv2.contourArea(c) for c in sorted_contours],
-                 len(rectangle_list),  # num rectangles
-                 len(sorted_contours),  # num contours
-                 len(average_cx_list),  # num targets
-                 average_cx_list,
-                 average_cy_list,
-                 index,
-                 best_center_average_coords,
-                 abs(data['image-width'] / 2 - best_center_average_coords[0]),
-                 end - start,
-                 image_written])
+        vl_writer.writerow(
+            [datetime.datetime.now(),
+             [cv2.contourArea(c) for c in all_contours if cv2.contourArea(contour) > 25],
+             biggest_contour_area,
+             [cv2.contourArea(c) for c in filtered_contours],
+             [cv2.contourArea(c) for c in sorted_contours],
+             len(rectangle_list),  # num rectangles
+             len(sorted_contours),  # num contours
+             len(average_cx_list),  # num targets
+             average_cx_list,
+             average_cy_list,
+             index,
+             best_center_average_coords,
+             abs(data['image-width'] / 2 - best_center_average_coords[0]),
+             end - start,
+             image_written])
 
     src = int(args['source']) if args['source'].isdigit() else args['source']
     flip = args['flip']
@@ -319,6 +316,9 @@ def vision():
 
     logging_fp = '/media/{}/GVLOGGING/'.format(getpass.getuser()) if is_pi else os.path.join(os.getcwd(), 'Logs')
     # /media/pi/GVLOGGING or /home/[user]/Documents/GreenVision/Logs
+
+    with open(os.path.join(logging_fp, 'vision_log.csv'), mode='a+') as vl_file:
+        vl_writer = csv.writer(vl_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
     if not os.path.exists(logging_fp):
         os.makedirs(logging_fp)
@@ -439,6 +439,7 @@ def vision():
                 best_center_average_coords = (average_cx_list[0], average_cy_list[0])
                 pitch = calc_pitch(average_cy_list[0], screen_c_y, v_focal_length)
                 yaw = calc_yaw(average_cx_list[0], screen_c_x, h_focal_length)
+                log_data(vl_writer)
                 if debug:
                     print(
                         'Filtered Contour Area: {}'.format([cv2.contourArea(contour) for contour in filtered_contours]))
@@ -453,7 +454,6 @@ def vision():
                     print('Distance: {}'.format(distance))
                     print('Pitch: {}'.format(pitch))
                     print('Yaw: {}'.format(yaw))
-
                 if view:
                     cv2.line(frame, best_center_average_coords, center_coords, (0, 255, 0), 2)
                     for index, x in enumerate(average_cx_list):
@@ -467,6 +467,7 @@ def vision():
                 best_center_average_coords = (best_center_average_x, best_center_average_y)
                 pitch = calc_pitch(best_center_average_y, screen_c_y, v_focal_length)
                 yaw = calc_yaw(best_center_average_x, screen_c_x, h_focal_length)
+                log_data(vl_writer)
                 if debug:
                     print(
                         'Filtered Contour Area: {}'.format([cv2.contourArea(contour) for contour in filtered_contours]))
