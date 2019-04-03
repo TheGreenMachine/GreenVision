@@ -246,6 +246,33 @@ def vision():
         table.putNumber('targets', targets)
         table.putNumber('pitch', pitch)
 
+    def get_system_stats():
+        """
+        This function will only work on the RPI
+        :return: temp, cpu, ram
+        """
+
+        def cpu_temp():
+            res = os.popen('vcgencmd measure_temp').readline()
+            return res.replace("temp=", "").replace("'C\n", "")
+
+        def cpu_usage():
+            return str(os.popen("top -n1 | awk '/Cpu\(s\):/ {print $2}'").readline().strip())
+
+        def ram_usage():
+            """
+            :return: [total RAM, used RAM, free RAM]
+            """
+            p = os.popen('free')
+            i = 0
+            while 1:
+                i = i + 1
+                line = p.readline()
+                if i == 2:
+                    return line.split()[1:4]
+
+        return {'temp': cpu_temp(), 'cpu': cpu_usage(), 'ram': ram_usage()}
+
     def log_data():
         image_written = False
         if can_log and len(sorted_contours) > 6:
@@ -273,7 +300,7 @@ def vision():
                  average_cy_list,
                  index,
                  best_center_average_coords,
-                 abs(320 - best_center_average_coords[0]),
+                 abs(data['image-width'] / 2 - best_center_average_coords[0]),
                  end - start,
                  image_written])
 
@@ -430,7 +457,7 @@ def vision():
                         draw_center_dot((x, average_cy_list[index]), (255, 0, 0))
             elif len(average_cx_list) > 1:
                 # finds c_x that is closest to the center of the center
-                best_center_average_x = min(average_cx_list, key=lambda x: abs(x - 320))
+                best_center_average_x = min(average_cx_list, key=lambda x: abs(x - data['image-width'] / 2))
                 index = average_cx_list.index(best_center_average_x)
                 best_center_average_y = average_cy_list[index]
 
