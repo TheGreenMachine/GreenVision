@@ -228,7 +228,7 @@ def vision():
         pzero_world = np.matmul(rot_inv, -tvec)
         angle2 = math.atan2(pzero_world[0][0], pzero_world[2][0])
         if debug:
-            print('Distance: {}, Angle1: {}, X: {}, Y: {}, Z: {}, cy: {}'.format(distance, angle1, angle2, x, y, z, cy))
+            print('Distance: {}, Angle1: {}, X: {}, Y: {}, Z: {}, cy: {}\r'.format(distance, angle1, angle2, x, y, z, cy))
         if net_table:
             pass
             # TODO: Implement table update depending on the data that Andrew wants
@@ -393,7 +393,7 @@ def vision():
             if frame is None:
                 continue
 
-            print('=========================================================')
+            print('=========================================================\r')
 
             if flip:
                 frame = cv2.flip(frame, -1)
@@ -412,10 +412,10 @@ def vision():
             biggest_contour_area = cv2.contourArea(
                 max(all_contours, key=lambda x: cv2.contourArea(x) if 50 < cv2.contourArea(x) < 2000 else 0)) if len(
                 all_contours) != 0 else 0
-            print('Biggest Area: {}'.format(biggest_contour_area))
+            print('Biggest Area: {}\r'.format(biggest_contour_area))
             for contour in all_contours:
                 if cv2.contourArea(contour) > 50 and debug:
-                    print('Unfiltered Contour Area: {}'.format(cv2.contourArea(contour)))
+                    print('Unfiltered Contour Area: {}\r'.format(cv2.contourArea(contour)))
                 if 50 < cv2.contourArea(contour) < 2000 and cv2.contourArea(contour) > 0.75 * biggest_contour_area:
                     filtered_contours.append(contour)
             if len(filtered_contours) > 1:
@@ -442,18 +442,18 @@ def vision():
                 log_data(vl_writer)
                 if debug:
                     print(
-                        'Filtered Contour Area: {}'.format([cv2.contourArea(contour) for contour in filtered_contours]))
-                    print('Sorted Contours Area: {}'.format([cv2.contourArea(contour) for contour in sorted_contours]))
-                    print('Rectangle List: {}'.format(len(rectangle_list)))
-                    print('Contours: {}'.format(len(sorted_contours)))
-                    print('Targets: {}'.format(len(average_cx_list)))
-                    print('Avg_cx_list: {}'.format(average_cx_list))
-                    print('Avg_cy_list: {}'.format(average_cy_list))
-                    print('Best Center Coords: {}'.format(best_center_average_coords))
-                    print('Index: {}'.format(0))
-                    print('Distance: {}'.format(distance))
-                    print('Pitch: {}'.format(pitch))
-                    print('Yaw: {}'.format(yaw))
+                        'Filtered Contour Area: {}\r'.format([cv2.contourArea(contour) for contour in filtered_contours]))
+                    print('Sorted Contours Area: {}\r'.format([cv2.contourArea(contour) for contour in sorted_contours]))
+                    print('Rectangle List: {}\r'.format(len(rectangle_list)))
+                    print('Contours: {}\r'.format(len(sorted_contours)))
+                    print('Targets: {}\r'.format(len(average_cx_list)))
+                    print('Avg_cx_list: {}\r'.format(average_cx_list))
+                    print('Avg_cy_list: {}\r'.format(average_cy_list))
+                    print('Best Center Coords: {}\r'.format(best_center_average_coords))
+                    print('Index: {}\r'.format(0))
+                    print('Distance: {}\r'.format(distance))
+                    print('Pitch: {}\r'.format(pitch))
+                    print('Yaw: {}\r'.format(yaw))
                 if view:
                     cv2.line(frame, best_center_average_coords, center_coords, (0, 255, 0), 2)
                     for index, x in enumerate(average_cx_list):
@@ -470,18 +470,18 @@ def vision():
                 log_data(vl_writer)
                 if debug:
                     print(
-                        'Filtered Contour Area: {}'.format([cv2.contourArea(contour) for contour in filtered_contours]))
-                    print('Sorted Contours Area: {}'.format([cv2.contourArea(contour) for contour in sorted_contours]))
-                    print('Rectangle List: {}'.format(len(rectangle_list)))
-                    print('Contours: {}'.format(len(sorted_contours)))
-                    print('Targets: {}'.format(len(average_cx_list)))
-                    print('Avg_cx_list: {}'.format(average_cx_list))
-                    print('Avg_cy_list: {}'.format(average_cy_list))
-                    print('Best Center Coords: {}'.format(best_center_average_coords))
-                    print('Index: {}'.format(index))
-                    print('Distance: {}'.format(distance))
-                    print('Pitch: {}'.format(pitch))
-                    print('Yaw: {}'.format(yaw))
+                        'Filtered Contour Area: {}\r'.format([cv2.contourArea(contour) for contour in filtered_contours]))
+                    print('Sorted Contours Area: {}\r'.format([cv2.contourArea(contour) for contour in sorted_contours]))
+                    print('Rectangle List: {}\r'.format(len(rectangle_list)))
+                    print('Contours: {}\r'.format(len(sorted_contours)))
+                    print('Targets: {}\r'.format(len(average_cx_list)))
+                    print('Avg_cx_list: {}\r'.format(average_cx_list))
+                    print('Avg_cy_list: {}\r'.format(average_cy_list))
+                    print('Best Center Coords: {}\r'.format(best_center_average_coords))
+                    print('Index: {}\r'.format(index))
+                    print('Distance: {}\r'.format(distance))
+                    print('Pitch: {}\r'.format(pitch))
+                    print('Yaw: {}\r'.format(yaw))
                 if view:
                     cv2.line(frame, best_center_average_coords, center_coords, (0, 255, 0), 2)
                     for index, x in enumerate(average_cx_list):
@@ -497,10 +497,10 @@ def vision():
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
             if debug:
-                print('Execute time: {}'.format(end - start))
+                print('Execute time: {}\r'.format(end - start))
     except Exception as err:
 
-        print('Vision has crashed! The error has been logged to {}. The error will now be displayed: \n{}'.format(
+        print('Vision has crashed! The error has been logged to {}. The error will now be displayed: \n{}\r'.format(
             logging_fp, err))
         if can_log:
             logging.exception('Vision Machine Broke')
