@@ -253,11 +253,6 @@ def vision():
         table.putNumber('pitch', pitch)
 
     def get_system_stats():
-        """
-        This function will only work on the RPI
-        :return: temp, cpu, ram
-        """
-
         def cpu_temp():
             res = os.popen('vcgencmd measure_temp').readline()
             return res.replace("temp=", "").replace("'C\n", "")
@@ -277,7 +272,10 @@ def vision():
                 if i == 2:
                     return line.split()[1:4]
 
-        return {'temp': cpu_temp(), 'cpu': cpu_usage(), 'ram': ram_usage()}
+        if is_pi:
+            return cpu_temp(), cpu_usage(), ram_usage()
+        else:
+            return -1, -1, -1
 
     def log_data(vl_writer):
         image_written = False
@@ -286,9 +284,10 @@ def vision():
             if not os.path.exists(images_fp):
                 os.makedirs(images_fp)
             biggest_num = max([file[:-3] for file in os.listdir(images_fp)])
-            fname = 'toomany_{}.jpg'.format(biggest_num)
+            fname = 'toomany_{}.jpg'.format(biggest_num + 1)
             cv2.imwrite(images_fp, fname)
-            print('Frame Captured!')
+            if debug:
+                print('Frame Captured!')
             image_written = True
         vl_writer.writerow(
             [datetime.datetime.now(),
@@ -307,8 +306,28 @@ def vision():
              end - start,
              image_written])
 
+    def capture_frame():
+        if is_pi:
+            images_fp = os.path.join(logging_fp, 'images')
+            if not os.path.exists(images_fp):
+                os.makedirs(images_fp)
+            biggest_num = max([file[:-3] for file in os.listdir(images_fp)])
+            fname = 'vision_{}.jpg'.format(biggest_num + 1)
+            cv2.imwrite(images_fp, fname)
+            if debug:
+                print('Vision Frame Captured!')
+        else:
+            print('Pi flag not enabled, frame not captured')
+
+    def value_changed(table, key, value, isNew):
+        global values
+        values[key] = value
+        if key == 'vision_active' and value:
+            capture_frame()
+
     def debug_output():
-        return """\r
+        return """
+=========================================================
 Unfiltered Contour Area: {}
 Filtered Contour Area: {}
 Sorted Contour Area: {}
@@ -323,8 +342,8 @@ Index: {}
 Distance: {}
 Pitch: {}
 Yaw: {}
-Execute Time: {}
-"""
+Temp, Cpu, Ram: {}
+Execute Time: {}\r"""
 
     src = int(args['source']) if args['source'].isdigit() else args['source']
     flip = args['flip']
@@ -373,6 +392,8 @@ Execute Time: {}
         table.putNumber('visionY', -1)
         table.putNumber('width', data['image-width'])
         table.putNumber('height', data['image-height'])
+        values = {'vision_active': False}
+        table.addEntryListener(value_changed, key='vision_active')
 
     if debug:
         print('----------------------------------------------------------------')
@@ -397,7 +418,6 @@ Execute Time: {}
     D = np.array(data['distortion'])
     first_read = True
     try:
-        print('=========================================================')
         while True:
             if crash:
                 raise Exception('boop')
@@ -481,7 +501,8 @@ Execute Time: {}
                         distance,
                         pitch,
                         yaw,
-                        end-start))
+                        get_system_stats(),
+                        end - start))
 
                 if view:
                     cv2.line(frame, best_center_average_coords, center_coords, (0, 255, 0), 2)
@@ -515,6 +536,7 @@ Execute Time: {}
                         distance,
                         pitch,
                         yaw,
+                        get_system_stats(),
                         end - start))
                 if view:
                     cv2.line(frame, best_center_average_coords, center_coords, (0, 255, 0), 2)
@@ -527,7 +549,6 @@ Execute Time: {}
             if view:
                 cv2.imshow('Contour Window', frame)
                 cv2.imshow('Mask', mask)
-            end = time.time()
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
     except Exception as err:
