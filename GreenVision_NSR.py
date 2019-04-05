@@ -303,6 +303,7 @@ def vision():
              index,
              best_center_average_coords,
              abs(data['image-width'] / 2 - best_center_average_coords[0]),
+             get_system_stats(),
              end - start,
              image_written])
 
