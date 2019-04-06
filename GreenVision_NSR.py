@@ -278,13 +278,13 @@ Execute Time: {}\r"""
             if crash:
                 raise Exception('Get bamboozled...')
             start_time = time.time()
-            biggest_contour_area = -9999
+            biggest_contour_area = -1
             best_center_average_coords = (-1, -1)
             index = -1
-            distance = -9999
+            distance = -1
             pitch = -9999
             yaw = -9999
-            end_time = -9999
+            end_time = -1
             image_written = False
             if not first_read:
                 key = cv2.waitKey(30) & 0xFF
