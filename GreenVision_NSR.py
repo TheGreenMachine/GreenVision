@@ -205,8 +205,7 @@ Biggest Contour Area: {}
 Rectangle List: {}
 Contours: {}
 Targets: {}
-Avg_cx_list: {}
-Avg_cy_list: {}
+Avg_center_list: {}
 Best Center Coords: {}
 Index: {}
 Distance: {}
@@ -298,9 +297,10 @@ Execute Time: {}\r"""
     try:
         filtered_contours = []
         rectangle_list = []
-        average_cx_list = []
-        average_cy_list = []
+        # average_cx_list = []
+        # average_cy_list = []
         sorted_contours = []
+        average_coord_list = []
         can_log = os.path.exists(log_fp)
         while True:
             if crash:
@@ -358,11 +358,13 @@ Execute Time: {}\r"""
                         if -12 > rectangle_list[index + 1].theta > -20:
                             if view:
                                 draw_rect(rectangle_list[index + 1], (0, 0, 255))
-                            average_cx_list.append(int((rect.center[0] + rectangle_list[index + 1].center[0]) / 2))
-                            average_cy_list.append(int((rect.center[1] + rectangle_list[index + 1].center[1]) / 2))
 
-            if len(average_cx_list) == 1:
-                best_center_average_coords = (average_cx_list[0], average_cy_list[0])
+                            cx = int((rect.center[0] + rectangle_list[index + 1].center[0]) / 2)
+                            cy = int((rect.center[1] + rectangle_list[index + 1].center[1]) / 2)
+                            average_coord_list.append((cx, cy))
+
+            if len(average_coord_list) == 1:
+                best_center_average_coords = average_coord_list[0]
                 yaw, pitch = calc_angles(best_center_average_coords)
                 end = time.time()
                 if log:
@@ -375,9 +377,8 @@ Execute Time: {}\r"""
                         biggest_contour_area,
                         len(rectangle_list),
                         len(sorted_contours),
-                        len(average_cx_list),
-                        average_cx_list,
-                        average_cy_list,
+                        len(average_coord_list),
+                        average_coord_list,
                         best_center_average_coords,
                         0,
                         distance,
@@ -388,15 +389,16 @@ Execute Time: {}\r"""
 
                 if view:
                     cv2.line(frame, best_center_average_coords, center_coords, (0, 255, 0), 2)
-                    for index, x in enumerate(average_cx_list):
-                        draw_center_dot((x, average_cy_list[index]), (255, 0, 0))
-            elif len(average_cx_list) > 1:
+                    for coord in average_coord_list:
+                        draw_center_dot(coord, (255, 0, 0))
+            elif len(average_coord_list) > 1:
                 # finds c_x that is closest to the center of the center
-                best_center_average_x = min(average_cx_list, key=lambda cx: abs(cx - data['image-width'] / 2))
-                index = average_cx_list.index(best_center_average_x)
-                best_center_average_y = average_cy_list[index]
-
-                yaw, pitch = calc_angles((best_center_average_x, best_center_average_y))
+                best_center_average_x = min(average_coord_list,
+                                            key=lambda xy: abs(xy[0] - data['image-width'] / 2))[0]
+                index = [coord[0] for coord in average_coord_list].index(best_center_average_x)
+                best_center_average_y = average_coord_list[index][1]
+                best_center_average_coords = (best_center_average_x, best_center_average_y)
+                yaw, pitch = calc_angles(best_center_average_coords)
                 end = time.time()
                 if log:
                     log_data(vl_writer)
@@ -408,9 +410,8 @@ Execute Time: {}\r"""
                         biggest_contour_area,
                         len(rectangle_list),
                         len(sorted_contours),
-                        len(average_cx_list),
-                        average_cx_list,
-                        average_cy_list,
+                        len(average_coord_list),
+                        average_coord_list,
                         best_center_average_coords,
                         index,
                         distance,
@@ -420,17 +421,16 @@ Execute Time: {}\r"""
                         end - start))
                 if view:
                     cv2.line(frame, best_center_average_coords, center_coords, (0, 255, 0), 2)
-                    for index, x in enumerate(average_cx_list):
-                        draw_center_dot((x, average_cy_list[index]), (255, 0, 0))
+                    for coord in average_coord_list:
+                        draw_center_dot(coord, (255, 0, 0))
 
             if net_table:
                 update_net_table(best_center_average_coords[0], best_center_average_coords[1], yaw, distance,
-                                 len(sorted_contours), len(average_cx_list), pitch)
+                                 len(sorted_contours), len(average_coord_list), pitch)
             filtered_contours.clear()
             sorted_contours.clear()
             rectangle_list.clear()
-            average_cx_list.clear()
-            average_cy_list.clear()
+            average_coord_list.clear()
 
             if view:
                 cv2.imshow('Mask', mask)
