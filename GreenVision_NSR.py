@@ -448,11 +448,8 @@ Execute Time: {}\r"""
 
 parser = argparse.ArgumentParser(description=program_description(), add_help=False)
 parser.add_argument('-h', '--help', action='store_true')
-# subparsers = parser.add_subparsers(help='commands', dest='program')
 init_parser_vision()
-
 args = vars(parser.parse_args())
-print(args)
 if args['help']:
     program_help()
 else:
