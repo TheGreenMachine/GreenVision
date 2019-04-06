@@ -29,115 +29,49 @@ def program_help():
     print("""
 Usage: GreenVision.py [program] [-optional arguments]
      
-Available Programs:
-vision              start vision processing
-image       save frame from camera
-video       save video from camera
-calibration           generate json containing camera matrix and distortion values
+Available parameters:
+WIP
 """)
 
 
-def program_usage():
-    return 'Greenvision.py [vision] or [image] or [video] or [calibrate]'
-
-
 def init_parser_vision():
-    parser_vision = subparsers.add_parser('vision')
-    parser_vision.add_argument('-src', '--source',
-                               required=True,
-                               type=str,
-                               help='set source for processing: [int] for camera, [path] for file')
-    parser_vision.add_argument('-r', '--rotate',
-                               action='store_true',
-                               default=False,
-                               help='rotate 90 degrees')
-    parser_vision.add_argument('-f', '--flip',
-                               action='store_true',
-                               default=False,
-                               help='flip camera image')
-    parser_vision.add_argument('-v', '--view',
-                               action='store_true',
-                               help='enable contour and mask window')
-    parser_vision.add_argument('-m', '--model',
-                               type=str,
-                               default='power',
-                               help='choose function model for distance calculating: [power], [exponential]')
-    parser_vision.add_argument('-d', '--debug',
-                               action='store_true',
-                               help='enable debug output to console')
-    parser_vision.add_argument('-th', '--threshold',
-                               default=0,
-                               type=int,
-                               help='adjust color thresholds by 50.0 or less')
-    parser_vision.add_argument('-nt', '--networktables',
-                               action='store_true',
-                               help='enable network tables')
-    parser_vision.add_argument('--pi',
-                               action='store_true',
-                               default=False,
-                               help='must enable for the script to work the pi -- GVLogging USB must be plugged in')
-    parser_vision.add_argument('--crash',
-                               action='store_true',
-                               default=False,
-                               help='enable to simulate a crash during vision loop')
-    parser_vision.add_argument('-l', '--log',
-                               action='store_true',
-                               default=False,
-                               help='enable logging')
-
-
-def init_parser_image():
-    parser_image = subparsers.add_parser('image')
-    parser_image.add_argument('-s', '--src', '--source',
-                              required=True,
-                              type=int,
-                              help='set source for processing: [int] for camera')
-    parser_image.add_argument('-cw', '--width',
-                              type=int,
-                              default=data['image-width'],
-                              help='set width of the camera resolution')
-    parser_image.add_argument('-ch', '--height',
-                              type=int,
-                              default=data['image-height'],
-                              help='set height of the camera resolution')
-
-
-def init_parser_video():
-    parser_video = subparsers.add_parser('video')
-    parser_video.add_argument_group('Video Capture Arguments')
-    parser_video.add_argument('-s', '--src', '--source',
-                              required=True,
-                              type=int,
-                              help='set source for processing: [int] for camera')
-    parser_video.add_argument('-f', '--fps',
-                              type=float,
-                              default=30.0,
-                              help='set fps of the video')
-    parser_video.add_argument('-cw', '--width',
-                              type=int,
-                              default=data['image-width'],
-                              help='set width of the camera resolution')
-    parser_video.add_argument('-ch', '--height',
-                              type=int,
-                              default=data['image-height'],
-                              help='set height of the camera resolution')
-
-
-def init_camera_calibration():
-    parser_calibration = subparsers.add_parser('calibrate')
-    parser_calibration.add_argument_group('Camera Calibration Arguments')
-    parser_calibration.add_argument('--length', '-l',
-                                    type=int,
-                                    default=9,
-                                    help='length of checkerboard (number of corners)')
-    parser_calibration.add_argument('--width', '-w',
-                                    type=int,
-                                    default=6,
-                                    help='width of checkerboard (number of corners)')
-    parser_calibration.add_argument('--size', '-s',
-                                    type=float,
-                                    default=1.0,
-                                    help='size of square')
+    parser.add_argument('-src', '--source',
+                        required=True,
+                        type=str,
+                        help='set source for processing: [int] for camera, [path] for file')
+    parser.add_argument('-r', '--rotate',
+                        action='store_true',
+                        default=False,
+                        help='rotate 90 degrees')
+    parser.add_argument('-f', '--flip',
+                        action='store_true',
+                        default=False,
+                        help='flip camera image')
+    parser.add_argument('-v', '--view',
+                        action='store_true',
+                        help='enable contour and mask window')
+    parser.add_argument('-d', '--debug',
+                        action='store_true',
+                        help='enable debug output to console')
+    parser.add_argument('-th', '--threshold',
+                        default=0,
+                        type=int,
+                        help='increases color thresholds by 50.0 or less')
+    parser.add_argument('-nt', '--networktables',
+                        action='store_true',
+                        help='enable network tables')
+    parser.add_argument('--pi',
+                        action='store_true',
+                        default=False,
+                        help='must enable for the script to work the pi -- GVLogging USB must be plugged in')
+    parser.add_argument('--crash',
+                        action='store_true',
+                        default=False,
+                        help='enable to simulate a crash during vision loop')
+    parser.add_argument('-l', '--log',
+                        action='store_true',
+                        default=False,
+                        help='enable logging')
 
 
 def vision():
@@ -178,67 +112,16 @@ def vision():
         dist = math.fabs(h / temp) if temp != 0 else -1
         return dist
 
-    def calc_pitch(c_y, screen_y, v_foc_len):
-        pitch = math.degrees(math.atan((c_y - screen_y) / v_foc_len))
-        return pitch
-
-    def calc_yaw(c_x, screen_x, h_foc_len):
-        ya = math.degrees(math.atan((c_x - screen_x) / h_foc_len))
-        return round(ya)
+    def calc_angles(coords):
+        yaw = math.degrees(math.atan((coords[0] - screen_c_x) / h_focal_length))
+        pitch = math.degrees(math.atan((coords[1] - screen_c_y) / v_focal_length))
+        return yaw, pitch
 
     def draw_rect(rect, color):
         cv2.line(frame, (rect.box[0][0], rect.box[0][1]), (rect.box[1][0], rect.box[1][1]), color, 2)
         cv2.line(frame, (rect.box[1][0], rect.box[1][1]), (rect.box[2][0], rect.box[2][1]), color, 2)
         cv2.line(frame, (rect.box[2][0], rect.box[2][1]), (rect.box[3][0], rect.box[3][1]), color, 2)
         cv2.line(frame, (rect.box[3][0], rect.box[3][1]), (rect.box[0][0], rect.box[0][1]), color, 2)
-
-    def undistort_frame(frame):
-        map1, map2 = cv2.fisheye.initUndistortRectifyMap(K, D, np.eye(3), K, DIM, cv2.CV_16SC2)
-        undst = cv2.remap(frame, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
-        return undst
-
-    def solve_pnp(rect1, rect2, cy):
-
-        model_points = [
-            # Left target
-            (-5.938, 2.938, 0.0),  # top left
-            (-4.063, 2.375, 0.0),  # top right
-            (-5.438, -2.938, 0.0),  # bottom left
-            (-7.375, -2.500, 0.0),  # bottom right
-
-            # Right target
-            (3.938, 2.375, 0.0),  # top left
-            (5.875, 2.875, 0.0),  # top right
-            (7.313, -2.500, 0.0),  # bottom left
-            (5.375, -2.938, 0.0),  # bottom right
-        ]
-
-        mp = np.array(model_points)
-
-        image_points = np.concatenate((rect1.box, rect2.box))
-        image_points[:, 0] -= data['image-width'] / 2
-        image_points[:, 1] -= cy
-        image_points[:, 1] *= -1
-
-        ret, rvec, tvec = cv2.solvePnP(mp, image_points, K, D)
-
-        x = tvec[0][0]
-        y = tvec[1][0]
-        z = tvec[2][0]
-
-        distance = math.sqrt(x ** 2 + z ** 2)
-        angle1 = math.atan2(x, z)
-        rot, _ = cv2.Rodrigues(rvec)
-        rot_inv = rot.transpose()
-        pzero_world = np.matmul(rot_inv, -tvec)
-        angle2 = math.atan2(pzero_world[0][0], pzero_world[2][0])
-        if debug:
-            print(
-                'Distance: {}, Angle1: {}, X: {}, Y: {}, Z: {}, cy: {}\r'.format(distance, angle1, angle2, x, y, z, cy))
-        if net_table:
-            pass
-            # TODO: Implement table update depending on the data that Andrew wants
-        return distance, angle1, angle2
 
     def draw_center_dot(cord, color):
         cv2.line(frame, cord, cord, color, 5)
@@ -277,18 +160,17 @@ def vision():
         else:
             return -1, -1, -1
 
+    def capture_frame(name):
+        images_fp = os.path.join(log_fp, 'images')
+        if not os.path.exists(images_fp):
+            os.makedirs(images_fp)
+        biggest_num = max([file[:-3] for file in os.listdir(images_fp)])
+        fname = '{}{}.jpg'.format(name, biggest_num + 1)
+        cv2.imwrite(images_fp, fname)
+        if debug:
+            print('Frame Captured!')
+
     def log_data(vl_writer):
-        image_written = False
-        if can_log and len(sorted_contours) > 6:
-            images_fp = os.path.join(logging_fp, 'images')
-            if not os.path.exists(images_fp):
-                os.makedirs(images_fp)
-            biggest_num = max([file[:-3] for file in os.listdir(images_fp)])
-            fname = 'toomany_{}.jpg'.format(biggest_num + 1)
-            cv2.imwrite(images_fp, fname)
-            if debug:
-                print('Frame Captured!')
-            image_written = True
         vl_writer.writerow(
             [datetime.datetime.now(),
              [cv2.contourArea(c) for c in all_contours if cv2.contourArea(contour) > 25],
@@ -307,24 +189,11 @@ def vision():
              end - start,
              image_written])
 
-    def capture_frame():
-        if is_pi:
-            images_fp = os.path.join(logging_fp, 'images')
-            if not os.path.exists(images_fp):
-                os.makedirs(images_fp)
-            biggest_num = max([file[:-3] for file in os.listdir(images_fp)])
-            fname = 'vision_{}.jpg'.format(biggest_num + 1)
-            cv2.imwrite(images_fp, fname)
-            if debug:
-                print('Vision Frame Captured!')
-        else:
-            print('Pi flag not enabled, frame not captured')
-
     def value_changed(table, key, value, isNew):
         global values
         values[key] = value
         if key == 'vision_active' and value:
-            capture_frame()
+            capture_frame('vision')
 
     def debug_output():
         return """
@@ -349,35 +218,39 @@ Execute Time: {}\r"""
     src = int(args['source']) if args['source'].isdigit() else args['source']
     flip = args['flip']
     rotate = args['rotate']
-    model = args['model']
     view = args['view']
     debug = args['debug']
     threshold = args['threshold'] if 0 < args['threshold'] < 50 else 0
     net_table = args['networktables']
     is_pi = args['pi']
     crash = args['crash']
-    toggle_log = args['log']
+    log = args['log']
     can_log = False
     sequence = False
 
-    logging_fp = '/media/{}/GVLOGGING/'.format(getpass.getuser()) if is_pi else os.path.join(os.getcwd(), 'Logs')
+    # sudo mount /dev/sda1 media/pi/GVLOGGING
+
+    # logging_fp = '/media/{}/GVLOGGING/'.format(getpass.getuser()) if is_pi else os.path.join(os.getcwd(), 'Logs')
     # /media/pi/GVLOGGING or /home/[user]/Documents/GreenVision/Logs
 
-    if toggle_log:
-        with open(os.path.join(logging_fp, 'vision_log.csv'), mode='a+') as vl_file:
+    log_fp = os.path.join(os.getcwd(), 'Logs')
+    if is_pi:
+        log_fp = '/media/pi/GVLOGGING/'
+        if not os.path.exists(log_fp):
+            os.makedirs(log_fp)
+        logging.basicConfig(level=logging.DEBUG,
+                            filename=os.path.join(log_fp, 'crash.log'),
+                            format='%(asctime)s %(levelname)-8s %(message)s',
+                            datefmt='%Y-%m-%d %H:%M:%S')
+        can_log = True
+    elif not is_pi and getpass.getuser() != 'pi':
+        if not os.path.exists(log_fp):
+            os.makedirs(log_fp)
+        logging.basicConfig(level=logging.DEBUG, filename=os.path.join(log_fp, 'crash.log'))
+        can_log = True
+    if log:
+        with open(os.path.join(log_fp, 'vision_log.csv'), mode='a+') as vl_file:
             vl_writer = csv.writer(vl_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-
-        if not os.path.exists(logging_fp):
-            os.makedirs(logging_fp)
-        if is_pi:
-            logging.basicConfig(level=logging.DEBUG,
-                                filename=os.path.join(logging_fp, 'crash.log'),
-                                format='%(asctime)s %(levelname)-8s %(message)s',
-                                datefmt='%Y-%m-%d %H:%M:%S')
-            can_log = True
-        else:
-            logging.basicConfig(level=logging.DEBUG, filename=os.path.join(logging_fp, 'crash.log'))
-            can_log = True
 
     cap = cv2.VideoCapture(src)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
@@ -389,12 +262,14 @@ Execute Time: {}\r"""
         table = nt.NetworkTables.getTable('SmartDashboard')
         if table:
             print('table OK')
-        table.putNumber('visionX', -1)
-        table.putNumber('visionY', -1)
+        table.putNumber('center_x', -1)
+        table.putNumber('center_y', -1)
+        table.putNumber('contours', -1)
+        table.putNumber('targets', -1)
         table.putNumber('width', data['image-width'])
         table.putNumber('height', data['image-height'])
-        values = {'vision_active': False}
-        table.addEntryListener(value_changed, key='vision_active')
+        # values = {'vision_active': False}
+        # table.addEntryListener(value_changed, key='vision_active')
 
     if debug:
         print('----------------------------------------------------------------')
@@ -402,32 +277,40 @@ Execute Time: {}\r"""
         print('Vision Flag: {}'.format(view))
         print('Debug Flag: {}'.format(debug))
         print('Threshold Value: {}'.format(threshold))
-        print('Function Model Value: {}'.format(model))
         print('Network Tables Flag: {}'.format(net_table))
         print('----------------------------------------------------------------')
 
     v_focal_length = data['camera_matrix'][1][1]
     h_focal_length = data['camera_matrix'][0][0]
-    lower_color = np.array(data['lower-color-list']) - threshold  # HSV to test: 0, 220, 25
-    upper_color = np.array([data['upper-color-list'][0] + threshold, 255, 255])
+    lower_color = np.array([
+        data['lower-color-list'][0] - threshold,
+        data['lower-color-list'][1],
+        data['lower-color-list'][2]])  # HSV to test: 0, 220, 25
+    upper_color = np.array([
+        data['upper-color-list'][0] + threshold,
+        data['upper-color-list'][1],
+        data['upper-color-list'][2]])
     center_coords = (int(data['image-width'] / 2), int(data['image-height'] / 2))
     screen_c_x = data['image-width'] / 2 - 0.5
     screen_c_y = data['image-height'] / 2 - 0.5
 
-    DIM = tuple(data['dim'])
-    K = np.array(data['camera_matrix'])
-    D = np.array(data['distortion'])
     first_read = True
     try:
+        filtered_contours = []
+        rectangle_list = []
+        average_cx_list = []
+        average_cy_list = []
+        sorted_contours = []
+        can_log = os.path.exists(log_fp)
         while True:
             if crash:
                 raise Exception('boop')
             start = time.time()
-            can_log = os.path.exists(logging_fp)
             best_center_average_coords = (-1, -1)
             pitch = -1
             yaw = -1
             distance = -1
+            image_written = False
             if not first_read:
                 key = cv2.waitKey(30) & 0xFF
                 if key == ord('q'):
@@ -451,11 +334,6 @@ Execute Time: {}\r"""
 
             all_contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
             index = 0
-            filtered_contours = []
-            rectangle_list = []
-            average_cx_list = []
-            average_cy_list = []
-            sorted_contours = []
             biggest_contour_area = cv2.contourArea(
                 max(all_contours, key=lambda x: cv2.contourArea(x) if 50 < cv2.contourArea(x) < 2000 else 0)) if len(
                 all_contours) != 0 else 0
@@ -464,7 +342,11 @@ Execute Time: {}\r"""
                     filtered_contours.append(contour)
             if len(filtered_contours) > 1:
                 sorted_contours, _ = sort_contours(filtered_contours)
+                sorted_contours = list(sorted_contours)
             if len(sorted_contours) > 1:
+                if len(sorted_contours) > 6:
+                    capture_frame('toomany')
+                    image_written = True
                 for contour in sorted_contours:
                     rectangle_list.append(Rect(contour))
                 for index, rect in enumerate(rectangle_list):
@@ -481,10 +363,9 @@ Execute Time: {}\r"""
 
             if len(average_cx_list) == 1:
                 best_center_average_coords = (average_cx_list[0], average_cy_list[0])
-                pitch = calc_pitch(average_cy_list[0], screen_c_y, v_focal_length)
-                yaw = calc_yaw(average_cx_list[0], screen_c_x, h_focal_length)
+                yaw, pitch = calc_angles(best_center_average_coords)
                 end = time.time()
-                if toggle_log:
+                if log:
                     log_data(vl_writer)
                 if debug:
                     sys.stdout.write(debug_output().format(
@@ -515,11 +396,9 @@ Execute Time: {}\r"""
                 index = average_cx_list.index(best_center_average_x)
                 best_center_average_y = average_cy_list[index]
 
-                best_center_average_coords = (best_center_average_x, best_center_average_y)
-                pitch = calc_pitch(best_center_average_y, screen_c_y, v_focal_length)
-                yaw = calc_yaw(best_center_average_x, screen_c_x, h_focal_length)
+                yaw, pitch = calc_angles((best_center_average_x, best_center_average_y))
                 end = time.time()
-                if toggle_log:
+                if log:
                     log_data(vl_writer)
                 if debug:
                     sys.stdout.write(debug_output().format(
@@ -547,15 +426,23 @@ Execute Time: {}\r"""
             if net_table:
                 update_net_table(best_center_average_coords[0], best_center_average_coords[1], yaw, distance,
                                  len(sorted_contours), len(average_cx_list), pitch)
+            filtered_contours.clear()
+            sorted_contours.clear()
+            rectangle_list.clear()
+            average_cx_list.clear()
+            average_cy_list.clear()
+
             if view:
-                cv2.imshow('Contour Window', frame)
                 cv2.imshow('Mask', mask)
+                cv2.imshow('Contour Window', frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
     except Exception as err:
-        if toggle_log:
-            print('Vision has crashed! The error has been logged to {}. The error will now be displayed: \n{}'.format(
-                logging_fp, err))
+        if net_table:
+            table.putNumber('contours', -99)
+            table.putNumber('targets', -99)
+        print('Vision has crashed! The error has been logged to {}. The error will now be displayed: \n{}'.format(
+            log_fp, err))
         if can_log:
             logging.exception('Vision Machine Broke')
 
@@ -563,156 +450,15 @@ Execute Time: {}\r"""
     cv2.destroyAllWindows()
 
 
-def image_capture():
-    cap = cv2.VideoCapture(args['src'])
-    width = args['width']
-    height = args['height']
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-    cv2.namedWindow('Image Capture')
-
-    n = 0
-
-    while True:
-        print('Hold C to capture, Hold Q to quit')
-        ret, frame = cap.read()
-        cv2.imshow("Image Capture", frame)
-        if not ret:
-            break
-
-        if cv2.waitKey(1) & 0xFF == ord('c'):
-            # file_name = input('Enter file name: ') + '.jpg'
-            file_name = input('Enter file name: ') + '.jpg'
-            cwd = os.path.join(os.getcwd(), 'Image_Capture/')  # /home/pi/Desktop/GreenVision/Image_Capture
-            if not os.path.exists(cwd):
-                os.makedirs(cwd)
-            path = os.path.join(cwd, file_name)
-            cv2.imwrite(path, frame)
-            print("{} saved!".format(file_name))
-            n += 1
-        if cv2.waitKey(5) & 0xFF == ord('q'):
-            break
-
-    cap.release()
-    cv2.destroyAllWindows()
-
-
-def video_capture():
-    src = args['src']
-    file_name = input('Enter file name: ')
-    cwd = '/home/pi/GreenVison/Video_Capture'
-    # cwd = os.path.join(os.getcwd(), 'Video_Capture')
-    # /home/pi/Desktop/GreenVision/Video_Capture
-    if not os.path.exists(cwd):
-        os.makedirs(cwd)
-    path = os.path.join(cwd, (file_name + '.avi'))
-    fps = args['fps']
-    res = (args['width'], args['height'])
-
-    cap = cv2.VideoCapture(src)
-    fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-    out = cv2.VideoWriter(path, fourcc, fps, res)
-    print('Hold Q to stop recording and quit')
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if ret:
-            out.write(frame)
-            cv2.imshow('Video Capture', frame)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-        else:
-            break
-    cap.release()
-    out.release()
-    cv2.destroyAllWindows()
-
-
-def camera_calibration():
-    CHECKERBOARD = (6, 9)
-    subpix_criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.1)
-    #
-    calibration_flags = cv2.fisheye.CALIB_RECOMPUTE_EXTRINSIC + cv2.fisheye.CALIB_FIX_SKEW
-    objp = np.zeros((1, CHECKERBOARD[0] * CHECKERBOARD[1], 3), np.float32)
-    objp[0, :, :2] = np.mgrid[0:CHECKERBOARD[0], 0:CHECKERBOARD[1]].T.reshape(-1, 2)
-    _img_shape = None
-    objpoints = []  # 3d point in real world space
-    imgpoints = []  # 2d points in image plane.
-    f_path = os.path.join(os.getcwd(), 'Camera_Calibration')
-    images = glob.glob(f_path + '/*.jpg')
-    for fname in images:
-        img = cv2.imread(fname)
-        if _img_shape is None:
-            _img_shape = img.shape[:2]
-        else:
-            assert _img_shape == img.shape[:2], "All images must share the same size."
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        # Find the chess board corners
-        ret, corners = cv2.findChessboardCorners(gray, CHECKERBOARD,
-                                                 cv2.CALIB_CB_ADAPTIVE_THRESH + cv2.CALIB_CB_FAST_CHECK + cv2.CALIB_CB_NORMALIZE_IMAGE)
-        # If found, add object points, image points (after refining them)
-        if ret:
-            objpoints.append(objp)
-            cv2.cornerSubPix(gray, corners, (3, 3), (-1, -1), subpix_criteria)
-            imgpoints.append(corners)
-    N_OK = len(objpoints)
-    K = np.zeros((3, 3))
-    D = np.zeros((4, 1))
-    rvecs = [np.zeros((1, 1, 3), dtype=np.float64) for i in range(N_OK)]
-    tvecs = [np.zeros((1, 1, 3), dtype=np.float64) for i in range(N_OK)]
-    ret, mtx, dist, rvecs, tvecs = cv2.fisheye.calibrate(objpoints,
-                                                         imgpoints,
-                                                         gray.shape[::-1],
-                                                         K,
-                                                         D,
-                                                         rvecs,
-                                                         tvecs,
-                                                         calibration_flags,
-                                                         (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 1e-6))
-    print('Found {} valid images for calibration'.format(N_OK))
-    print('Reprojection error = {}'.format(ret))
-    print('Image center = ({:.2f}, {:.2f})'.format(mtx[0][2], mtx[1][2]))
-    fov_x = math.degrees(2.0 * math.atan(data['image-width'] / 2.0 / mtx[0][0]))
-    fov_y = math.degrees(2.0 * math.atan(data['image-height'] / 2.0 / mtx[1][1]))
-    print('FOV = ({:.2f}, {:.2f}) degrees'.format(fov_x, fov_y))
-    print('Mtx = {}\n'.format(mtx))
-    print('Dist = {}\n'.format(dist))
-
-    # Writing JSON data
-    with open('calibration_output.json', 'w') as f:
-        json.dump({"camera_matrix": mtx.tolist(),
-                   "distortion": dist.tolist(),
-                   "xfov": fov_x,
-                   "yfov": fov_y,
-                   "dim": gray.shape[::-1]}, f)
-
-
 parser = argparse.ArgumentParser(description=program_description(), add_help=False)
 parser.add_argument('-h', '--help', action='store_true')
-subparsers = parser.add_subparsers(help='commands', dest='program')
+# subparsers = parser.add_subparsers(help='commands', dest='program')
 init_parser_vision()
-init_parser_image()
-init_parser_video()
-init_camera_calibration()
 
 args = vars(parser.parse_args())
-prog = args['program']
-if args['help']: program_help()
-if prog is None and not args['help']:
-    print('No command selected, please rerun the script with the "-h" flag to see available commands.')
-    print('To see the flags of each command, include a "-h" after choosing a command')
-elif prog == 'vision':
-    del args['program']
+print(args)
+if args['help']:
+    program_help()
+else:
     del args['help']
     vision()
-elif prog == 'image':
-    del args['program']
-    del args['help']
-    image_capture()
-elif prog == 'video':
-    del args['program']
-    del args['help']
-    video_capture()
-elif prog == 'calibration':
-    del args['program']
-    del args['help']
-    camera_calibration()

@@ -1,0 +1,38 @@
+ERROR:root:Vision Machine Broke
+Traceback (most recent call last):
+  File "GreenVision_NSR.py", line 326, in vision
+    mask = cv2.inRange(hsv, lower_color, upper_color)
+cv2.error: OpenCV(4.0.0) /io/opencv/modules/core/src/arithm.cpp:1776: error: (-215:Assertion failed) lb.type() == ub.type() in function 'inRange'
+
+ERROR:root:Vision Machine Broke
+Traceback (most recent call last):
+  File "GreenVision_NSR.py", line 326, in vision
+    mask = cv2.inRange(hsv, lower_color, upper_color)
+cv2.error: OpenCV(4.0.0) /io/opencv/modules/core/src/arithm.cpp:1776: error: (-215:Assertion failed) lb.type() == ub.type() in function 'inRange'
+
+ERROR:root:Vision Machine Broke
+Traceback (most recent call last):
+  File "GreenVision_NSR.py", line 326, in vision
+    mask = cv2.inRange(hsv, lower_color, upper_color)
+cv2.error: OpenCV(4.0.0) /io/opencv/modules/core/src/arithm.cpp:1776: error: (-215:Assertion failed) lb.type() == ub.type() in function 'inRange'
+
+ERROR:root:Vision Machine Broke
+Traceback (most recent call last):
+  File "GreenVision_NSR.py", line 305, in vision
+    raise Exception('boop')
+Exception: boop
+ERROR:root:Vision Machine Broke
+Traceback (most recent call last):
+  File "GreenVision_NSR.py", line 433, in vision
+    sorted_contours.clear()
+AttributeError: 'tuple' object has no attribute 'clear'
+ERROR:root:Vision Machine Broke
+Traceback (most recent call last):
+  File "GreenVision_NSR.py", line 434, in vision
+    sorted_contours.clear()
+AttributeError: 'tuple' object has no attribute 'clear'
+ERROR:root:Vision Machine Broke
+Traceback (most recent call last):
+  File "GreenVision_NSR.py", line 435, in vision
+    sorted_contours.clear()
+AttributeError: 'tuple' object has no attribute 'clear'
