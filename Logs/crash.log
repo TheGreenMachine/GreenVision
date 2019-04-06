@@ -47,3 +47,22 @@ Traceback (most recent call last):
   File "GreenVision_NSR.py", line 398, in vision
     distance = math.sqrt(point3D[0] * point3D[0] + point3D[1] * point3D[1] + point3D[2] * point3D[2])
 TypeError: unsupported operand type(s) for *: 'ERROR_CODE' and 'ERROR_CODE'
+ERROR:root:Vision Machine Broke
+Traceback (most recent call last):
+  File "GreenVision_NSR.py", line 374, in vision
+    capture_frame('toomany')
+  File "GreenVision_NSR.py", line 168, in capture_frame
+    biggest_num = max([file[:-3] for file in os.listdir(images_fp)])
+ValueError: max() arg is an empty sequence
+ERROR:root:Vision Machine Broke
+Traceback (most recent call last):
+  File "GreenVision_NSR.py", line 374, in vision
+    capture_frame('toomany')
+  File "GreenVision_NSR.py", line 168, in capture_frame
+    biggest_num = max([file[:-3] for file in os.listdir(images_fp)])
+ValueError: max() arg is an empty sequence
+ERROR:root:Vision Machine Broke
+Traceback (most recent call last):
+  File "GreenVision_NSR.py", line 371, in vision
+    print("Filtered" + filtered_contours)
+TypeError: must be str, not list

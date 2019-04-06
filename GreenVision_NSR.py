@@ -254,7 +254,8 @@ Execute Time: {}\r"""
 
     zed = sl.Camera()
     init = sl.InitParameters()
-    init.camera_resolution = sl.RESOLUTION.RESOLUTION_HD1080
+    init.camera_resolution = sl.RESOLUTION.RESOLUTION_VGA
+    init.camera_fps = 60
     init.depth_mode = sl.DEPTH_MODE.DEPTH_MODE_MEDIUM
     init.coordinate_units = sl.UNIT.UNIT_INCH
 
@@ -263,13 +264,13 @@ Execute Time: {}\r"""
         print(repr(err))
         zed.close()
         exit(1)
-    zed.set_camera_settings(sl.CAMERA_SETTINGS.CAMERA_SETTINGS_EXPOSURE, 11, False)
+    zed.set_camera_settings(sl.CAMERA_SETTINGS.CAMERA_SETTINGS_EXPOSURE, 20, False)
     runtime = sl.RuntimeParameters()
     runtime.sensing_mode = sl.SENSING_MODE.SENSING_MODE_STANDARD
 
     image_size = zed.get_resolution()
-    new_width = image_size.width / 2
-    new_height = image_size.height / 2
+    new_width = 672
+    new_height = 376
 
     image_zed = sl.Mat(new_width, new_height, sl.MAT_TYPE.MAT_TYPE_8U_C4)
     depth_image_zed = sl.Mat(new_width, new_height, sl.MAT_TYPE.MAT_TYPE_8U_C4)
@@ -364,24 +365,24 @@ Execute Time: {}\r"""
                     max(all_contours, key=lambda x: cv2.contourArea(x) if 50 < cv2.contourArea(x) < 2000 else 0)) \
                     if len(all_contours) != 0 else 0
                 for contour in all_contours:
-                    if 50 < cv2.contourArea(contour) < 2000 and cv2.contourArea(contour) > 0.75 * biggest_contour_area:
+                    if 50 < cv2.contourArea(contour) < 20000 and cv2.contourArea(contour) > 0.9 * biggest_contour_area:
                         filtered_contours.append(contour)
                 if len(filtered_contours) > 1:
                     sorted_contours, _ = sort_contours(filtered_contours)
                     sorted_contours = list(sorted_contours)
                 if len(sorted_contours) > 1:
-                    if len(sorted_contours) > 100:
-                        capture_frame('toomany')
+                    if len(sorted_contours) > 6:
+                        #capture_frame('toomany')
                         image_written = True
                     for contour in sorted_contours:
                         rectangle_list.append(Rect(contour))
                     for index, rect in enumerate(rectangle_list):
                         # positive angle means it's the left tape of a pair
-                        if -82 < rect.theta < -74 and index != len(rectangle_list) - 1:
+                        if -82 < rect.theta < -55 and index != len(rectangle_list) - 1:
                             if view:
                                 draw_rect(rect, (0, 255, 255))
                             # only add rect if the second rect is the correct angle
-                            if -12 > rectangle_list[index + 1].theta > -20:
+                            if 1 > rectangle_list[index + 1].theta > -30:
                                 if view:
                                     draw_rect(rectangle_list[index + 1], (0, 0, 255))
 
