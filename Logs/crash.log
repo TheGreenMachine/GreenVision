@@ -36,3 +36,15 @@ Traceback (most recent call last):
   File "GreenVision_NSR.py", line 435, in vision
     sorted_contours.clear()
 AttributeError: 'tuple' object has no attribute 'clear'
+ERROR:root:Vision Machine Broke
+Traceback (most recent call last):
+  File "GreenVision_NSR.py", line 401, in vision
+    yaw, pitch = calc_angles((best_center_average_x, best_center_average_y))
+  File "GreenVision_NSR.py", line 116, in calc_angles
+    yaw = math.degrees(math.atan((coords[0] - screen_c_x) / h_focal_length))
+TypeError: unsupported operand type(s) for -: 'tuple' and 'float'
+ERROR:root:Vision Machine Broke
+Traceback (most recent call last):
+  File "GreenVision_NSR.py", line 398, in vision
+    index = [coord[0] for coord in average_coord_list].index(best_center_average_x[0])
+TypeError: 'int' object is not subscriptable
