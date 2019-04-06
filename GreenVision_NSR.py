@@ -309,10 +309,10 @@ Execute Time: {}\r"""
 
             all_contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
             biggest_contour_area = cv2.contourArea(
-                max(all_contours, key=lambda x: cv2.contourArea(x) if 50 < cv2.contourArea(x) < 5000 else 0)) if len(
+                max(all_contours, key=lambda x: cv2.contourArea(x) if 50 < cv2.contourArea(x) < 4500 else 0)) if len(
                 all_contours) != 0 else 0
             for contour in all_contours:
-                if 50 < cv2.contourArea(contour) < 5000 and cv2.contourArea(contour) > 0.80 * biggest_contour_area:
+                if 50 < cv2.contourArea(contour) < 4500 and cv2.contourArea(contour) > 0.80 * biggest_contour_area:
                     filtered_contours.append(contour)
             if len(filtered_contours) > 1:
                 sorted_contours, _ = sort_contours(filtered_contours)
