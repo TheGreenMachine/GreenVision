@@ -91,7 +91,7 @@ def vision():
         (cnts, bounding_boxes) = zip(*sorted(zip(cnts, bounding_boxes), key=lambda b: b[1][0], reverse=False))
         return cnts, bounding_boxes
 
-    def calc_distance(c_y, screen_y, v_foc_len):
+    def calc_distance(coord, screen_y, v_foc_len):
 
         # d = distance
         # h = height between camera and target
@@ -108,7 +108,7 @@ def vision():
         target_height = data['target-height']
         cam_height = data['camera-height']
         h = abs(target_height - cam_height)
-        temp = math.tan(math.radians(calc_pitch(c_y, screen_y, v_foc_len)))
+        temp = math.tan(math.radians(calc_angles(coord)[1]))
         dist = math.fabs(h / temp) if temp != 0 else -1
         return dist
 
@@ -170,23 +170,25 @@ def vision():
         if debug:
             print('Frame Captured!')
 
-    def log_data(vl_writer):
-        vl_writer.writerow(
-            [datetime.datetime.now(),
-             [cv2.contourArea(c) for c in all_contours if cv2.contourArea(contour) > 25],
-             biggest_contour_area,
-             [cv2.contourArea(c) for c in filtered_contours],
-             [cv2.contourArea(c) for c in sorted_contours],
-             len(rectangle_list),  # num rectangles
-             len(sorted_contours),  # num contours
-             len(average_coord_list),  # num targets
-             average_coord_list,
-             index,
-             best_center_average_coords,
-             abs(data['image-width'] / 2 - best_center_average_coords[0]),
-             get_system_stats(),
-             end - start,
-             image_written])
+    def log_data():
+        with open(os.path.join(log_fp, 'vision_log.csv'), mode='a+') as vl_file:
+            vl_writer = csv.writer(vl_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            vl_writer.writerow(
+                [datetime.datetime.now(),
+                 [cv2.contourArea(c) for c in all_contours if cv2.contourArea(contour) > 25],
+                 biggest_contour_area,
+                 [cv2.contourArea(c) for c in filtered_contours],
+                 [cv2.contourArea(c) for c in sorted_contours],
+                 len(rectangle_list),  # num rectangles
+                 len(sorted_contours),  # num contours
+                 len(average_coord_list),  # num targets
+                 average_coord_list,
+                 index,
+                 best_center_average_coords,
+                 abs(data['image-width'] / 2 - best_center_average_coords[0]),
+                 get_system_stats(),
+                 end - start,
+                 image_written])
 
     def value_changed(table, key, value, isNew):
         global values
@@ -246,9 +248,6 @@ Execute Time: {}\r"""
             os.makedirs(log_fp)
         logging.basicConfig(level=logging.DEBUG, filename=os.path.join(log_fp, 'crash.log'))
         can_log = True
-    if log:
-        with open(os.path.join(log_fp, 'vision_log.csv'), mode='a+') as vl_file:
-            vl_writer = csv.writer(vl_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
     cap = cv2.VideoCapture(src)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
@@ -365,7 +364,7 @@ Execute Time: {}\r"""
                 yaw, pitch = calc_angles(best_center_average_coords)
                 end = time.time()
                 if log:
-                    log_data(vl_writer)
+                    log_data()
                 if debug:
                     sys.stdout.write(debug_output().format(
                         [cv2.contourArea(contour) for contour in all_contours if cv2.contourArea(contour) > 50],
@@ -398,7 +397,7 @@ Execute Time: {}\r"""
                 yaw, pitch = calc_angles(best_center_average_coords)
                 end = time.time()
                 if log:
-                    log_data(vl_writer)
+                    log_data()
                 if debug:
                     sys.stdout.write(debug_output().format(
                         [cv2.contourArea(contour) for contour in all_contours if cv2.contourArea(contour) > 50],
