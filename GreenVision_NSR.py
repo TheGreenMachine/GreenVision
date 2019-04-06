@@ -13,6 +13,7 @@ import logging
 import datetime
 import getpass
 import sys
+import pyzed.sl as sl
 
 cwd = os.getcwd()
 file_path = os.path.join(cwd, 'values.json')
@@ -227,6 +228,8 @@ Execute Time: {}\r"""
     log = args['log']
     can_log = False
     sequence = False
+    point_cloud_format = sl.POINT_CLOUD_FORMAT.POINT_CLOUD_FORMAT_XYZ_ASCII
+    depth_format = sl.DEPTH_FORMAT.DEPTH_FORMAT_PNG
 
     # sudo mount /dev/sda1 media/pi/GVLOGGING
 
@@ -249,10 +252,28 @@ Execute Time: {}\r"""
         logging.basicConfig(level=logging.DEBUG, filename=os.path.join(log_fp, 'crash.log'))
         can_log = True
 
-    cap = cv2.VideoCapture(src)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
-    cap.set(cv2.CAP_PROP_FPS, data['fps'])
+    zed = sl.Camera()
+    init = sl.InitParameters()
+    init.camera_resolution = sl.RESOLUTION.RESOLUTION_HD1080
+    init.depth_mode = sl.DEPTH_MODE.DEPTH_MODE_MEDIUM
+    init.coordinate_units = sl.UNIT.UNIT_INCH
+
+    err = zed.open(init)
+    if err != sl.ERROR_CODE.SUCCESS:
+        print(repr(err))
+        zed.close()
+        exit(1)
+    zed.set_camera_settings(sl.CAMERA_SETTINGS.CAMERA_SETTINGS_EXPOSURE, 11, False)
+    runtime = sl.RuntimeParameters()
+    runtime.sensing_mode = sl.SENSING_MODE.SENSING_MODE_STANDARD
+
+    image_size = zed.get_resolution()
+    new_width = image_size.width / 2
+    new_height = image_size.height / 2
+
+    image_zed = sl.Mat(new_width, new_height, sl.MAT_TYPE.MAT_TYPE_8U_C4)
+    depth_image_zed = sl.Mat(new_width, new_height, sl.MAT_TYPE.MAT_TYPE_8U_C4)
+    point_cloud = sl.Mat()
 
     if net_table:
         nt.NetworkTables.initialize(server=data['server-ip'])
@@ -316,123 +337,139 @@ Execute Time: {}\r"""
 
             first_read = False
 
-            _, frame = cap.read()
+            err = zed.grab(runtime)
+            if err == sl.ERROR_CODE.SUCCESS:
+                # Retrieve the left image, depth image in the half-resolution
+                zed.retrieve_image(image_zed, sl.VIEW.VIEW_LEFT, sl.MEM.MEM_CPU, int(new_width), int(new_height))
+                zed.retrieve_image(depth_image_zed, sl.VIEW.VIEW_DEPTH, sl.MEM.MEM_CPU, int(new_width), int(new_height))
+                # Retrieve the RGBA point cloud in half resolution
+                zed.retrieve_measure(point_cloud, sl.MEASURE.MEASURE_XYZRGBA, sl.MEM.MEM_CPU, int(new_width),
+                                     int(new_height))
+                frame = image_zed.get_data()
+                depth_image_ocv = depth_image_zed.get_data()
 
-            if frame is None:
-                continue
+                if frame is None:
+                    continue
 
-            if flip:
-                frame = cv2.flip(frame, -1)
-            if rotate:
-                frame = imutils.rotate_bound(frame, 90)
-            hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-            mask = cv2.inRange(hsv, lower_color, upper_color)
+                if flip:
+                    frame = cv2.flip(frame, -1)
+                if rotate:
+                    frame = imutils.rotate_bound(frame, 90)
+                hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+                mask = cv2.inRange(hsv, lower_color, upper_color)
 
-            all_contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-            index = 0
-            biggest_contour_area = cv2.contourArea(
-                max(all_contours, key=lambda x: cv2.contourArea(x) if 50 < cv2.contourArea(x) < 2000 else 0)) if len(
-                all_contours) != 0 else 0
-            for contour in all_contours:
-                if 50 < cv2.contourArea(contour) < 2000 and cv2.contourArea(contour) > 0.75 * biggest_contour_area:
-                    filtered_contours.append(contour)
-            if len(filtered_contours) > 1:
-                sorted_contours, _ = sort_contours(filtered_contours)
-                sorted_contours = list(sorted_contours)
-            if len(sorted_contours) > 1:
-                if len(sorted_contours) > 6:
-                    capture_frame('toomany')
-                    image_written = True
-                for contour in sorted_contours:
-                    rectangle_list.append(Rect(contour))
-                for index, rect in enumerate(rectangle_list):
-                    # positive angle means it's the left tape of a pair
-                    if -82 < rect.theta < -74 and index != len(rectangle_list) - 1:
-                        if view:
-                            draw_rect(rect, (0, 255, 255))
-                        # only add rect if the second rect is the correct angle
-                        if -12 > rectangle_list[index + 1].theta > -20:
+                all_contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+                index = 0
+                biggest_contour_area = cv2.contourArea(
+                    max(all_contours, key=lambda x: cv2.contourArea(x) if 50 < cv2.contourArea(x) < 2000 else 0)) \
+                    if len(all_contours) != 0 else 0
+                for contour in all_contours:
+                    if 50 < cv2.contourArea(contour) < 2000 and cv2.contourArea(contour) > 0.75 * biggest_contour_area:
+                        filtered_contours.append(contour)
+                if len(filtered_contours) > 1:
+                    sorted_contours, _ = sort_contours(filtered_contours)
+                    sorted_contours = list(sorted_contours)
+                if len(sorted_contours) > 1:
+                    if len(sorted_contours) > 100:
+                        capture_frame('toomany')
+                        image_written = True
+                    for contour in sorted_contours:
+                        rectangle_list.append(Rect(contour))
+                    for index, rect in enumerate(rectangle_list):
+                        # positive angle means it's the left tape of a pair
+                        if -82 < rect.theta < -74 and index != len(rectangle_list) - 1:
                             if view:
-                                draw_rect(rectangle_list[index + 1], (0, 0, 255))
+                                draw_rect(rect, (0, 255, 255))
+                            # only add rect if the second rect is the correct angle
+                            if -12 > rectangle_list[index + 1].theta > -20:
+                                if view:
+                                    draw_rect(rectangle_list[index + 1], (0, 0, 255))
 
-                            cx = int((rect.center[0] + rectangle_list[index + 1].center[0]) / 2)
-                            cy = int((rect.center[1] + rectangle_list[index + 1].center[1]) / 2)
-                            average_coord_list.append((cx, cy))
+                                cx = int((rect.center[0] + rectangle_list[index + 1].center[0]) / 2)
+                                cy = int((rect.center[1] + rectangle_list[index + 1].center[1]) / 2)
+                                average_coord_list.append((cx, cy))
 
-            if len(average_coord_list) == 1:
-                best_center_average_coords = average_coord_list[0]
-                yaw, pitch = calc_angles(best_center_average_coords)
-                end = time.time()
-                if log:
-                    log_data()
-                if debug:
-                    sys.stdout.write(debug_output().format(
-                        [cv2.contourArea(contour) for contour in all_contours if cv2.contourArea(contour) > 50],
-                        [cv2.contourArea(contour) for contour in filtered_contours],
-                        [cv2.contourArea(contour) for contour in sorted_contours],
-                        biggest_contour_area,
-                        len(rectangle_list),
-                        len(sorted_contours),
-                        len(average_coord_list),
-                        average_coord_list,
-                        best_center_average_coords,
-                        0,
-                        distance,
-                        pitch,
-                        yaw,
-                        get_system_stats(),
-                        end - start))
+                if len(average_coord_list) == 1:
+                    best_center_average_coords = average_coord_list[0]
+                    print(best_center_average_coords)
+                    point3D = point_cloud.get_value(best_center_average_coords[0], best_center_average_coords[1])
+                    print(point3D)
+                    distance = math.sqrt(
+                        point3D[1][0] * point3D[1][0] + point3D[1][1] * point3D[1][1] + point3D[1][2] * point3D[1][2])
+                    print("DISTANCE:" + str(distance))
+                    yaw, pitch = calc_angles(best_center_average_coords)
+                    end = time.time()
+                    if log:
+                        log_data()
+                    if debug:
+                        sys.stdout.write(debug_output().format(
+                            [cv2.contourArea(contour) for contour in all_contours if cv2.contourArea(contour) > 50],
+                            [cv2.contourArea(contour) for contour in filtered_contours],
+                            [cv2.contourArea(contour) for contour in sorted_contours],
+                            biggest_contour_area,
+                            len(rectangle_list),
+                            len(sorted_contours),
+                            len(average_coord_list),
+                            average_coord_list,
+                            best_center_average_coords,
+                            0,
+                            distance,
+                            pitch,
+                            yaw,
+                            get_system_stats(),
+                            end - start))
+
+                    if view:
+                        cv2.line(frame, best_center_average_coords, center_coords, (0, 255, 0), 2)
+                        for coord in average_coord_list:
+                            draw_center_dot(coord, (255, 0, 0))
+                elif len(average_coord_list) > 1:
+                    # finds c_x that is closest to the center of the center
+                    best_center_average_x = min(average_coord_list,
+                                                key=lambda xy: abs(xy[0] - data['image-width'] / 2))[0]
+                    index = [coord[0] for coord in average_coord_list].index(best_center_average_x)
+                    best_center_average_y = average_coord_list[index][1]
+                    best_center_average_coords = (best_center_average_x, best_center_average_y)
+                    yaw, pitch = calc_angles(best_center_average_coords)
+                    end = time.time()
+                    if log:
+                        log_data()
+                    if debug:
+                        sys.stdout.write(debug_output().format(
+                            [cv2.contourArea(contour) for contour in all_contours if cv2.contourArea(contour) > 50],
+                            [cv2.contourArea(contour) for contour in filtered_contours],
+                            [cv2.contourArea(contour) for contour in sorted_contours],
+                            biggest_contour_area,
+                            len(rectangle_list),
+                            len(sorted_contours),
+                            len(average_coord_list),
+                            average_coord_list,
+                            best_center_average_coords,
+                            index,
+                            distance,
+                            pitch,
+                            yaw,
+                            get_system_stats(),
+                            end - start))
+                    if view:
+                        cv2.line(frame, best_center_average_coords, center_coords, (0, 255, 0), 2)
+                        for coord in average_coord_list:
+                            draw_center_dot(coord, (255, 0, 0))
+
+                if net_table:
+                    update_net_table(best_center_average_coords[0], best_center_average_coords[1], yaw, distance,
+                                     len(sorted_contours), len(average_coord_list), pitch)
+                filtered_contours.clear()
+                sorted_contours.clear()
+                rectangle_list.clear()
+                average_coord_list.clear()
 
                 if view:
-                    cv2.line(frame, best_center_average_coords, center_coords, (0, 255, 0), 2)
-                    for coord in average_coord_list:
-                        draw_center_dot(coord, (255, 0, 0))
-            elif len(average_coord_list) > 1:
-                # finds c_x that is closest to the center of the center
-                best_center_average_x = min(average_coord_list,
-                                            key=lambda xy: abs(xy[0] - data['image-width'] / 2))[0]
-                index = [coord[0] for coord in average_coord_list].index(best_center_average_x)
-                best_center_average_y = average_coord_list[index][1]
-                best_center_average_coords = (best_center_average_x, best_center_average_y)
-                yaw, pitch = calc_angles(best_center_average_coords)
-                end = time.time()
-                if log:
-                    log_data()
-                if debug:
-                    sys.stdout.write(debug_output().format(
-                        [cv2.contourArea(contour) for contour in all_contours if cv2.contourArea(contour) > 50],
-                        [cv2.contourArea(contour) for contour in filtered_contours],
-                        [cv2.contourArea(contour) for contour in sorted_contours],
-                        biggest_contour_area,
-                        len(rectangle_list),
-                        len(sorted_contours),
-                        len(average_coord_list),
-                        average_coord_list,
-                        best_center_average_coords,
-                        index,
-                        distance,
-                        pitch,
-                        yaw,
-                        get_system_stats(),
-                        end - start))
-                if view:
-                    cv2.line(frame, best_center_average_coords, center_coords, (0, 255, 0), 2)
-                    for coord in average_coord_list:
-                        draw_center_dot(coord, (255, 0, 0))
-
-            if net_table:
-                update_net_table(best_center_average_coords[0], best_center_average_coords[1], yaw, distance,
-                                 len(sorted_contours), len(average_coord_list), pitch)
-            filtered_contours.clear()
-            sorted_contours.clear()
-            rectangle_list.clear()
-            average_coord_list.clear()
-
-            if view:
-                cv2.imshow('Mask', mask)
-                cv2.imshow('Contour Window', frame)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
+                    cv2.imshow('Mask', mask)
+                    cv2.imshow('Depth', depth_image_ocv)
+                    cv2.imshow('Contour Window', frame)
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
     except Exception as err:
         if net_table:
             table.putNumber('contours', -99)
@@ -442,7 +479,6 @@ Execute Time: {}\r"""
         if can_log:
             logging.exception('Vision Machine Broke')
 
-    cap.release()
     cv2.destroyAllWindows()
 
 
