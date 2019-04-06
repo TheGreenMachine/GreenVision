@@ -179,9 +179,8 @@ def vision():
              [cv2.contourArea(c) for c in sorted_contours],
              len(rectangle_list),  # num rectangles
              len(sorted_contours),  # num contours
-             len(average_cx_list),  # num targets
-             average_cx_list,
-             average_cy_list,
+             len(average_coord_list),  # num targets
+             average_coord_list,
              index,
              best_center_average_coords,
              abs(data['image-width'] / 2 - best_center_average_coords[0]),
@@ -297,8 +296,6 @@ Execute Time: {}\r"""
     try:
         filtered_contours = []
         rectangle_list = []
-        # average_cx_list = []
-        # average_cy_list = []
         sorted_contours = []
         average_coord_list = []
         can_log = os.path.exists(log_fp)
