@@ -1,0 +1,58 @@
+ERROR:root:Vision Machine Broke
+Traceback (most recent call last):
+  File "GreenVision_NSR.py", line 294, in vision
+    biggest_contour_area = cv2.contourArea(max([cv2.contourArea(c) for c in all_contours]))
+cv2.error: OpenCV(4.0.0) /io/opencv/modules/imgproc/src/shapedescr.cpp:272: error: (-215:Assertion failed) npoints >= 0 && (depth == CV_32F || depth == CV_32S) in function 'contourArea'
+
+ERROR:root:Vision Machine Broke
+Traceback (most recent call last):
+  File "GreenVision_NSR.py", line 294, in vision
+    biggest_contour_area = cv2.contourArea(max([cv2.contourArea(c) for c in all_contours]))
+cv2.error: OpenCV(4.0.0) /io/opencv/modules/imgproc/src/shapedescr.cpp:272: error: (-215:Assertion failed) npoints >= 0 && (depth == CV_32F || depth == CV_32S) in function 'contourArea'
+
+ERROR:root:Vision Machine Broke
+Traceback (most recent call last):
+  File "GreenVision_NSR.py", line 341, in vision
+    index = [coord[0] for coord in average_coord_list].index(best_center_average_x)
+ValueError: 85.0 is not in list
+ERROR:root:Vision Machine Broke
+Traceback (most recent call last):
+  File "GreenVision_NSR.py", line 341, in vision
+    index = [coord[0] for coord in average_coord_list].index(best_center_average_x)
+ValueError: 85.0 is not in list
+ERROR:root:Vision Machine Broke
+Traceback (most recent call last):
+  File "GreenVision_NSR.py", line 342, in vision
+    index = [coord[0] for coord in average_coord_list].index(best_center_average_x)
+ValueError: 85.0 is not in list
+ERROR:root:Vision Machine Broke
+Traceback (most recent call last):
+  File "GreenVision_NSR.py", line 342, in vision
+    index = [coord[0] for coord in average_coord_list].index(best_center_average_x)
+ValueError: 85.0 is not in list
+ERROR:root:Vision Machine Broke
+Traceback (most recent call last):
+  File "GreenVision_NSR.py", line 338, in vision
+    best_center_average_x = min([abs(xy[0] - data['image-width'] / 2) for xy in average_coord_list])[0]
+TypeError: 'float' object is not subscriptable
+ERROR:root:Vision Machine Broke
+Traceback (most recent call last):
+  File "GreenVision_NSR.py", line 339, in vision
+    best_center_average_x = min([abs(xy[0] - data['image-width'] / 2) for xy in average_coord_list])[0]
+TypeError: 'float' object is not subscriptable
+ERROR:root:Vision Machine Broke
+Traceback (most recent call last):
+  File "GreenVision_NSR.py", line 341, in vision
+    index = [coord[0] for coord in average_coord_list].index(best_center_average_x)
+ValueError: 85.0 is not in list
+ERROR:root:Vision Machine Broke
+Traceback (most recent call last):
+  File "GreenVision_NSR.py", line 341, in vision
+    index = [coord[0] for coord in average_coord_list].index(best_center_average_x)
+ValueError: 85.0 is not in list
+INFO:nt:NetworkTables initialized in client mode
+DEBUG:nt.th:Started thread nt-dispatch-thread-0
+DEBUG:nt.th:Started thread nt-client-thread-0
+INFO:nt:NetworkTables initialized in client mode
+DEBUG:nt.th:Started thread nt-dispatch-thread-0
+DEBUG:nt.th:Started thread nt-client-thread-0
