@@ -56,3 +56,32 @@ DEBUG:nt.th:Started thread nt-client-thread-0
 INFO:nt:NetworkTables initialized in client mode
 DEBUG:nt.th:Started thread nt-dispatch-thread-0
 DEBUG:nt.th:Started thread nt-client-thread-0
+INFO:nt:NetworkTables initialized in client mode
+DEBUG:nt.th:Started thread nt-dispatch-thread-0
+DEBUG:nt.th:Started thread nt-client-thread-0
+ERROR:root:Vision Machine Broke
+Traceback (most recent call last):
+  File "GreenVision_NSR.py", line 269, in vision
+    rectangle_list = [Rect(c) for c in sorted_contours]
+  File "GreenVision_NSR.py", line 269, in <listcomp>
+    rectangle_list = [Rect(c) for c in sorted_contours]
+  File "GreenVision_NSR.py", line 85, in __init__
+    self.box = cv2.boxPoints(center, wid_hei, theta)
+TypeError: boxPoints() takes at most 2 arguments (3 given)
+ERROR:root:Vision Machine Broke
+Traceback (most recent call last):
+  File "GreenVision_NSR.py", line 271, in vision
+    rectangle_list = [cv2.minAreaRect() for c in sorted_contours]
+  File "GreenVision_NSR.py", line 271, in <listcomp>
+    rectangle_list = [cv2.minAreaRect() for c in sorted_contours]
+TypeError: Required argument 'points' (pos 1) not found
+ERROR:root:Vision Machine Broke
+Traceback (most recent call last):
+  File "GreenVision_NSR.py", line 273, in vision
+    if -84 < rect.theta < -72 and pos != len(rectangle_list) - 1:
+AttributeError: 'tuple' object has no attribute 'theta'
+ERROR:root:Vision Machine Broke
+Traceback (most recent call last):
+  File "GreenVision_NSR.py", line 288, in vision
+    if -10 > rectangle_list[pos + 1].theta > -22:
+AttributeError: 'tuple' object has no attribute 'theta'

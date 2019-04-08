@@ -75,17 +75,6 @@ def init_parser_vision():
 
 
 def vision():
-    class Rect:
-        def __init__(self, contur):
-            center, wid_hei, theta = cv2.minAreaRect(contur)
-            self.center = center
-            self.width = wid_hei[0]
-            self.height = wid_hei[1]
-            self.theta = theta
-            self.box = cv2.boxPoints(cv2.minAreaRect(contur))
-            self.area = cv2.contourArea(contur)
-            self.draw = np.int0(self.box)
-
     def calc_distance(coord, screen_y, v_foc_len):
 
         # d = distance
@@ -107,15 +96,6 @@ def vision():
         temp = math.tan(math.radians(pitch))
         dist = math.fabs(h / temp) if temp != 0 else -1
         return dist
-
-    def update_net_table(avgc_x=-1, avgc_y=-1, yaaw=-1, dis=-1, conts=-1, targets=-1, pitch=-1):
-        table.putNumber('center_x', avgc_x)
-        table.putNumber('center_y', avgc_y)
-        table.putNumber('yaw', yaaw)
-        table.putNumber('distance_esti', dis)
-        table.putNumber('contours', conts)
-        table.putNumber('targets', targets)
-        table.putNumber('pitch', pitch)
 
     def capture_frame(name):
         images_fp = os.path.join(log_fp, 'images')
@@ -227,7 +207,6 @@ def vision():
             distance = -1
             pitch = -999
             yaw = -999
-            end_time = -1
             image_written = False
 
             if view:
@@ -267,39 +246,23 @@ def vision():
                     *sorted(zip(filtered_contours, bounding_boxes), key=lambda b: b[1][0], reverse=False))
                 sorted_contours = list(sorted_contours)
             if len(sorted_contours) > 1:
-                rectangle_list = [Rect(c) for c in sorted_contours]
+                rectangle_list = [cv2.minAreaRect(c) for c in sorted_contours]
                 for pos, rect in enumerate(rectangle_list):
                     # positive angle means it's the left tape of a pair
-                    if -84 < rect.theta < -72 and pos != len(rectangle_list) - 1:
+                    if -84 < rect[2] < -72 and pos != len(rectangle_list) - 1:
                         if view:
                             color = (0, 255, 255)
-                            cv2.line(frame, (rect.box[0][0], rect.box[0][1]), (rect.box[1][0], rect.box[1][1]), color,
-                                     2)
-                            cv2.line(frame, (rect.box[1][0], rect.box[1][1]), (rect.box[2][0], rect.box[2][1]), color,
-                                     2)
-                            cv2.line(frame, (rect.box[2][0], rect.box[2][1]), (rect.box[3][0], rect.box[3][1]), color,
-                                     2)
-                            cv2.line(frame, (rect.box[3][0], rect.box[3][1]), (rect.box[0][0], rect.box[0][1]), color,
-                                     2)
+                            box = np.int0(cv2.boxPoints(rect))
+                            cv2.drawContours(frame, [box], 0, color, 2)
                         # only add rect if the second rect is the correct angle
-                        if -10 > rectangle_list[pos + 1].theta > -22:
+                        if -10 > rectangle_list[pos + 1][2] > -22:
                             if view:
-                                color = (0, 255, 255)
+                                color = (0, 0, 255)
                                 rect2 = rectangle_list[pos + 1]
-                                cv2.line(frame, (rect2.box[0][0], rect2.box[0][1]), (rect2.box[1][0], rect2.box[1][1]),
-                                         color,
-                                         2)
-                                cv2.line(frame, (rect2.box[1][0], rect2.box[1][1]), (rect2.box[2][0], rect2.box[2][1]),
-                                         color,
-                                         2)
-                                cv2.line(frame, (rect2.box[2][0], rect2.box[2][1]), (rect2.box[3][0], rect2.box[3][1]),
-                                         color,
-                                         2)
-                                cv2.line(frame, (rect2.box[3][0], rect2.box[3][1]), (rect2.box[0][0], rect2.box[0][1]),
-                                         color,
-                                         2)
-                            cx = int((rect.center[0] + rectangle_list[pos + 1].center[0]) / 2)
-                            cy = int((rect.center[1] + rectangle_list[pos + 1].center[1]) / 2)
+                                box2 = np.int0(cv2.boxPoints(rect2))
+                                cv2.drawContours(frame, [box2], 0, color, 2)
+                            cx = int((rect[0][0] + rectangle_list[pos + 1][0][0]) / 2)
+                            cy = int((rect[0][1] + rectangle_list[pos + 1][0][1]) / 2)
                             average_coord_list.append((cx, cy))
 
             if len(average_coord_list) == 1:
@@ -307,8 +270,6 @@ def vision():
                 index = 0
                 yaw = math.degrees(math.atan((best_center_average_coords[0] - screen_c_x) / h_focal_length))
                 pitch = math.degrees(math.atan((best_center_average_coords[1] - screen_c_y) / v_focal_length))
-                if log:
-                    log_data(vl_file, vl_writer)
                 if view:
                     cv2.line(frame, best_center_average_coords, center_coords, (0, 255, 0), 2)
                     cv2.line(frame, best_center_average_coords, best_center_average_coords, (255, 0, 0), 5)
