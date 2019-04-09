@@ -251,7 +251,6 @@ def vision():
                 for pos, rect in enumerate(rectangle_list):
                     # positive angle means it's the left tape of a pair
                     angle_constant = 20
-                    # if -84 < rect[2] < -68 and pos != len(rectangle_list) - 1:
                     if -75 - angle_constant < rect[2] < -75 + angle_constant and pos != len(rectangle_list) - 1:
                         if view:
                             color = (0, 255, 255)
