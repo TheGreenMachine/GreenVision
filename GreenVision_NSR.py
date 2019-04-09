@@ -3,9 +3,9 @@ import json
 import math
 import os
 import time
-import glob
 import cv2
 import imutils
+from imutils.video import FPS
 import networktables as nt
 import numpy as np
 import csv
@@ -195,8 +195,8 @@ def vision():
         if log and can_log:
             vl_file = open(os.path.join(log_fp, 'vision_log.csv'), mode='a+')
             vl_writer = csv.writer(vl_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-
         while True:
+            fps = FPS().start()
             if crash:
                 raise Exception('Get bamboozled...')
             start_time = time.time()
@@ -331,6 +331,8 @@ def vision():
                      abs(data['image-width'] / 2 - best_center_average_coords[0]),
                      end_time - start_time])
                 vl_file.flush()
+            fps.update()
+            fps.stop()
             if debug:
                 sys.stdout.write("""
 =========================================================
@@ -360,7 +362,9 @@ Yaw: {}\r""".format(filtered_contours_area,
             filtered_contours.clear()
             rectangle_list.clear()
             average_coord_list.clear()
+            print('FPS: {} '.format(fps.fps()))
             print('Execute Time: {}'.format(end_time - start_time))
+
 
     except Exception as err:
         if net_table:
