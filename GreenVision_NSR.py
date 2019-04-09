@@ -238,7 +238,7 @@ def vision():
             if len(all_contours) > 0:
                 biggest_contour_area = np.amax(filtered_contours_area)
             # create a contour list that removes contours smaller than the biggest * some constant
-            filtered_contours = [c for c in filtered_contours if cv2.contourArea(c) > 0.35 * biggest_contour_area]
+            filtered_contours = [c for c in filtered_contours if cv2.contourArea(c) > 0.5 * biggest_contour_area]
             # sort contours by left to right, top to bottom
             if len(filtered_contours) > 1:
                 bounding_boxes = [cv2.boundingRect(c) for c in filtered_contours]
@@ -250,19 +250,32 @@ def vision():
                 rectangle_list = [cv2.minAreaRect(c) for c in sorted_contours]
                 for pos, rect in enumerate(rectangle_list):
                     # positive angle means it's the left tape of a pair
-                    angle_constant = 20
-                    # if biggest_contour_area <
-                    if -75 - angle_constant < rect[2] < -75 + angle_constant and pos != len(rectangle_list) - 1:
-                        if view:
-                            color = (0, 255, 255)
-                            box = np.int0(cv2.boxPoints(rect))
-                            cv2.drawContours(frame, [box], 0, color, 2)
-                        # only add rect if the second rect is the correct angle
-                        if -14 - angle_constant < rectangle_list[pos + 1][2] < -14 + angle_constant:
+                    angle_constant = 15
+                    if biggest_contour_area < 10000:
+                        if -75 - angle_constant < rect[2] < -75 + angle_constant and pos != len(rectangle_list) - 1:
                             if view:
-                                color = (0, 0, 255)
+                                color = (0, 255, 255)
+                                box = np.int0(cv2.boxPoints(rect))
+                                cv2.drawContours(frame, [box], 0, color, 2)
+                            # only add rect if the second rect is the correct angle
+                            if -14 - angle_constant < rectangle_list[pos + 1][2] < -14 + angle_constant:
+                                if view:
+                                    color = (0, 0, 255)
+                                    rect2 = rectangle_list[pos + 1]
+                                    box2 = np.int0(cv2.boxPoints(rect2))
+                                    cv2.drawContours(frame, [box2], 0, color, 2)
+                                cx = int((rect[0][0] + rectangle_list[pos + 1][0][0]) / 2)
+                                cy = int((rect[0][1] + rectangle_list[pos + 1][0][1]) / 2)
+                                average_coord_list.append((cx, cy))
+                    else:
+                        if pos != len(rectangle_list) - 1:
+                            if view:
+                                color = (0, 255, 255)
+                                box = np.int0(cv2.boxPoints(rect))
+                                cv2.drawContours(frame, [box], 0, color, 2)
                                 rect2 = rectangle_list[pos + 1]
                                 box2 = np.int0(cv2.boxPoints(rect2))
+                                color = (255, 255, 0)
                                 cv2.drawContours(frame, [box2], 0, color, 2)
                             cx = int((rect[0][0] + rectangle_list[pos + 1][0][0]) / 2)
                             cy = int((rect[0][1] + rectangle_list[pos + 1][0][1]) / 2)
