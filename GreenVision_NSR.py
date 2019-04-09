@@ -258,7 +258,7 @@ def vision():
                             box = np.int0(cv2.boxPoints(rect))
                             cv2.drawContours(frame, [box], 0, color, 2)
                         # only add rect if the second rect is the correct angle
-                        if -3 > rectangle_list[pos + 1][2] > -18:
+                        if -2 > rectangle_list[pos + 1][2] > -20:
                             print('Angle 1: {}'.format(rectangle_list[pos+1][2]))
                             if view:
                                 color = (0, 0, 255)
