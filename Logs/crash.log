@@ -85,3 +85,8 @@ Traceback (most recent call last):
   File "GreenVision_NSR.py", line 288, in vision
     if -10 > rectangle_list[pos + 1].theta > -22:
 AttributeError: 'tuple' object has no attribute 'theta'
+ERROR:root:Vision Machine Broke
+Traceback (most recent call last):
+  File "GreenVision_NSR.py", line 358, in vision
+    sorted_contours.clear()
+AttributeError: 'tuple' object has no attribute 'clear'
