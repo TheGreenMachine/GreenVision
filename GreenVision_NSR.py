@@ -350,24 +350,25 @@ Best Center Coords: {}
 Index: {}
 Distance: {}
 Pitch: {}
-Yaw: {}\r""".format(filtered_contours_area,
-                    [cv2.contourArea(contour) for contour in sorted_contours],
-                    biggest_contour_area,
-                    len(rectangle_list),
-                    len(sorted_contours),
-                    len(average_coord_list),
-                    average_coord_list,
-                    best_center_average_coords,
-                    index,
-                    distance,
-                    pitch,
-                    yaw))
+Yaw: {}
+FPS: {}
+Execute time: {}\r""".format(filtered_contours_area,
+                             [cv2.contourArea(contour) for contour in sorted_contours],
+                             biggest_contour_area,
+                             len(rectangle_list),
+                             len(sorted_contours),
+                             len(average_coord_list),
+                             average_coord_list,
+                             best_center_average_coords,
+                             index,
+                             distance,
+                             pitch,
+                             yaw,
+                             fps.fps(),
+                             end_time - start_time))
             filtered_contours.clear()
             rectangle_list.clear()
             average_coord_list.clear()
-            print('FPS: {} '.format(fps.fps()))
-            print('Execute Time: {}'.format(end_time - start_time))
-
 
     except Exception as err:
         if net_table:
