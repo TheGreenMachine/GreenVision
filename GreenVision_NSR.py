@@ -251,7 +251,7 @@ def vision():
                 rectangle_list = [cv2.minAreaRect(c) for c in sorted_contours]
                 for pos, rect in enumerate(rectangle_list):
                     # positive angle means it's the left tape of a pair
-                    if -84 < rect[2] < -68 and pos != len(rectangle_list) - 1:
+                    if -90 < rect[2] < -68 and pos != len(rectangle_list) - 1:
                         print('Angle 1: {}'.format(rect[2]))
                         if view:
                             color = (0, 255, 255)
