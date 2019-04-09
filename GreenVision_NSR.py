@@ -210,6 +210,7 @@ def vision():
 
             if view:
                 if not first_read:
+
                     key = cv2.waitKey(30) & 0xFF
                     if key == ord('q'):
                         break
@@ -313,6 +314,8 @@ def vision():
             if view:
                 cv2.imshow('Mask', mask)
                 cv2.imshow('Contour Window', frame)
+                cv2.moveWindow('Mask', 300, 250)
+                cv2.moveWindow('Contour Window', 1100, 250)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
