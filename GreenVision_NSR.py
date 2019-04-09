@@ -233,13 +233,14 @@ def vision():
             # find contours from mask
             all_contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
             # remove super small or super big contours that exist due to light noise/objects
-            all_contours_area = [c for c in all_contours if 50 < cv2.contourArea(c)]
             filtered_contours = [c for c in all_contours if 50 < cv2.contourArea(c) < 15000]
+            all_contours_area = [cv2.contourArea(c) for c in all_contours]
             # find the contour with the biggest area so we can further remove contours created from light noise
+            biggest_contour_area = np.amax(all_contours_area)
             if len(all_contours) > 0:
                 biggest_contour_area = max([cv2.contourArea(c) for c in all_contours])
             # create a contour list that removes contours smaller than the biggest * some constant
-            filtered_contours = [c for c in filtered_contours if cv2.contourArea(c) > 0.65 * biggest_contour_area]
+            filtered_contours = [c for c in filtered_contours if cv2.contourArea(c) > 0.35 * biggest_contour_area]
             # sort contours by left to right, top to bottom
             if len(filtered_contours) > 1:
                 bounding_boxes = [cv2.boundingRect(c) for c in filtered_contours]
@@ -251,15 +252,15 @@ def vision():
                 rectangle_list = [cv2.minAreaRect(c) for c in sorted_contours]
                 for pos, rect in enumerate(rectangle_list):
                     # positive angle means it's the left tape of a pair
-                    if -84 < rect[2] < -68 and pos != len(rectangle_list) - 1:
-                        print('Angle 1: {}'.format(rect[2]))
+                    angle_constant = 20
+                    # if -84 < rect[2] < -68 and pos != len(rectangle_list) - 1:
+                    if -75 - angle_constant < rect[2] < -75 + angle_constant and pos != len(rectangle_list) - 1:
                         if view:
                             color = (0, 255, 255)
                             box = np.int0(cv2.boxPoints(rect))
                             cv2.drawContours(frame, [box], 0, color, 2)
                         # only add rect if the second rect is the correct angle
-                        if -2 > rectangle_list[pos + 1][2] > -20:
-                            print('Angle 1: {}'.format(rectangle_list[pos+1][2]))
+                        if -14 - angle_constant < rectangle_list[pos + 1][2] < -14 + angle_constant:
                             if view:
                                 color = (0, 0, 255)
                                 rect2 = rectangle_list[pos + 1]
@@ -280,14 +281,7 @@ def vision():
 
             elif len(average_coord_list) > 1:
                 # finds c_x that is closest to the center of the center
-                t1 = time.time()
-                best_center_average_coords = np.amin(average_coord_list, axis=0)
-                t2 = time.time()
-                print('Method 1: {} in {} seconds'.format(best_center_average_coords, ((t2 - t1)*10**5)))
-                t1 = time.time()
                 best_center_average_x = min(average_coord_list, key=lambda xy: abs(xy[0] - data['image-width'] / 2))[0]
-                t2 = time.time()
-                print('Method 2: {} in {} seconds'.format(best_center_average_coords, ((t2 - t1)*10**5)))
                 index = [coord[0] for coord in average_coord_list].index(best_center_average_x)
                 best_center_average_y = average_coord_list[index][1]
                 best_center_average_coords = (best_center_average_x, best_center_average_y)
