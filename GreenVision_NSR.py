@@ -233,7 +233,7 @@ def vision():
             all_contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
             # remove super small or super big contours that exist due to light noise/objects
             filtered_contours = [c for c in all_contours if 50 < cv2.contourArea(c) < 15000]
-            filtered_contours_area = [cv2.contourArea(c) for c in all_contours]
+            filtered_contours_area = [cv2.contourArea(c) for c in all_contours if 50 < cv2.contourArea(c)]
             # find the contour with the biggest area so we can further remove contours created from light noise
             if len(all_contours) > 0:
                 biggest_contour_area = np.amax(filtered_contours_area)
@@ -251,6 +251,7 @@ def vision():
                 for pos, rect in enumerate(rectangle_list):
                     # positive angle means it's the left tape of a pair
                     angle_constant = 20
+                    # if biggest_contour_area <
                     if -75 - angle_constant < rect[2] < -75 + angle_constant and pos != len(rectangle_list) - 1:
                         if view:
                             color = (0, 255, 255)
