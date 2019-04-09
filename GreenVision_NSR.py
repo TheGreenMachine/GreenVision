@@ -97,21 +97,21 @@ def vision():
         dist = math.fabs(h / temp) if temp != 0 else -1
         return dist
 
-    def capture_frame(name):
-        images_fp = os.path.join(log_fp, 'images')
-        if not os.path.exists(images_fp):
-            os.makedirs(images_fp)
-        biggest_num = max([file[:-3] for file in os.listdir(images_fp)])
-        fname = '{}{}.jpg'.format(name, biggest_num + 1)
-        cv2.imwrite(images_fp, fname)
-        if debug:
-            print('Frame Captured!')
-
-    def value_changed(table, key, value, isNew):
-        global values
-        values[key] = value
-        if key == 'vision_active' and value:
-            capture_frame('vision')
+    # def capture_frame(name):
+    #     images_fp = os.path.join(log_fp, 'images')
+    #     if not os.path.exists(images_fp):
+    #         os.makedirs(images_fp)
+    #     biggest_num = max([file[:-3] for file in os.listdir(images_fp)])
+    #     fname = '{}{}.jpg'.format(name, biggest_num + 1)
+    #     cv2.imwrite(images_fp, fname)
+    #     if debug:
+    #         print('Frame Captured!')
+    #
+    # def value_changed(table, key, value, isNew):
+    #     global values
+    #     values[key] = value
+    #     if key == 'vision_active' and value:
+    #         capture_frame('vision')
 
     src = int(args['source']) if args['source'].isdigit() else args['source']
     flip = args['flip']
@@ -188,7 +188,6 @@ def vision():
 
     first_read = True
     try:
-        all_contours_area = []
         rectangle_list = []
         sorted_contours = []
         average_coord_list = []
@@ -234,11 +233,10 @@ def vision():
             all_contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
             # remove super small or super big contours that exist due to light noise/objects
             filtered_contours = [c for c in all_contours if 50 < cv2.contourArea(c) < 15000]
-            all_contours_area = [cv2.contourArea(c) for c in all_contours]
+            filtered_contours_area = [cv2.contourArea(c) for c in all_contours]
             # find the contour with the biggest area so we can further remove contours created from light noise
-            biggest_contour_area = np.amax(all_contours_area)
             if len(all_contours) > 0:
-                biggest_contour_area = max([cv2.contourArea(c) for c in all_contours])
+                biggest_contour_area = np.amax(filtered_contours_area)
             # create a contour list that removes contours smaller than the biggest * some constant
             filtered_contours = [c for c in filtered_contours if cv2.contourArea(c) > 0.35 * biggest_contour_area]
             # sort contours by left to right, top to bottom
@@ -246,7 +244,7 @@ def vision():
                 bounding_boxes = [cv2.boundingRect(c) for c in filtered_contours]
                 sorted_contours, _ = zip(
                     *sorted(zip(filtered_contours, bounding_boxes), key=lambda b: b[1][0], reverse=False))
-                sorted_contours = list(sorted_contours)
+                sorted_contours = tuple(sorted_contours)
 
             if len(sorted_contours) > 1:
                 rectangle_list = [cv2.minAreaRect(c) for c in sorted_contours]
@@ -296,10 +294,8 @@ def vision():
                 table.putNumber('center_x', best_center_average_coords[0])
                 table.putNumber('center_y', best_center_average_coords[1])
                 table.putNumber('yaw', yaw)
-                table.putNumber('distance_esti', distance)
                 table.putNumber('contours', len(sorted_contours))
                 table.putNumber('targets', len(average_coord_list))
-                table.putNumber('pitch', pitch)
 
             if view:
                 cv2.imshow('Mask', mask)
@@ -311,24 +307,20 @@ def vision():
             if log and can_log:
                 vl_writer.writerow(
                     [datetime.datetime.now(),
-                     [cv2.contourArea(c) for c in all_contours if cv2.contourArea(c) > 25],
+                     filtered_contours_area,
                      biggest_contour_area,
-                     [cv2.contourArea(c) for c in filtered_contours],
-                     [cv2.contourArea(c) for c in sorted_contours],
-                     len(rectangle_list),  # num rectangles
                      len(sorted_contours),  # num contours
+                     len(rectangle_list),  # num rectangles
                      len(average_coord_list),  # num targets
                      average_coord_list,
                      index,
                      best_center_average_coords,
                      abs(data['image-width'] / 2 - best_center_average_coords[0]),
-                     end_time - start_time,
-                     image_written])
+                     end_time - start_time])
                 vl_file.flush()
             if debug:
                 sys.stdout.write("""
 =========================================================
-Unfiltered Contour Area: {}
 Filtered Contour Area: {}
 Sorted Contour Area: {}
 Biggest Contour Area: {}
@@ -340,9 +332,7 @@ Best Center Coords: {}
 Index: {}
 Distance: {}
 Pitch: {}
-Yaw: {}\r""".format(
-                    [cv2.contourArea(contour) for contour in all_contours if cv2.contourArea(contour) > 50],
-                    [cv2.contourArea(contour) for contour in filtered_contours],
+Yaw: {}\r""".format(filtered_contours_area,
                     [cv2.contourArea(contour) for contour in sorted_contours],
                     biggest_contour_area,
                     len(rectangle_list),
@@ -355,7 +345,6 @@ Yaw: {}\r""".format(
                     pitch,
                     yaw))
             filtered_contours.clear()
-            sorted_contours.clear()
             rectangle_list.clear()
             average_coord_list.clear()
             print('Execute Time: {}'.format(end_time - start_time))
