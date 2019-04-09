@@ -233,19 +233,21 @@ def vision():
             # find contours from mask
             all_contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
             # remove super small or super big contours that exist due to light noise/objects
-            all_contours = [c for c in all_contours if 50 < cv2.contourArea(c) < 4500]
+            all_contours = [c for c in all_contours if 50 < cv2.contourArea(c) < 5500]
             # find the contour with the biggest area so we can further remove contours created from light noise
             if len(all_contours) > 0:
                 biggest_contour_area = max([cv2.contourArea(c) for c in all_contours])
             # create a contour list that removes contours smaller than the biggest * some constant
             filtered_contours = [c for c in all_contours if cv2.contourArea(c) > 0.80 * biggest_contour_area]
             # sort contours by left to right, top to bottom
-            if len(filtered_contours) > 1:
+            if len(filtered_contours) > 2:
                 bounding_boxes = [cv2.boundingRect(c) for c in filtered_contours]
                 sorted_contours, _ = zip(
                     *sorted(zip(filtered_contours, bounding_boxes), key=lambda b: b[1][0], reverse=False))
                 sorted_contours = list(sorted_contours)
-            if len(sorted_contours) > 1:
+            else:
+                sorted_contours = filtered_contours
+            if len(sorted_contours) > 2:
                 rectangle_list = [cv2.minAreaRect(c) for c in sorted_contours]
                 for pos, rect in enumerate(rectangle_list):
                     # positive angle means it's the left tape of a pair
@@ -276,6 +278,7 @@ def vision():
 
             elif len(average_coord_list) > 1:
                 # finds c_x that is closest to the center of the center
+                
                 best_center_average_x = min(average_coord_list, key=lambda xy: abs(xy[0] - data['image-width'] / 2))[0]
                 index = [coord[0] for coord in average_coord_list].index(best_center_average_x)
                 best_center_average_y = average_coord_list[index][1]
@@ -306,7 +309,7 @@ def vision():
             if log and can_log:
                 vl_writer.writerow(
                     [datetime.datetime.now(),
-                     [cv2.contourArea(c) for c in all_contours if cv2.contourArea(contour) > 25],
+                     [cv2.contourArea(c) for c in all_contours if cv2.contourArea(c) > 25],
                      biggest_contour_area,
                      [cv2.contourArea(c) for c in filtered_contours],
                      [cv2.contourArea(c) for c in sorted_contours],
