@@ -1,1 +1,1 @@
-timestamp,filtered_area,biggest_contour,num_contours,num_rects,num_targets,coord_list,index,best_coord,yaw,diff,exe_time
+timestamp,filtered_area,biggest_contour,num_contours,num_rects,num_targets,coord_list,index,best_coord,yaw,diff,fps,exe_time

@@ -320,20 +320,7 @@ def vision():
                 break
 
             end_time = time.time()
-            if log and can_log:
-                vl_writer.writerow(
-                    [datetime.datetime.now(),
-                     filtered_contours_area,
-                     biggest_contour_area,
-                     len(sorted_contours),  # num contours
-                     len(rectangle_list),  # num rectangles
-                     len(average_coord_list),  # num targets
-                     average_coord_list,
-                     index,
-                     best_center_average_coords,
-                     abs(data['image-width'] / 2 - best_center_average_coords[0]),
-                     end_time - start_time])
-                vl_file.flush()
+
             fps.update()
             fps.stop()
             if debug:
@@ -366,6 +353,21 @@ Execute time: {}\r""".format(filtered_contours_area,
                              yaw,
                              fps.fps(),
                              end_time - start_time))
+                if log and can_log:
+                    vl_writer.writerow(
+                        [datetime.datetime.now(),
+                         filtered_contours_area,
+                         biggest_contour_area,
+                         len(sorted_contours),  # num contours
+                         len(rectangle_list),  # num rectangles
+                         len(average_coord_list),  # num targets
+                         average_coord_list,
+                         index,
+                         best_center_average_coords,
+                         abs(data['image-width'] / 2 - best_center_average_coords[0]),
+                         fps.fps(),
+                         end_time - start_time])
+                    vl_file.flush()
             filtered_contours.clear()
             rectangle_list.clear()
             average_coord_list.clear()
