@@ -75,22 +75,6 @@ def init_parser_vision():
 
 
 def vision():
-    # def capture_frame(name):
-    #     images_fp = os.path.join(log_fp, 'images')
-    #     if not os.path.exists(images_fp):
-    #         os.makedirs(images_fp)
-    #     biggest_num = max([file[:-3] for file in os.listdir(images_fp)])
-    #     fname = '{}{}.jpg'.format(name, biggest_num + 1)
-    #     cv2.imwrite(images_fp, fname)
-    #     if debug:
-    #         print('Frame Captured!')
-    #
-    # def value_changed(table, key, value, isNew):
-    #     global values
-    #     values[key] = value
-    #     if key == 'vision_active' and value:
-    #         capture_frame('vision')
-
     src = int(args['source']) if args['source'].isdigit() else args['source']
     flip = args['flip']
     rotate = args['rotate']
