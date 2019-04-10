@@ -75,28 +75,6 @@ def init_parser_vision():
 
 
 def vision():
-    def calc_distance(coord, screen_y, v_foc_len):
-
-        # d = distance
-        # h = height between camera and target
-        # a = angle = pitch
-        # tan a = h/d (opposite over adjacent)
-        # d = h / tan a
-        #                      .
-        #                     /|
-        #                    / |
-        #                   /  |h
-        #                  /a  |
-        #           camera -----
-        #                    d
-        target_height = data['target-height']
-        cam_height = data['camera-height']
-        h = abs(target_height - cam_height)
-        pitch = math.degrees(coord[1] - screen_c_y) / v_focal_length
-        temp = math.tan(math.radians(pitch))
-        dist = math.fabs(h / temp) if temp != 0 else -1
-        return dist
-
     # def capture_frame(name):
     #     images_fp = os.path.join(log_fp, 'images')
     #     if not os.path.exists(images_fp):
