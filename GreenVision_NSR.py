@@ -153,6 +153,7 @@ def vision():
         rectangle_list = []
         sorted_contours = []
         average_coord_list = []
+        append = average_coord_list.append
         can_log = os.path.exists(log_fp)
         if log and can_log:
             vl_file = open(os.path.join(log_fp, 'vision_log.csv'), mode='a+')
@@ -229,7 +230,7 @@ def vision():
                                     cv2.drawContours(frame, [box2], 0, color, 2)
                                 cx = int((rect[0][0] + rectangle_list[pos + 1][0][0]) / 2)
                                 cy = int((rect[0][1] + rectangle_list[pos + 1][0][1]) / 2)
-                                average_coord_list.append((cx, cy))
+                                append((cx, cy))
                     else:
                         if pos != len(rectangle_list) - 1:
                             if view:
@@ -242,7 +243,7 @@ def vision():
                                 cv2.drawContours(frame, [box2], 0, color, 2)
                             cx = int((rect[0][0] + rectangle_list[pos + 1][0][0]) / 2)
                             cy = int((rect[0][1] + rectangle_list[pos + 1][0][1]) / 2)
-                            average_coord_list.append((cx, cy))
+                            append((cx, cy))
 
             if len(average_coord_list) == 1:
                 best_center_average_coords = average_coord_list[index]
