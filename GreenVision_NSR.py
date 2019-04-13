@@ -110,7 +110,6 @@ def vision():
     cap = cv2.VideoCapture(src)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
-    cap.set(cv2.CAP_PROP_FPS, data['fps'])
 
     if net_table:
         nt.NetworkTables.initialize(server=data['server-ip'])
@@ -271,14 +270,6 @@ def vision():
                     for coord in average_coord_list:
                         cv2.line(frame, coord, coord, (255, 0, 0), 5)
 
-            if net_table:
-                table.putNumber('center_x', best_center_average_coords[0])
-                table.putNumber('center_y', best_center_average_coords[1])
-                table.putNumber('yaw', yaw)
-                table.putNumber('contours', len(sorted_contours))
-                table.putNumber('targets', len(average_coord_list))
-                table.putNumber('pitch', pitch)
-
             if view:
                 cv2.imshow('Mask', mask)
                 cv2.imshow('Contour Window', frame)
@@ -338,6 +329,14 @@ Execute time: {}\r""".format(filtered_contours_area,
                          end_time - start_time])
                     vl_file.flush()
 
+            if net_table:
+                table.putNumber('center_x', best_center_average_coords[0])
+                table.putNumber('center_y', best_center_average_coords[1])
+                table.putNumber('yaw', yaw)
+                table.putNumber('contours', len(sorted_contours))
+                table.putNumber('targets', len(average_coord_list))
+                table.putNumber('pitch', pitch)
+                table.putNumber('fps', fps.fps())
             filtered_contours.clear()
             sorted_contours.clear()
             rectangle_list.clear()
