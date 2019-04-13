@@ -2,5 +2,3 @@ opencv-python
 pynetworktables
 imutils
 numpy
-pandas
-matplotlib

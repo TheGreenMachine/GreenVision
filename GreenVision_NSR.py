@@ -3,9 +3,9 @@ import json
 import math
 import os
 import time
-import glob
 import cv2
 import imutils
+from imutils.video import FPS
 import networktables as nt
 import numpy as np
 import csv
@@ -75,44 +75,6 @@ def init_parser_vision():
 
 
 def vision():
-    def calc_distance(coord, screen_y, v_foc_len):
-
-        # d = distance
-        # h = height between camera and target
-        # a = angle = pitch
-        # tan a = h/d (opposite over adjacent)
-        # d = h / tan a
-        #                      .
-        #                     /|
-        #                    / |
-        #                   /  |h
-        #                  /a  |
-        #           camera -----
-        #                    d
-        target_height = data['target-height']
-        cam_height = data['camera-height']
-        h = abs(target_height - cam_height)
-        pitch = math.degrees(coord[1] - screen_c_y) / v_focal_length
-        temp = math.tan(math.radians(pitch))
-        dist = math.fabs(h / temp) if temp != 0 else -1
-        return dist
-
-    def capture_frame(name):
-        images_fp = os.path.join(log_fp, 'images')
-        if not os.path.exists(images_fp):
-            os.makedirs(images_fp)
-        biggest_num = max([file[:-3] for file in os.listdir(images_fp)])
-        fname = '{}{}.jpg'.format(name, biggest_num + 1)
-        cv2.imwrite(images_fp, fname)
-        if debug:
-            print('Frame Captured!')
-
-    def value_changed(table, key, value, isNew):
-        global values
-        values[key] = value
-        if key == 'vision_active' and value:
-            capture_frame('vision')
-
     src = int(args['source']) if args['source'].isdigit() else args['source']
     flip = args['flip']
     rotate = args['rotate']
@@ -192,12 +154,13 @@ def vision():
         rectangle_list = []
         sorted_contours = []
         average_coord_list = []
+        append = average_coord_list.append
         can_log = os.path.exists(log_fp)
         if log and can_log:
             vl_file = open(os.path.join(log_fp, 'vision_log.csv'), mode='a+')
             vl_writer = csv.writer(vl_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-
         while True:
+            fps = FPS().start()
             if crash:
                 raise Exception('Get bamboozled...')
             start_time = time.time()
@@ -211,6 +174,7 @@ def vision():
 
             if view:
                 if not first_read:
+
                     key = cv2.waitKey(30) & 0xFF
                     if key == ord('q'):
                         break
@@ -235,11 +199,16 @@ def vision():
             # remove super small or super big contours that exist due to light noise/objects
             all_contours_area = [c for c in all_contours if 50 < cv2.contourArea(c)]
             filtered_contours = [c for c in all_contours if 50 < cv2.contourArea(c) < 15000]
+
+            filtered_contours_area = [cv2.contourArea(c) for c in all_contours if 50 < cv2.contourArea(c)]
+
             # find the contour with the biggest area so we can further remove contours created from light noise
             if len(all_contours) > 0:
                 biggest_contour_area = max([cv2.contourArea(c) for c in all_contours])
             # create a contour list that removes contours smaller than the biggest * some constant
-            filtered_contours = [c for c in filtered_contours if cv2.contourArea(c) > 0.65 * biggest_contour_area]
+
+            filtered_contours = [c for c in filtered_contours if cv2.contourArea(c) > 0.5 * biggest_contour_area]
+
             # sort contours by left to right, top to bottom
             if len(filtered_contours) > 1:
                 bounding_boxes = [cv2.boundingRect(c) for c in filtered_contours]
@@ -248,26 +217,40 @@ def vision():
                 sorted_contours = list(sorted_contours)
 
             if len(sorted_contours) > 1:
+                # gets ((cx, cy), (width, height), angle of rot) for each contour
                 rectangle_list = [cv2.minAreaRect(c) for c in sorted_contours]
                 for pos, rect in enumerate(rectangle_list):
-                    # positive angle means it's the left tape of a pair
-                    if -90 < rect[2] < -68 and pos != len(rectangle_list) - 1:
-                        print('Angle 1: {}'.format(rect[2]))
-                        if view:
-                            color = (0, 255, 255)
-                            box = np.int0(cv2.boxPoints(rect))
-                            cv2.drawContours(frame, [box], 0, color, 2)
-                        # only add rect if the second rect is the correct angle
-                        if -2 > rectangle_list[pos + 1][2] > -20:
-                            print('Angle 1: {}'.format(rectangle_list[pos+1][2]))
+                    angle_constant = 15
+                    if biggest_contour_area < 10000:
+                        if -77 - angle_constant < rect[2] < -75 + angle_constant and pos != len(rectangle_list) - 1:
+
                             if view:
-                                color = (0, 0, 255)
+                                color = (0, 255, 255)
+                                box = np.int0(cv2.boxPoints(rect))
+                                cv2.drawContours(frame, [box], 0, color, 2)
+                            # only add rect if the second rect is the correct angle
+                            if -13 - angle_constant < rectangle_list[pos + 1][2] < -15 + angle_constant:
+                                if view:
+                                    color = (0, 0, 255)
+                                    rect2 = rectangle_list[pos + 1]
+                                    box2 = np.int0(cv2.boxPoints(rect2))
+                                    cv2.drawContours(frame, [box2], 0, color, 2)
+                                cx = int((rect[0][0] + rectangle_list[pos + 1][0][0]) / 2)
+                                cy = int((rect[0][1] + rectangle_list[pos + 1][0][1]) / 2)
+                                append((cx, cy))
+                    else:
+                        if pos != len(rectangle_list) - 1:
+                            if view:
+                                color = (0, 255, 255)
+                                box = np.int0(cv2.boxPoints(rect))
+                                cv2.drawContours(frame, [box], 0, color, 2)
                                 rect2 = rectangle_list[pos + 1]
                                 box2 = np.int0(cv2.boxPoints(rect2))
+                                color = (255, 255, 0)
                                 cv2.drawContours(frame, [box2], 0, color, 2)
                             cx = int((rect[0][0] + rectangle_list[pos + 1][0][0]) / 2)
                             cy = int((rect[0][1] + rectangle_list[pos + 1][0][1]) / 2)
-                            average_coord_list.append((cx, cy))
+                            append((cx, cy))
 
             if len(average_coord_list) == 1:
                 best_center_average_coords = average_coord_list[index]
@@ -310,27 +293,15 @@ def vision():
             if view:
                 cv2.imshow('Mask', mask)
                 cv2.imshow('Contour Window', frame)
+                cv2.moveWindow('Mask', 300, 250)
+                cv2.moveWindow('Contour Window', 1100, 250)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
             end_time = time.time()
-            if log and can_log:
-                vl_writer.writerow(
-                    [datetime.datetime.now(),
-                     [cv2.contourArea(c) for c in all_contours if cv2.contourArea(c) > 25],
-                     biggest_contour_area,
-                     [cv2.contourArea(c) for c in filtered_contours],
-                     [cv2.contourArea(c) for c in sorted_contours],
-                     len(rectangle_list),  # num rectangles
-                     len(sorted_contours),  # num contours
-                     len(average_coord_list),  # num targets
-                     average_coord_list,
-                     index,
-                     best_center_average_coords,
-                     abs(data['image-width'] / 2 - best_center_average_coords[0]),
-                     end_time - start_time,
-                     image_written])
-                vl_file.flush()
+
+            fps.update()
+            fps.stop()
             if debug:
                 sys.stdout.write("""
 =========================================================
@@ -346,25 +317,43 @@ Best Center Coords: {}
 Index: {}
 Distance: {}
 Pitch: {}
-Yaw: {}\r""".format(
-                    [cv2.contourArea(contour) for contour in all_contours if cv2.contourArea(contour) > 50],
-                    [cv2.contourArea(contour) for contour in filtered_contours],
-                    [cv2.contourArea(contour) for contour in sorted_contours],
-                    biggest_contour_area,
-                    len(rectangle_list),
-                    len(sorted_contours),
-                    len(average_coord_list),
-                    average_coord_list,
-                    best_center_average_coords,
-                    index,
-                    distance,
-                    pitch,
-                    yaw))
+
+Yaw: {}
+FPS: {}
+Execute time: {}\r""".format(filtered_contours_area,
+                             [cv2.contourArea(contour) for contour in sorted_contours],
+                             biggest_contour_area,
+                             len(rectangle_list),
+                             len(sorted_contours),
+                             len(average_coord_list),
+                             average_coord_list,
+                             best_center_average_coords,
+                             index,
+                             distance,
+                             pitch,
+                             yaw,
+                             fps.fps(),
+                             end_time - start_time))
+                if log and can_log:
+                    vl_writer.writerow(
+                        [datetime.datetime.now(),
+                         filtered_contours_area,
+                         biggest_contour_area,
+                         len(sorted_contours),  # num contours
+                         len(rectangle_list),  # num rectangles
+                         len(average_coord_list),  # num targets
+                         average_coord_list,
+                         index,
+                         best_center_average_coords,
+                         abs(data['image-width'] / 2 - best_center_average_coords[0]),
+                         fps.fps(),
+                         end_time - start_time])
+                    vl_file.flush()
+
             filtered_contours.clear()
             sorted_contours.clear()
             rectangle_list.clear()
             average_coord_list.clear()
-            print('Execute Time: {}'.format(end_time - start_time))
 
     except Exception as err:
         if net_table:
