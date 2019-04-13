@@ -211,18 +211,18 @@ def vision():
                 sorted_contours = tuple(sorted_contours)
 
             if len(sorted_contours) > 1:
+                # gets ((cx, cy), (width, height), angle of rot) for each contour
                 rectangle_list = [cv2.minAreaRect(c) for c in sorted_contours]
                 for pos, rect in enumerate(rectangle_list):
-                    # positive angle means it's the left tape of a pair
                     angle_constant = 15
                     if biggest_contour_area < 10000:
-                        if -75 - angle_constant < rect[2] < -75 + angle_constant and pos != len(rectangle_list) - 1:
+                        if -77 - angle_constant < rect[2] < -75 + angle_constant and pos != len(rectangle_list) - 1:
                             if view:
                                 color = (0, 255, 255)
                                 box = np.int0(cv2.boxPoints(rect))
                                 cv2.drawContours(frame, [box], 0, color, 2)
                             # only add rect if the second rect is the correct angle
-                            if -14 - angle_constant < rectangle_list[pos + 1][2] < -14 + angle_constant:
+                            if -13 - angle_constant < rectangle_list[pos + 1][2] < -15 + angle_constant:
                                 if view:
                                     color = (0, 0, 255)
                                     rect2 = rectangle_list[pos + 1]
