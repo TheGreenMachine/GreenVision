@@ -298,7 +298,6 @@ Targets: {}
 Avg_center_list: {}
 Best Center Coords: {}
 Index: {}
-Distance: {}
 Pitch: {}
 Yaw: {}
 FPS: {}
@@ -311,7 +310,6 @@ Execute time: {}\r""".format(filtered_contours_area,
                              average_coord_list,
                              best_center_average_coords,
                              index,
-                             distance,
                              pitch,
                              yaw,
                              fps.fps(),
