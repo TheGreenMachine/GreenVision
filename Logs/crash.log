@@ -97,3 +97,8 @@ Traceback (most recent call last):
   File "/home/ethansky/.local/lib/python3.6/site-packages/imutils/video/fps.py", line 29, in elapsed
     return (self._end - self._start).total_seconds()
 TypeError: unsupported operand type(s) for -: 'NoneType' and 'datetime.datetime'
+ERROR:root:Vision Machine Broke
+Traceback (most recent call last):
+  File "GreenVision_NSR.py", line 327, in vision
+    end_time - start_time))
+IndexError: tuple index out of range

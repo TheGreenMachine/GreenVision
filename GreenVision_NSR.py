@@ -298,7 +298,6 @@ def vision():
             if debug:
                 sys.stdout.write("""
 =========================================================
-Unfiltered Contour Area: {}
 Filtered Contour Area: {}
 Sorted Contour Area: {}
 Biggest Contour Area: {}
@@ -309,7 +308,6 @@ Avg_center_list: {}
 Best Center Coords: {}
 Index: {}
 Pitch: {}
-
 Yaw: {}
 FPS: {}
 Execute time: {}\r""".format(filtered_contours_area,
