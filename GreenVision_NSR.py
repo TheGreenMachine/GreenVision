@@ -57,6 +57,10 @@ def init_parser_vision():
                         default=0,
                         type=int,
                         help='increases color thresholds by 50.0 or less')
+    parser.add_argument('-ath', '--athreshold',
+                        default=0,
+                        type=int,
+                        help='increases color thresholds by 30 or less degrees')
     parser.add_argument('-nt', '--networktables',
                         action='store_true',
                         help='enable network tables')
@@ -80,7 +84,8 @@ def vision():
     rotate = args['rotate']
     view = args['view']
     debug = args['debug']
-    threshold = args['threshold'] if 0 < args['threshold'] < 50 else 0
+    threshold = args['threshold'] if args['threshold'] < 50 else 0
+    angle_threshold = args['athreshold'] if 0 < args['athreshold'] < 30 else 0
     net_table = args['networktables']
     is_pi = args['pi']
     crash = args['crash']
@@ -131,6 +136,7 @@ def vision():
         print('View Flag: {}'.format(view))
         print('Debug Flag: {}'.format(debug))
         print('Threshold Value: {}'.format(threshold))
+        print('Angle Threshold Value: {}'.format(angle_threshold))
         print('Network Tables Flag: {}'.format(net_table))
         print('----------------------------------------------------------------\n')
 
@@ -216,16 +222,15 @@ def vision():
                 # gets ((cx, cy), (width, height), angle of rot) for each contour
                 rectangle_list = [cv2.minAreaRect(c) for c in sorted_contours]
                 for pos, rect in enumerate(rectangle_list):
-                    angle_threshold = 7
                     if biggest_contour_area < 10000:
-                        if -77 - angle_threshold < rect[2] < -75 + angle_threshold and pos != len(rectangle_list) - 1:
+                        if -78 - angle_threshold < rect[2] < -74 + angle_threshold and pos != len(rectangle_list) - 1:
 
                             if view:
                                 color = (0, 255, 255)
                                 box = np.int0(cv2.boxPoints(rect))
                                 cv2.drawContours(frame, [box], 0, color, 2)
                             # only add rect if the second rect is the correct angle
-                            if -13 - angle_threshold < rectangle_list[pos + 1][2] < -15 + angle_threshold:
+                            if -16 - angle_threshold < rectangle_list[pos + 1][2] < -12 + angle_threshold:
                                 if view:
                                     color = (0, 0, 255)
                                     rect2 = rectangle_list[pos + 1]
