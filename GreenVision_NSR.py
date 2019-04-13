@@ -166,7 +166,6 @@ def vision():
             biggest_contour_area = -1
             best_center_average_coords = (-1, -1)
             index = -1
-            distance = -1
             pitch = -999
             yaw = -999
 
@@ -275,7 +274,6 @@ def vision():
                 table.putNumber('center_x', best_center_average_coords[0])
                 table.putNumber('center_y', best_center_average_coords[1])
                 table.putNumber('yaw', yaw)
-                table.putNumber('distance_esti', distance)
                 table.putNumber('contours', len(sorted_contours))
                 table.putNumber('targets', len(average_coord_list))
                 table.putNumber('pitch', pitch)
