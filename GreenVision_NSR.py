@@ -285,7 +285,7 @@ def vision():
                 if not window_moved:
                     cv2.moveWindow('Mask', 300, 250)
                     cv2.moveWindow('Contour Window', 1100, 250)
-                    window_moved = False
+                    window_moved = True
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
