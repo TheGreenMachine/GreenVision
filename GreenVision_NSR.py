@@ -150,6 +150,7 @@ def vision():
 
     first_read = True
     try:
+        all_contours_area = []
         rectangle_list = []
         sorted_contours = []
         average_coord_list = []
@@ -196,19 +197,24 @@ def vision():
             # find contours from mask
             all_contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
             # remove super small or super big contours that exist due to light noise/objects
+            all_contours_area = [c for c in all_contours if 50 < cv2.contourArea(c)]
             filtered_contours = [c for c in all_contours if 50 < cv2.contourArea(c) < 15000]
+
             filtered_contours_area = [cv2.contourArea(c) for c in all_contours if 50 < cv2.contourArea(c)]
+
             # find the contour with the biggest area so we can further remove contours created from light noise
             if len(all_contours) > 0:
-                biggest_contour_area = np.amax(filtered_contours_area)
+                biggest_contour_area = max([cv2.contourArea(c) for c in all_contours])
             # create a contour list that removes contours smaller than the biggest * some constant
+
             filtered_contours = [c for c in filtered_contours if cv2.contourArea(c) > 0.5 * biggest_contour_area]
+
             # sort contours by left to right, top to bottom
             if len(filtered_contours) > 1:
                 bounding_boxes = [cv2.boundingRect(c) for c in filtered_contours]
                 sorted_contours, _ = zip(
                     *sorted(zip(filtered_contours, bounding_boxes), key=lambda b: b[1][0], reverse=False))
-                sorted_contours = tuple(sorted_contours)
+                sorted_contours = list(sorted_contours)
 
             if len(sorted_contours) > 1:
                 # gets ((cx, cy), (width, height), angle of rot) for each contour
@@ -217,6 +223,7 @@ def vision():
                     angle_constant = 15
                     if biggest_contour_area < 10000:
                         if -77 - angle_constant < rect[2] < -75 + angle_constant and pos != len(rectangle_list) - 1:
+
                             if view:
                                 color = (0, 255, 255)
                                 box = np.int0(cv2.boxPoints(rect))
@@ -256,7 +263,14 @@ def vision():
 
             elif len(average_coord_list) > 1:
                 # finds c_x that is closest to the center of the center
+                t1 = time.time()
+                best_center_average_coords = np.amin(average_coord_list, axis=0)
+                t2 = time.time()
+                print('Method 1: {} in {} seconds'.format(best_center_average_coords, ((t2 - t1)*10**5)))
+                t1 = time.time()
                 best_center_average_x = min(average_coord_list, key=lambda xy: abs(xy[0] - data['image-width'] / 2))[0]
+                t2 = time.time()
+                print('Method 2: {} in {} seconds'.format(best_center_average_coords, ((t2 - t1)*10**5)))
                 index = [coord[0] for coord in average_coord_list].index(best_center_average_x)
                 best_center_average_y = average_coord_list[index][1]
                 best_center_average_coords = (best_center_average_x, best_center_average_y)
@@ -271,8 +285,10 @@ def vision():
                 table.putNumber('center_x', best_center_average_coords[0])
                 table.putNumber('center_y', best_center_average_coords[1])
                 table.putNumber('yaw', yaw)
+                table.putNumber('distance_esti', distance)
                 table.putNumber('contours', len(sorted_contours))
                 table.putNumber('targets', len(average_coord_list))
+                table.putNumber('pitch', pitch)
 
             if view:
                 cv2.imshow('Mask', mask)
@@ -289,6 +305,7 @@ def vision():
             if debug:
                 sys.stdout.write("""
 =========================================================
+Unfiltered Contour Area: {}
 Filtered Contour Area: {}
 Sorted Contour Area: {}
 Biggest Contour Area: {}
@@ -300,6 +317,7 @@ Best Center Coords: {}
 Index: {}
 Distance: {}
 Pitch: {}
+
 Yaw: {}
 FPS: {}
 Execute time: {}\r""".format(filtered_contours_area,
@@ -331,7 +349,9 @@ Execute time: {}\r""".format(filtered_contours_area,
                          fps.fps(),
                          end_time - start_time])
                     vl_file.flush()
+
             filtered_contours.clear()
+            sorted_contours.clear()
             rectangle_list.clear()
             average_coord_list.clear()
 
