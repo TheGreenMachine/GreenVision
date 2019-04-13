@@ -85,6 +85,7 @@ def vision():
     is_pi = args['pi']
     crash = args['crash']
     log = args['log']
+    window_moved = False
     sequence = False
 
     # sudo mount /dev/sda1 media/pi/GVLOGGING
@@ -281,8 +282,10 @@ def vision():
             if view:
                 cv2.imshow('Mask', mask)
                 cv2.imshow('Contour Window', frame)
-                cv2.moveWindow('Mask', 300, 250)
-                cv2.moveWindow('Contour Window', 1100, 250)
+                if not window_moved:
+                    cv2.moveWindow('Mask', 300, 250)
+                    cv2.moveWindow('Contour Window', 1100, 250)
+                    window_moved = False
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
