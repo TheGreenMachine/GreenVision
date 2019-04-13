@@ -150,7 +150,6 @@ def vision():
 
     first_read = True
     try:
-        all_contours_area = []
         rectangle_list = []
         sorted_contours = []
         average_coord_list = []
@@ -170,7 +169,6 @@ def vision():
             distance = -1
             pitch = -999
             yaw = -999
-            image_written = False
 
             if view:
                 if not first_read:
@@ -197,7 +195,6 @@ def vision():
             # find contours from mask
             all_contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
             # remove super small or super big contours that exist due to light noise/objects
-            all_contours_area = [c for c in all_contours if 50 < cv2.contourArea(c)]
             filtered_contours = [c for c in all_contours if 50 < cv2.contourArea(c) < 15000]
 
             filtered_contours_area = [cv2.contourArea(c) for c in all_contours if 50 < cv2.contourArea(c)]
@@ -288,6 +285,7 @@ def vision():
                 cv2.imshow('Contour Window', frame)
                 cv2.moveWindow('Mask', 300, 250)
                 cv2.moveWindow('Contour Window', 1100, 250)
+
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
