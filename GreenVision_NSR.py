@@ -220,16 +220,16 @@ def vision():
                 # gets ((cx, cy), (width, height), angle of rot) for each contour
                 rectangle_list = [cv2.minAreaRect(c) for c in sorted_contours]
                 for pos, rect in enumerate(rectangle_list):
-                    angle_constant = 15
+                    angle_threshold = 7
                     if biggest_contour_area < 10000:
-                        if -77 - angle_constant < rect[2] < -75 + angle_constant and pos != len(rectangle_list) - 1:
+                        if -77 - angle_threshold < rect[2] < -75 + angle_threshold and pos != len(rectangle_list) - 1:
 
                             if view:
                                 color = (0, 255, 255)
                                 box = np.int0(cv2.boxPoints(rect))
                                 cv2.drawContours(frame, [box], 0, color, 2)
                             # only add rect if the second rect is the correct angle
-                            if -13 - angle_constant < rectangle_list[pos + 1][2] < -15 + angle_constant:
+                            if -13 - angle_threshold < rectangle_list[pos + 1][2] < -15 + angle_threshold:
                                 if view:
                                     color = (0, 0, 255)
                                     rect2 = rectangle_list[pos + 1]
@@ -263,14 +263,7 @@ def vision():
 
             elif len(average_coord_list) > 1:
                 # finds c_x that is closest to the center of the center
-                t1 = time.time()
-                best_center_average_coords = np.amin(average_coord_list, axis=0)
-                t2 = time.time()
-                print('Method 1: {} in {} seconds'.format(best_center_average_coords, ((t2 - t1)*10**5)))
-                t1 = time.time()
                 best_center_average_x = min(average_coord_list, key=lambda xy: abs(xy[0] - data['image-width'] / 2))[0]
-                t2 = time.time()
-                print('Method 2: {} in {} seconds'.format(best_center_average_coords, ((t2 - t1)*10**5)))
                 index = [coord[0] for coord in average_coord_list].index(best_center_average_x)
                 best_center_average_y = average_coord_list[index][1]
                 best_center_average_coords = (best_center_average_x, best_center_average_y)
