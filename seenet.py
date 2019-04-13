@@ -12,23 +12,22 @@ def program_description():
 
 def view():
     # global values
-    msg = "\rw, h: ({} {});" \
-          " coords: ({} {});" \
-          " yaw, pitch: ({}, {});" \
-          " dist: {};" \
+    msg = "\rcoords: ({} {});" \
+          " yaw, pitch: ({:.2f}, {:.2f});" \
           " contours: {};" \
-          " targets: {}".format(
-        int(values['width']), int(values['height']),
+          " targets: {}," \
+          " fps: {}".format(
         int(values['center_x']), int(values['center_y']),
         values['yaw'], values['pitch'],
-        values['distance_esti'],
         int(values['contours']),
-        int(values['targets']))
+        int(values['targets']),
+        int(values['fps']))
     if args['log']:
         with open('vision_net_values.csv', mode='a+') as vnv_file:
             vnv_writer = csv.writer(vnv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            vnv_writer.writerow([datetime.datetime.now(), int(values['center_x']), int(values['center_y']), int(values['contours']),
-                                 int(values['targets'])])
+            vnv_writer.writerow(
+                [datetime.datetime.now(), int(values['center_x']), int(values['center_y']), int(values['contours']),
+                 int(values['targets'])])
     sys.stdout.write(msg)
 
 
@@ -47,10 +46,10 @@ def start_listener():
     table.addEntryListener(value_changed, key='center_x')
     table.addEntryListener(value_changed, key='center_y')
     table.addEntryListener(value_changed, key='yaw')
-    table.addEntryListener(value_changed, key='distance_esti')
     table.addEntryListener(value_changed, key='contours')
     table.addEntryListener(value_changed, key='targets')
     table.addEntryListener(value_changed, key='pitch')
+    table.addEntryListener(value_changed, key='fps')
 
 
 parser = argparse.ArgumentParser(description=program_description())
@@ -60,17 +59,15 @@ parser.add_argument('-l', '--log',
                     help='enable logging')
 args = vars(parser.parse_args())
 values = {}
-values['visionX'] = -99
-values['visionY'] = -99
 values['width'] = -99
 values['height'] = -99
 values['center_x'] = -99
 values['center_y'] = -99
-values['distance_esti'] = -99
 values['contours'] = -99
 values['targets'] = -99
 values['yaw'] = -99
 values['pitch'] = -99
+values['fps'] = -99
 
 nt.NetworkTables.initialize(server='10.18.16.2')
 table = nt.NetworkTables.getTable('SmartDashboard')
