@@ -290,6 +290,7 @@ def vision():
 
             fps.update()
             fps.stop()
+            curr_fps = fps.fps()
             if debug:
                 sys.stdout.write("""
 =========================================================
@@ -316,7 +317,7 @@ Execute time: {}\r""".format(filtered_contours_area,
                              index,
                              pitch,
                              yaw,
-                             fps.fps(),
+                             curr_fps,
                              end_time - start_time))
                 if log and can_log:
                     vl_writer.writerow(
@@ -330,7 +331,7 @@ Execute time: {}\r""".format(filtered_contours_area,
                          index,
                          best_center_average_coords,
                          abs(data['image-width'] / 2 - best_center_average_coords[0]),
-                         fps.fps(),
+                         curr_fps,
                          end_time - start_time])
                     vl_file.flush()
 
@@ -341,7 +342,7 @@ Execute time: {}\r""".format(filtered_contours_area,
                 table.putNumber('contours', len(sorted_contours))
                 table.putNumber('targets', len(average_coord_list))
                 table.putNumber('pitch', pitch)
-                table.putNumber('fps', fps.fps())
+                table.putNumber('fps', curr_fps)
             filtered_contours.clear()
             sorted_contours.clear()
             rectangle_list.clear()
