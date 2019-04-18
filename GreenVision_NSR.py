@@ -60,7 +60,11 @@ def init_parser_vision():
     parser.add_argument('-ath', '--athreshold',
                         default=0,
                         type=int,
-                        help='increases color thresholds by 30 or less degrees')
+                        help='increases angle thresholds by 30 or less degrees')
+    parser.add_argument('-fth', '--fthreshold',
+                        default=0.5,
+                        type=float,
+                        help='increase filter threshold by 1.0 or less')
     parser.add_argument('-nt', '--networktables',
                         action='store_true',
                         help='enable network tables')
@@ -86,6 +90,7 @@ def vision():
     debug = args['debug']
     threshold = args['threshold'] if args['threshold'] < 50 else 0
     angle_threshold = args['athreshold'] if 0 < args['athreshold'] < 30 else 0
+    filter_threshold = args['fthreshold'] if 0 < args['fthreshold'] <= 0.8 else 0.5
     net_table = args['networktables']
     is_pi = args['pi']
     crash = args['crash']
@@ -209,7 +214,8 @@ def vision():
                 biggest_contour_area = max([cv2.contourArea(c) for c in all_contours])
             # create a contour list that removes contours smaller than the biggest * some constant
 
-            filtered_contours = [c for c in filtered_contours if cv2.contourArea(c) > 0.5 * biggest_contour_area]
+            filtered_contours = [c for c in filtered_contours if
+                                 cv2.contourArea(c) > filter_threshold * biggest_contour_area]
 
             # sort contours by left to right, top to bottom
             if len(filtered_contours) > 1:
