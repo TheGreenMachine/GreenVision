@@ -10,8 +10,8 @@ if [ -e /dev/sda1 ]
 then sudo mount -o rw,users,umask=000 /dev/sda1 /media/pi/GVLOGGING
 	echo "Mounting logging USB..."
 	sleep 1
-	python3 GreenVision_NSR.py -s 0 -d -nt --pi -l -ath 7 -th 5
+	python3 GreenVision_NSR.py -s 0 -d -nt --pi -l -ath 7 -th 5 -fth .65
 else
 	echo "Failed to mount USB!"
-	python3 GreenVision_NSR.py -s 0 -d -nt --pi -ath 7 -th 5
+	python3 GreenVision_NSR.py -s 0 -d -nt --pi -ath 7 -th 5 -fth .65
 fi
