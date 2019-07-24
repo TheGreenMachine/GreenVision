@@ -19,103 +19,21 @@ file_path = os.path.join(cwd, 'values.json')
 with open(file_path) as json_file:
     data = json.load(json_file)
 
-
-def program_description():
-    return 'Team 1816 Vision Processing Utility for the 2019 Deep Space Season'
-
-
-def program_help():
-    print(parser.description)
-    print("""
-Usage: GreenVision.py [program] [-optional arguments]
-     
-Available parameters:
-WIP
-""")
-
-
-def init_parser_vision():
-    parser.add_argument('-src', '--source',
-                        required=True,
-                        type=str,
-                        help='set source for processing: [int] for camera, [path] for file')
-    parser.add_argument('-r', '--rotate',
-                        action='store_true',
-                        default=False,
-                        help='rotate 90 degrees')
-    parser.add_argument('-f', '--flip',
-                        action='store_true',
-                        default=False,
-                        help='flip camera image')
-    parser.add_argument('-v', '--view',
-                        action='store_true',
-                        help='enable contour and mask window')
-    parser.add_argument('-d', '--debug',
-                        action='store_true',
-                        help='enable debug output to console')
-    parser.add_argument('-th', '--threshold',
-                        default=0,
-                        type=int,
-                        help='increases color thresholds by 50.0 or less')
-    parser.add_argument('-ath', '--athreshold',
-                        default=0,
-                        type=int,
-                        help='increases angle thresholds by 30 or less degrees')
-    parser.add_argument('-fth', '--fthreshold',
-                        default=0.5,
-                        type=float,
-                        help='increase filter threshold by 1.0 or less')
-    parser.add_argument('-nt', '--networktables',
-                        action='store_true',
-                        help='enable network tables')
-    parser.add_argument('--pi',
-                        action='store_true',
-                        default=False,
-                        help='must enable for the script to work the pi -- GVLogging USB must be plugged in')
-    parser.add_argument('--crash',
-                        action='store_true',
-                        default=False,
-                        help='enable to simulate a crash during vision loop')
-    parser.add_argument('-l', '--log',
-                        action='store_true',
-                        default=False,
-                        help='enable logging')
-
-
 def vision():
-    src = int(args['source']) if args['source'].isdigit() else args['source']
-    flip = args['flip']
-    rotate = args['rotate']
-    view = args['view']
-    debug = args['debug']
-    threshold = args['threshold'] if args['threshold'] < 50 else 0
-    angle_threshold = args['athreshold'] if 0 < args['athreshold'] < 30 else 0
-    filter_threshold = args['fthreshold'] if 0 < args['fthreshold'] <= 0.8 else 0.5
-    net_table = args['networktables']
-    is_pi = args['pi']
-    crash = args['crash']
-    log = args['log']
+    src = 0
+    flip = False
+    rotate = False
+    view = True
+    debug = True
+    threshold = 30
+    #angle_threshold = args['athreshold'] if 0 < args['athreshold'] < 30 else 0
+    #filter_threshold = .5
+    net_table = True
+    is_pi = False
+    crash = False
+    log = False
     window_moved = False
     sequence = False
-
-    # sudo mount /dev/sda1 media/pi/GVLOGGING
-
-    # logging_fp = '/media/{}/GVLOGGING/'.format(getpass.getuser()) if is_pi else os.path.join(os.getcwd(), 'Logs')
-    # /media/pi/GVLOGGING or /home/[user]/Documents/GreenVision/Logs
-
-#    log_fp = os.path.join(os.getcwd(), 'Logs')
-#    if is_pi:
-#        print('Log running in PI mode...')
-#        log_fp = '/media/pi/GVLOGGING'
-#        logging.basicConfig(level=logging.DEBUG,
-#                            filename=os.path.join(log_fp, 'crash.log'),
-#                            format='%(asctime)s %(levelname)-8s %(message)s',
-#                            datefmt='%Y-%m-%d %H:%M:%S')
-#    elif not is_pi and getpass.getuser() != 'pi':
-#        print('Log running in laptop mode...')
-#        if not os.path.exists(log_fp):
-#            os.makedirs(log_fp)
-#        logging.basicConfig(level=logging.DEBUG, filename=os.path.join(log_fp, 'crash.log'))
 
     cap = cv2.VideoCapture(src)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
@@ -141,7 +59,6 @@ def vision():
         print('View Flag: {}'.format(view))
         print('Debug Flag: {}'.format(debug))
         print('Threshold Value: {}'.format(threshold))
-        print('Angle Threshold Value: {}'.format(angle_threshold))
         print('Network Tables Flag: {}'.format(net_table))
         print('----------------------------------------------------------------\n')
 
@@ -204,7 +121,7 @@ def vision():
         # find contours from mask
         all_contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         # remove super small or super big contours that exist due to light noise/objects
-        filtered_contours = [c for c in all_contours if 50 < cv2.contourArea(c) < 15000]
+        filtered_contours = [c for c in all_contours if 10000 < cv2.contourArea(c) < 100000]
 
         filtered_contours_area = [cv2.contourArea(c) for c in all_contours if 50 < cv2.contourArea(c)]
 
@@ -214,49 +131,31 @@ def vision():
         # create a contour list that removes contours smaller than the biggest * some constant
 
         filtered_contours = [c for c in filtered_contours if
-                                cv2.contourArea(c) > filter_threshold * biggest_contour_area]
-
+                                cv2.contourArea(c) == biggest_contour_area]
+        for c in filtered_contours:
+          print(cv2.contourArea(c))
         # sort contours by left to right, top to bottom
-        if len(filtered_contours) > 1:
-            bounding_boxes = [cv2.boundingRect(c) for c in filtered_contours]
-            sorted_contours, _ = zip(
-                *sorted(zip(filtered_contours, bounding_boxes), key=lambda b: b[1][0], reverse=False))
-            sorted_contours = list(sorted_contours)
+        # if len(filtered_contours) > 0:
+        #     bounding_boxes = [cv2.boundingRect(c) for c in filtered_contours]
+        #     sorted_contours, _ = zip(
+        #         *sorted(zip(filtered_contours, bounding_boxes), key=lambda b: b[1][0], reverse=False))
+        #     sorted_contours = list(sorted_contours)
 
-        if len(sorted_contours) > 1:
+        if len(filtered_contours) > 0:
             # gets ((cx, cy), (width, height), angle of rot) for each contour
-            rectangle_list = [cv2.minAreaRect(c) for c in sorted_contours]
+            rectangle_list = [cv2.minAreaRect(c) for c in filtered_contours]
             for pos, rect in enumerate(rectangle_list):
-                if biggest_contour_area < 10000:
-                    if -78 - angle_threshold < rect[2] < -74 + angle_threshold and pos != len(rectangle_list) - 1:
+                if biggest_contour_area < 100000:
+                    if True:
 
                         if view:
                             color = (0, 255, 255)
                             box = np.int0(cv2.boxPoints(rect))
                             cv2.drawContours(frame, [box], 0, color, 2)
-                        # only add rect if the second rect is the correct angle
-                        if -16 - angle_threshold < rectangle_list[pos + 1][2] < -12 + angle_threshold:
-                            if view:
-                                color = (0, 0, 255)
-                                rect2 = rectangle_list[pos + 1]
-                                box2 = np.int0(cv2.boxPoints(rect2))
-                                cv2.drawContours(frame, [box2], 0, color, 2)
-                            cx = int((rect[0][0] + rectangle_list[pos + 1][0][0]) / 2)
-                            cy = int((rect[0][1] + rectangle_list[pos + 1][0][1]) / 2)
+
+                            cx = int((rect[0][0]))
+                            cy = int((rect[0][1]))
                             append((cx, cy))
-                else:
-                    if pos != len(rectangle_list) - 1:
-                        if view:
-                            color = (0, 255, 255)
-                            box = np.int0(cv2.boxPoints(rect))
-                            cv2.drawContours(frame, [box], 0, color, 2)
-                            rect2 = rectangle_list[pos + 1]
-                            box2 = np.int0(cv2.boxPoints(rect2))
-                            color = (255, 255, 0)
-                            cv2.drawContours(frame, [box2], 0, color, 2)
-                        cx = int((rect[0][0] + rectangle_list[pos + 1][0][0]) / 2)
-                        cy = int((rect[0][1] + rectangle_list[pos + 1][0][1]) / 2)
-                        append((cx, cy))
 
         if len(average_coord_list) == 1:
             best_center_average_coords = average_coord_list[index]
@@ -266,19 +165,6 @@ def vision():
             if view:
                 cv2.line(frame, best_center_average_coords, center_coords, (0, 255, 0), 2)
                 cv2.line(frame, best_center_average_coords, best_center_average_coords, (255, 0, 0), 5)
-
-        elif len(average_coord_list) > 1:
-            # finds c_x that is closest to the center of the center
-            best_center_average_x = min(average_coord_list, key=lambda xy: abs(xy[0] - data['image-width'] / 2))[0]
-            index = [coord[0] for coord in average_coord_list].index(best_center_average_x)
-            best_center_average_y = average_coord_list[index][1]
-            best_center_average_coords = (best_center_average_x, best_center_average_y)
-            yaw = math.degrees(math.atan((best_center_average_coords[0] - screen_c_x) / h_focal_length))
-            pitch = math.degrees(math.atan((best_center_average_coords[1] - screen_c_y) / v_focal_length))
-            if view:
-                cv2.line(frame, best_center_average_coords, center_coords, (0, 255, 0), 2)
-                for coord in average_coord_list:
-                    cv2.line(frame, coord, coord, (255, 0, 0), 5)
 
         if view:
             cv2.imshow('Mask', mask)
@@ -324,21 +210,6 @@ Execute time: {}\r""".format(filtered_contours_area,
                             yaw,
                             curr_fps,
                             end_time - start_time))
-            if log and can_log:
-                vl_writer.writerow(
-                    [datetime.datetime.now(),
-                        filtered_contours_area,
-                        biggest_contour_area,
-                        len(sorted_contours),  # num contours
-                        len(rectangle_list),  # num rectangles
-                        len(average_coord_list),  # num targets
-                        average_coord_list,
-                        index,
-                        best_center_average_coords,
-                        abs(data['image-width'] / 2 - best_center_average_coords[0]),
-                        curr_fps,
-                        end_time - start_time])
-                vl_file.flush()
 
         if net_table:
             table.putNumber('center_x', best_center_average_coords[0])
@@ -364,14 +235,4 @@ Execute time: {}\r""".format(filtered_contours_area,
 
     cap.release()
     cv2.destroyAllWindows()
-
-
-parser = argparse.ArgumentParser(description=program_description(), add_help=False)
-parser.add_argument('-h', '--help', action='store_true')
-init_parser_vision()
-args = vars(parser.parse_args())
-if args['help']:
-    program_help()
-else:
-    del args['help']
-    vision()
+vision()

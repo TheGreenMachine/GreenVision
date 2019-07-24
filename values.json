@@ -1,12 +1,12 @@
 {
   "server-ip": "10.18.16.2",
-  "lower-color-list": [
-    60.0,
-    55,
-    110
+   "lower-color-list": [
+    0,
+    60,
+    190
   ],
   "upper-color-list": [
-    100.0,
+    20,
     255,
     255
   ],
