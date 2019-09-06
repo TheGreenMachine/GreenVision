@@ -28,10 +28,15 @@ def program_help():
     print(parser.description)
     print("""
 Usage: GreenVision.py [program] [-optional arguments]
-     
+
 Available parameters:
 WIP
 """)
+
+def capture_frame(frame, table, value):
+    if value:
+        cv2.imwrite('/tmp/gv_frame.jpg', frame),
+        table.putBoolean('capture_frame', False)
 
 
 def init_parser_vision():
@@ -92,6 +97,7 @@ def vision():
     crash = args['crash']
     window_moved = False
     sequence = False
+    frame = []
 
     cap = cv2.VideoCapture(src)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
@@ -108,6 +114,8 @@ def vision():
         table.putNumber('targets', -1)
         table.putNumber('width', data['image-width'])
         table.putNumber('height', data['image-height'])
+        table.putBoolean('capture_frame', False)
+        table.addEntryListener(lambda table, key, value, isNew: capture_frame(frame, table, value), key='capture_frame')
         # values = {'vision_active': False}
         # table.addEntryListener(value_changed, key='vision_active')
 
