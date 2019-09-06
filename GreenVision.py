@@ -90,7 +90,6 @@ def vision():
     net_table = args['networktables']
     is_pi = args['pi']
     crash = args['crash']
-    log = args['log']
     window_moved = False
     sequence = False
 
