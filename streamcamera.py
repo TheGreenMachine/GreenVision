@@ -95,6 +95,8 @@ zed = sl.Camera()
 init_params = sl.InitParameters()
 init_params.camera_resolution = sl.RESOLUTION.RESOLUTION_VGA
 init_params.camera_fps = 30
+init_params.coordinate_system = sl.COORDINATE_SYSTEM.COORDINATE_SYSTEM_RIGHT_HANDED_Y_UP
+init_params.coordinate_units = sl.UNIT.UNIT_INCH
 
 # Open the camera
 err = zed.open(init_params)
@@ -105,6 +107,11 @@ image_zed = sl.Mat(zed.get_resolution().width, zed.get_resolution().height, sl.M
 image_ocv = image_zed.get_data()
 
 runtime_parameters = sl.RuntimeParameters()
+
+tracking_parameters = sl.TrackingParameters()
+err = zed.enable_tracking(tracking_parameters)
+if err != sl.ERROR_CODE.SUCCESS :
+    exit(-1)
 
 streamer = Streamer(port1, require_login)
 
@@ -170,6 +177,10 @@ def vision():
     average_coord_list = []
     append = average_coord_list.append
 
+    zed_pose = sl.Pose()
+    tx, ty, tz = 0, 0, 0
+    ox, oy, oz, ow = 0, 0, 0, 0
+
     while True:
         fps = FPS().start()
         if crash:
@@ -190,6 +201,22 @@ def vision():
             # Use get_data() to get the numpy array
             frame = image_zed.get_data()
             # Display the left image from the numpy array
+
+            # Get ZED positional tracking pose
+            zed.get_position(zed_pose, sl.REFERENCE_FRAME.REFERENCE_FRAME_WORLD)
+
+            # Get translation information
+            translation = sl.Translation()
+            tx = round(zed_pose.get_translation(translation).get()[0], 3)
+            ty = round(zed_pose.get_translation(translation).get()[1], 3)
+            tz = round(zed_pose.get_translation(translation).get()[2], 3)
+
+            # Get orientation information
+            orientation = sl.Orientation()
+            ox = round(zed_pose.get_orientation(orientation).get()[0], 3)
+            oy = round(zed_pose.get_orientation(orientation).get()[1], 3)
+            oz = round(zed_pose.get_orientation(orientation).get()[2], 3)
+            ow = round(zed_pose.get_orientation(orientation).get()[3], 3)
 
         if frame is None:
             continue
@@ -310,6 +337,9 @@ Pitch: {pitch}
 Yaw: {yaw}
 FPS: {curr_fps}
 Execute time: {end_time - start_time}
+Pose:
+Translation: {tx} {ty} {tz}
+Orientation: {ox} {oy} {oz} {ow}
 """
 
         if net_table:
@@ -331,6 +361,7 @@ Execute time: {end_time - start_time}
 
     print("Exiting...")
     cv2.destroyAllWindows()
+    zed.disable_tracking()
     zed.close()
 
 
