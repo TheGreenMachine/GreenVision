@@ -205,7 +205,7 @@ def vision():
         # remove super small or super big contours that exist due to light noise/objects
         filtered_contours = [c for c in all_contours if 50 < cv2.contourArea(c) < 15000]
 
-        filtered_contours_area = [cv2.contourArea(c) for c in all_contours if 50 < cv2.contourArea(c)]
+        filtered_contours_area = [cv2.contourArea(c) for c in filtered_contours]
 
         # find the contour with the biggest area so we can further remove contours created from light noise
         if len(all_contours) > 0:
