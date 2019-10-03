@@ -336,6 +336,9 @@ Execute time: {}\r""".format(filtered_contours_area,
         rectangle_list.clear()
         average_coord_list.clear()
 
+        except KeyboardInterrupt:
+            break
+
 
     print("Exiting...")
     cv2.destroyAllWindows()
