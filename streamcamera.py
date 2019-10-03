@@ -1,4 +1,3 @@
-from flask_opencv_streamer.streamer import Streamer
 import cv2
 import pyzed.sl as sl
 import numpy as np
@@ -83,7 +82,7 @@ def init_parser_vision():
 NetworkTables.initialize("10.18.16.2")
 camera_table = NetworkTables.getTable("CameraPublisher")
 table = camera_table.getSubTable("Camera")
-table.getEntry("streams").setStringArray(["mjpg:http://10.18.16.142:3030/video_feed"])
+table.getEntry("streams").setStringArray(["mjpg:http://10.18.16.142:3030/"])
 port1 = 3030
 port2 = 3031
 require_login = False
@@ -106,7 +105,10 @@ image_ocv = image_zed.get_data()
 
 runtime_parameters = sl.RuntimeParameters()
 
-streamer = Streamer(port1, require_login)
+stream = sl.StreamingParameters()
+stream.codec = sl.STREAMING_CODEC.STREAMING_CODEC_AVCHD
+stream.bitrate = 4000
+zed.enable_streaming(stream)
 
 
 
@@ -275,10 +277,6 @@ def vision():
         new_h = 320
         new_w = 240
         resize = cv2.resize(frame, (new_w, new_h))
-        streamer.update_frame(resize)
-
-        if not streamer.is_streaming:
-            streamer.start_streaming()
 
         if view:
             cv2.imshow('Mask', mask)
@@ -337,7 +335,10 @@ Execute time: {}\r""".format(filtered_contours_area,
         average_coord_list.clear()
 
 
+    print('Cleaning up...')
     cv2.destroyAllWindows()
+    zed.disable_streaming()
+    zed.close()
 
 
 parser = argparse.ArgumentParser(description=program_description(), add_help=False)
