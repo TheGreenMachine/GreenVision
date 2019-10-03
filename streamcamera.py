@@ -337,7 +337,9 @@ Execute time: {}\r""".format(filtered_contours_area,
         average_coord_list.clear()
 
 
+    print("Exiting...")
     cv2.destroyAllWindows()
+    zed.close()
 
 
 parser = argparse.ArgumentParser(description=program_description(), add_help=False)
