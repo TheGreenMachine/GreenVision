@@ -13,7 +13,7 @@ import logging
 import datetime
 import getpass
 import sys
-
+from flask_opencv_streamer.streamer import Streamer
 cwd = os.getcwd()
 file_path = os.path.join(cwd, 'values.json')
 with open(file_path) as json_file:
@@ -104,9 +104,14 @@ def vision():
     cap = cv2.VideoCapture(src)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, data['image-width'])
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, data['image-height'])
+    port1 = 3030
+    streamer = Streamer(port1, False)
 
     if net_table:
         nt.NetworkTables.initialize(server=data['server-ip'])
+        camera_table = nt.NetworkTables.getTable("CameraPublisher")
+        sub_table = camera_table.getSubTable("Camera")
+        sub_table.getEntry("streams").setStringArray(["mjpg:http://10.18.16.16:3030/video_feed"])
         table = nt.NetworkTables.getTable('SmartDashboard')
         if table:
             print('table OK')
@@ -262,14 +267,20 @@ def vision():
                 cv2.line(frame, best_center_average_coords, center_coords, (0, 255, 0), 2)
                 for coord in average_coord_list:
                     cv2.line(frame, coord, coord, (255, 0, 0), 5)
+        new_h = 320
+        new_w = 240
+        resize = cv2.resize(frame, (new_w, new_h))
+        streamer.update_frame(resize)
 
-        if view:
-            cv2.imshow('Mask', mask)
-            cv2.imshow('Contour Window', frame)
-            if not window_moved:
-                cv2.moveWindow('Mask', 300, 250)
-                cv2.moveWindow('Contour Window', 1100, 250)
-                window_moved = True
+        if not streamer.is_streaming:
+            streamer.start_streaming()
+        # if view:
+        #     cv2.imshow('Mask', mask)
+        #     cv2.imshow('Contour Window', frame)
+        #     if not window_moved:
+        #         cv2.moveWindow('Mask', 300, 250)
+        #         cv2.moveWindow('Contour Window', 1100, 250)
+        #         window_moved = True
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
