@@ -142,12 +142,12 @@ def vision():
 
     if debug:
         print('----------------------------------------------------------------')
-        print('Current Source: {}'.format(src))
-        print('View Flag: {}'.format(view))
-        print('Debug Flag: {}'.format(debug))
-        print('Threshold Value: {}'.format(threshold))
-        print('Angle Threshold Value: {}'.format(angle_threshold))
-        print('Network Tables Flag: {}'.format(net_table))
+        print(f'Current Source: {src}')
+        print(f'View Flag: {view}')
+        print(f'Debug Flag: {debug}')
+        print(f'Threshold Value: {threshold}')
+        print(f'Angle Threshold Value: {angle_threshold}')
+        print(f'Network Tables Flag: {net_table}')
         print('----------------------------------------------------------------\n')
 
     v_focal_length = data['camera_matrix'][1][1]
@@ -205,7 +205,7 @@ def vision():
         # remove super small or super big contours that exist due to light noise/objects
         filtered_contours = [c for c in all_contours if 50 < cv2.contourArea(c) < 15000]
 
-        filtered_contours_area = [cv2.contourArea(c) for c in all_contours if 50 < cv2.contourArea(c)]
+        filtered_contours_area = [cv2.contourArea(c) for c in filtered_contours]
 
         # find the contour with the biggest area so we can further remove contours created from light noise
         if len(all_contours) > 0:
@@ -295,33 +295,22 @@ def vision():
         fps.stop()
         curr_fps = fps.fps()
         if debug:
-            sys.stdout.write("""
+            sys.stdout.write(f"""
 =========================================================
-Filtered Contour Area: {}
-Sorted Contour Area: {}
-Biggest Contour Area: {}
-Rectangle List: {}
-Contours: {}
-Targets: {}
-Avg_center_list: {}
-Best Center Coords: {}
-Index: {}
-Pitch: {}
-Yaw: {}
-FPS: {}
-Execute time: {}\r""".format(filtered_contours_area,
-                             [cv2.contourArea(contour) for contour in sorted_contours],
-                             biggest_contour_area,
-                             len(rectangle_list),
-                             len(sorted_contours),
-                             len(average_coord_list),
-                             average_coord_list,
-                             best_center_average_coords,
-                             index,
-                             pitch,
-                             yaw,
-                             curr_fps,
-                             end_time - start_time))
+Filtered Contour Area: {filtered_contours_area}
+Sorted Contour Area: {[cv2.contourArea(contour) for contour in sorted_contours]}
+Biggest Contour Area: {biggest_contour_area}
+Rectangle List: {len(rectangle_list)}
+Contours: {len(sorted_contours)}
+Targets: {len(average_coord_list)}
+Avg_center_list: {average_coord_list}
+Best Center Coords: {best_center_average_coords}
+Index: {index}
+Pitch: {pitch}
+Yaw: {yaw}
+FPS: {curr_fps}
+Execute time: {end_time - start_time}
+"""
 
         if net_table:
             table.putNumber('center_x', best_center_average_coords[0])
@@ -336,8 +325,13 @@ Execute time: {}\r""".format(filtered_contours_area,
         rectangle_list.clear()
         average_coord_list.clear()
 
+        except KeyboardInterrupt:
+            break
 
+
+    print("Exiting...")
     cv2.destroyAllWindows()
+    zed.close()
 
 
 parser = argparse.ArgumentParser(description=program_description(), add_help=False)
