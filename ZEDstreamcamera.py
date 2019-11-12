@@ -99,6 +99,7 @@ init_params.camera_fps = 30
 # Open the camera
 err = zed.open(init_params)
 if err != sl.ERROR_CODE.SUCCESS:
+    print("error")
     exit(-1)
 
 image_zed = sl.Mat(zed.get_resolution().width, zed.get_resolution().height, sl.MAT_TYPE.MAT_TYPE_8U_C4)
@@ -310,7 +311,7 @@ Pitch: {pitch}
 Yaw: {yaw}
 FPS: {curr_fps}
 Execute time: {end_time - start_time}
-"""
+""")
 
         if net_table:
             table.putNumber('center_x', best_center_average_coords[0])
@@ -324,10 +325,6 @@ Execute time: {end_time - start_time}
         sorted_contours.clear()
         rectangle_list.clear()
         average_coord_list.clear()
-
-        except KeyboardInterrupt:
-            break
-
 
     print("Exiting...")
     cv2.destroyAllWindows()
