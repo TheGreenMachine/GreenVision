@@ -94,6 +94,7 @@ zed = sl.Camera()
 # Set configuration parameters
 init_params = sl.InitParameters()
 init_params.camera_resolution = sl.RESOLUTION.RESOLUTION_VGA
+
 init_params.camera_fps = 30
 
 # Open the camera
@@ -102,11 +103,12 @@ if err != sl.ERROR_CODE.SUCCESS:
     print("error")
     exit(-1)
 
-image_zed = sl.Mat(zed.get_resolution().width, zed.get_resolution().height, sl.MAT_TYPE.MAT_TYPE_8U_C4)
-image_ocv = image_zed.get_data()
-
+left_image_zed = sl.Mat(zed.get_resolution().width, zed.get_resolution().height, sl.MAT_TYPE.MAT_TYPE_8U_C4)
+right_image_zed = sl.Mat(zed.get_resolution().width, zed.get_resolution().height, sl.MAT_TYPE.MAT_TYPE_8U_C4)
+depth_image_zed = sl.Mat(zed.get_resolution().width, zed.get_resolution().height, sl.MAT_TYPE.MAT_TYPE_8U_C4)
+point_cloud = sl.Mat()
 runtime_parameters = sl.RuntimeParameters()
-
+runtime_parameters.sensing_mode = sl.SENSING_MODE.SENSING_MODE_STANDARD
 streamer = Streamer(port1, require_login)
 
 
@@ -187,9 +189,17 @@ def vision():
         frame = None
         if zed.grab(runtime_parameters) == sl.ERROR_CODE.SUCCESS:
             # Retrieve the left image in sl.Mat
-            zed.retrieve_image(image_zed, sl.VIEW.VIEW_LEFT)
+            zed.retrieve_image(left_image_zed, sl.VIEW.VIEW_LEFT)
+            zed.retrieve_image(right_image_zed, sl.VIEW.VIEW_RIGHT)
+            zed.retrieve_image(depth_image_zed, sl.VIEW.VIEW_DEPTH, sl.MEM.MEM_CPU, int(zed.get_resolution().width), int(zed.get_resolution().height))
+            # Retrieve the RGBA point cloud in half resolution
+            zed.retrieve_measure(point_cloud, sl.MEASURE.MEASURE_XYZRGBA, sl.MEM.MEM_CPU, int(zed.get_resolution().width),
+                                 int(zed.get_resolution().height))
+
+            depth_image_ocv = depth_image_zed.get_data()
             # Use get_data() to get the numpy array
-            frame = image_zed.get_data()
+            frame = left_image_zed.get_data()
+            view_frame = right_image_zed.get_data()
             # Display the left image from the numpy array
 
         if frame is None:
@@ -231,13 +241,13 @@ def vision():
                     if -78 - angle_threshold < rect[2] < -74 + angle_threshold and pos != len(rectangle_list) - 1:
                         color = (0, 255, 255)
                         box = np.int0(cv2.boxPoints(rect))
-                        cv2.drawContours(frame, [box], 0, color, 2)
+                        cv2.drawContours(view_frame, [box], 0, color, 2)
                         # only add rect if the second rect is the correct angle
                         if -16 - angle_threshold < rectangle_list[pos + 1][2] < -12 + angle_threshold:
                             color = (0, 0, 255)
                             rect2 = rectangle_list[pos + 1]
                             box2 = np.int0(cv2.boxPoints(rect2))
-                            cv2.drawContours(frame, [box2], 0, color, 2)
+                            cv2.drawContours(view_frame, [box2], 0, color, 2)
                             cx = int((rect[0][0] + rectangle_list[pos + 1][0][0]) / 2)
                             cy = int((rect[0][1] + rectangle_list[pos + 1][0][1]) / 2)
                             append((cx, cy))
@@ -245,22 +255,27 @@ def vision():
                     if pos != len(rectangle_list) - 1:
                         color = (0, 255, 255)
                         box = np.int0(cv2.boxPoints(rect))
-                        cv2.drawContours(frame, [box], 0, color, 2)
+                        cv2.drawContours(view_frame, [box], 0, color, 2)
                         rect2 = rectangle_list[pos + 1]
                         box2 = np.int0(cv2.boxPoints(rect2))
                         color = (255, 255, 0)
-                        cv2.drawContours(frame, [box2], 0, color, 2)
+                        cv2.drawContours(view_frame, [box2], 0, color, 2)
                         cx = int((rect[0][0] + rectangle_list[pos + 1][0][0]) / 2)
                         cy = int((rect[0][1] + rectangle_list[pos + 1][0][1]) / 2)
                         append((cx, cy))
 
         if len(average_coord_list) == 1:
             best_center_average_coords = average_coord_list[index]
+            point3D = point_cloud.get_value(best_center_average_coords[0], best_center_average_coords[1])
+            print(point3D)
+            distance = math.sqrt(
+                point3D[1][0] * point3D[1][0] + point3D[1][1] * point3D[1][1] + point3D[1][2] * point3D[1][2])
+            print("DISTANCE:" + str(distance))
             index = 0
             yaw = math.degrees(math.atan((best_center_average_coords[0] - screen_c_x) / h_focal_length))
             pitch = math.degrees(math.atan((best_center_average_coords[1] - screen_c_y) / v_focal_length))
-            cv2.line(frame, best_center_average_coords, center_coords, (0, 255, 0), 2)
-            cv2.line(frame, best_center_average_coords, best_center_average_coords, (255, 0, 0), 5)
+            cv2.line(view_frame, best_center_average_coords, center_coords, (0, 255, 0), 2)
+            cv2.line(view_frame, best_center_average_coords, best_center_average_coords, (255, 0, 0), 5)
 
         elif len(average_coord_list) > 1:
             # finds c_x that is closest to the center of the center
@@ -270,12 +285,12 @@ def vision():
             best_center_average_coords = (best_center_average_x, best_center_average_y)
             yaw = math.degrees(math.atan((best_center_average_coords[0] - screen_c_x) / h_focal_length))
             pitch = math.degrees(math.atan((best_center_average_coords[1] - screen_c_y) / v_focal_length))
-            cv2.line(frame, best_center_average_coords, center_coords, (0, 255, 0), 2)
+            cv2.line(view_frame, best_center_average_coords, center_coords, (0, 255, 0), 2)
             for coord in average_coord_list:
-                cv2.line(frame, coord, coord, (255, 0, 0), 5)
+                cv2.line(view_frame, coord, coord, (255, 0, 0), 5)
         new_h = 320
         new_w = 240
-        resize = cv2.resize(frame, (new_w, new_h))
+        resize = cv2.resize(view_frame, (new_w, new_h))
         streamer.update_frame(resize)
 
         if not streamer.is_streaming:
@@ -283,7 +298,7 @@ def vision():
 
         if view:
             cv2.imshow('Mask', mask)
-            cv2.imshow('Contour Window', frame)
+            cv2.imshow('Contour Window', view_frame)
             if not window_moved:
                 cv2.moveWindow('Mask', 300, 250)
                 cv2.moveWindow('Contour Window', 1100, 250)
