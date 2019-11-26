@@ -148,7 +148,6 @@ def vision():
 
     if debug:
         print('----------------------------------------------------------------')
-        print(f'Current Source: {src}')
         print(f'View Flag: {view}')
         print(f'Debug Flag: {debug}')
         print(f'Threshold Value: {threshold}')
