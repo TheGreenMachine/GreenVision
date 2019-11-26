@@ -38,10 +38,6 @@ WIP
 
 
 def init_parser_vision():
-    parser.add_argument('-src', '--source',
-                        required=True,
-                        type=str,
-                        help='set source for processing: [int] for camera, [path] for file')
     parser.add_argument('-r', '--rotate',
                         action='store_true',
                         default=False,
@@ -90,22 +86,30 @@ require_login = False
 
 # Create a ZED camera object
 zed = sl.Camera()
+init = sl.InitParameters()
+init.camera_resolution = sl.RESOLUTION.RESOLUTION_VGA
+init.camera_fps = 60
+init.depth_mode = sl.DEPTH_MODE.DEPTH_MODE_MEDIUM
+init.coordinate_units = sl.UNIT.UNIT_INCH
 
-# Set configuration parameters
-init_params = sl.InitParameters()
-init_params.camera_resolution = sl.RESOLUTION.RESOLUTION_VGA
-
-init_params.camera_fps = 30
-
-# Open the camera
-err = zed.open(init_params)
+err = zed.open(init)
 if err != sl.ERROR_CODE.SUCCESS:
-    print("error")
-    exit(-1)
+    print(repr(err))
+    zed.close()
+    exit(1)
+zed.set_camera_settings(sl.CAMERA_SETTINGS.CAMERA_SETTINGS_EXPOSURE, 10, False)
+runtime = sl.RuntimeParameters()
+runtime.sensing_mode = sl.SENSING_MODE.SENSING_MODE_STANDARD
 
-left_image_zed = sl.Mat(zed.get_resolution().width, zed.get_resolution().height, sl.MAT_TYPE.MAT_TYPE_8U_C4)
-right_image_zed = sl.Mat(zed.get_resolution().width, zed.get_resolution().height, sl.MAT_TYPE.MAT_TYPE_8U_C4)
-depth_image_zed = sl.Mat(zed.get_resolution().width, zed.get_resolution().height, sl.MAT_TYPE.MAT_TYPE_8U_C4)
+image_size = zed.get_resolution()
+new_width = 672
+new_height = 376
+
+depth_image_zed = sl.Mat(new_width, new_height, sl.MAT_TYPE.MAT_TYPE_8U_C4)
+point_cloud = sl.Mat()
+left_image_zed = sl.Mat(new_width, new_height, sl.MAT_TYPE.MAT_TYPE_8U_C4)
+right_image_zed = sl.Mat(new_width, new_height, sl.MAT_TYPE.MAT_TYPE_8U_C4)
+depth_image_zed = sl.Mat(new_width, new_height, sl.MAT_TYPE.MAT_TYPE_8U_C4)
 point_cloud = sl.Mat()
 runtime_parameters = sl.RuntimeParameters()
 runtime_parameters.sensing_mode = sl.SENSING_MODE.SENSING_MODE_STANDARD
@@ -114,7 +118,6 @@ streamer = Streamer(port1, require_login)
 
 
 def vision():
-    src = int(args['source']) if args['source'].isdigit() else args['source']
     flip = args['flip']
     rotate = args['rotate']
     view = args['view']
@@ -191,10 +194,10 @@ def vision():
             # Retrieve the left image in sl.Mat
             zed.retrieve_image(left_image_zed, sl.VIEW.VIEW_LEFT)
             zed.retrieve_image(right_image_zed, sl.VIEW.VIEW_RIGHT)
-            zed.retrieve_image(depth_image_zed, sl.VIEW.VIEW_DEPTH, sl.MEM.MEM_CPU, int(zed.get_resolution().width), int(zed.get_resolution().height))
+            zed.retrieve_image(depth_image_zed, sl.VIEW.VIEW_DEPTH, sl.MEM.MEM_CPU, int(new_width), int(new_height))
             # Retrieve the RGBA point cloud in half resolution
-            zed.retrieve_measure(point_cloud, sl.MEASURE.MEASURE_XYZRGBA, sl.MEM.MEM_CPU, int(zed.get_resolution().width),
-                                 int(zed.get_resolution().height))
+            zed.retrieve_measure(point_cloud, sl.MEASURE.MEASURE_XYZRGBA, sl.MEM.MEM_CPU, int(new_width),
+                                 int(new_height))
 
             depth_image_ocv = depth_image_zed.get_data()
             # Use get_data() to get the numpy array
@@ -242,7 +245,7 @@ def vision():
                         color = (0, 255, 255)
                         box = np.int0(cv2.boxPoints(rect))
                         cv2.drawContours(view_frame, [box], 0, color, 2)
-                        # only add rect if the second rect is the correct angle
+                        # only add rect if the second rect is t:he correct angle
                         if -16 - angle_threshold < rectangle_list[pos + 1][2] < -12 + angle_threshold:
                             color = (0, 0, 255)
                             rect2 = rectangle_list[pos + 1]
@@ -303,7 +306,7 @@ def vision():
                 cv2.moveWindow('Mask', 300, 250)
                 cv2.moveWindow('Contour Window', 1100, 250)
                 window_moved = True
-        cv2.waitKey(30)
+        cv2.waitKey(1)
 
         end_time = time.time()
 
