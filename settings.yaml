@@ -1,0 +1,23 @@
+flags:
+  view: true
+camera:
+  type: BASIC
+  source: 0
+  width: 320
+  height: 240
+  vertical-focal-length: 566.7916999921097
+  horizontal-focal-length: 568.8838380154359
+nt:
+  server-ip: 10.18.16.2
+  table-name: SmartDashboard
+  variables: ['Contours', 'Test']
+colors: #In HSV
+  lower: [1, 1, 1]
+  upper: [255, 255, 255]
+  threshold: 10 #Will adjust colors by this value both ways
+contours:
+  min-size: 50
+  max-size: 15000
+  filter-threshold: .5
+angles:
+  angle-threshold: 10
