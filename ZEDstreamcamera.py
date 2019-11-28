@@ -81,15 +81,14 @@ camera_table = NetworkTables.getTable("CameraPublisher")
 table = camera_table.getSubTable("Camera")
 table.getEntry("streams").setStringArray(["mjpg:http://10.18.16.142:3030/video_feed"])
 port1 = 3030
-port2 = 3031
 require_login = False
 
 # Create a ZED camera object
 zed = sl.Camera()
 init = sl.InitParameters()
 init.camera_resolution = sl.RESOLUTION.RESOLUTION_VGA
-init.camera_fps = 60
-init.depth_mode = sl.DEPTH_MODE.DEPTH_MODE_MEDIUM
+init.camera_fps = 100
+init.depth_mode = sl.DEPTH_MODE.DEPTH_MODE_PERFORMANCE
 init.coordinate_units = sl.UNIT.UNIT_INCH
 
 err = zed.open(init)
@@ -98,18 +97,13 @@ if err != sl.ERROR_CODE.SUCCESS:
     zed.close()
     exit(1)
 zed.set_camera_settings(sl.CAMERA_SETTINGS.CAMERA_SETTINGS_EXPOSURE, 10, False)
-runtime = sl.RuntimeParameters()
-runtime.sensing_mode = sl.SENSING_MODE.SENSING_MODE_STANDARD
 
 image_size = zed.get_resolution()
 new_width = 672
 new_height = 376
 
-depth_image_zed = sl.Mat(new_width, new_height, sl.MAT_TYPE.MAT_TYPE_8U_C4)
-point_cloud = sl.Mat()
 left_image_zed = sl.Mat(new_width, new_height, sl.MAT_TYPE.MAT_TYPE_8U_C4)
 right_image_zed = sl.Mat(new_width, new_height, sl.MAT_TYPE.MAT_TYPE_8U_C4)
-depth_image_zed = sl.Mat(new_width, new_height, sl.MAT_TYPE.MAT_TYPE_8U_C4)
 point_cloud = sl.Mat()
 runtime_parameters = sl.RuntimeParameters()
 runtime_parameters.sensing_mode = sl.SENSING_MODE.SENSING_MODE_STANDARD
@@ -193,12 +187,10 @@ def vision():
             # Retrieve the left image in sl.Mat
             zed.retrieve_image(left_image_zed, sl.VIEW.VIEW_LEFT)
             zed.retrieve_image(right_image_zed, sl.VIEW.VIEW_RIGHT)
-            zed.retrieve_image(depth_image_zed, sl.VIEW.VIEW_DEPTH, sl.MEM.MEM_CPU, int(new_width), int(new_height))
             # Retrieve the RGBA point cloud in half resolution
             zed.retrieve_measure(point_cloud, sl.MEASURE.MEASURE_XYZRGBA, sl.MEM.MEM_CPU, int(new_width),
                                  int(new_height))
 
-            depth_image_ocv = depth_image_zed.get_data()
             # Use get_data() to get the numpy array
             frame = left_image_zed.get_data()
             view_frame = right_image_zed.get_data()
@@ -268,11 +260,16 @@ def vision():
 
         if len(average_coord_list) == 1:
             best_center_average_coords = average_coord_list[index]
-            point3D = point_cloud.get_value(best_center_average_coords[0], best_center_average_coords[1])
-            print(point3D)
-            distance = math.sqrt(
-                point3D[1][0] * point3D[1][0] + point3D[1][1] * point3D[1][1] + point3D[1][2] * point3D[1][2])
-            print("DISTANCE:" + str(distance))
+            distances = []
+            pixel = 0
+            while pixel <= 672:
+                point3D = point_cloud.get_value(pixel,
+                                                best_center_average_coords[1])
+                distance = math.sqrt(
+                    point3D[1][0] * point3D[1][0] + point3D[1][1] * point3D[1][1] + point3D[1][2] * point3D[1][2])
+                distances.append(distance)
+                pixel += 5
+            print(distances)
             index = 0
             yaw = math.degrees(math.atan((best_center_average_coords[0] - screen_c_x) / h_focal_length))
             pitch = math.degrees(math.atan((best_center_average_coords[1] - screen_c_y) / v_focal_length))
