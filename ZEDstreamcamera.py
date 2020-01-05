@@ -95,7 +95,7 @@ err = zed.open(init)
 if err != sl.ERROR_CODE.SUCCESS:
     print(repr(err))
     zed.close()
-    exit(1)
+exit(1)
 zed.set_camera_settings(sl.CAMERA_SETTINGS.CAMERA_SETTINGS_EXPOSURE, 10, False)
 
 image_size = zed.get_resolution()
@@ -260,16 +260,16 @@ def vision():
 
         if len(average_coord_list) == 1:
             best_center_average_coords = average_coord_list[index]
-            distances = []
-            pixel = 0
-            while pixel <= 672:
-                point3D = point_cloud.get_value(pixel,
-                                                best_center_average_coords[1])
-                distance = math.sqrt(
-                    point3D[1][0] * point3D[1][0] + point3D[1][1] * point3D[1][1] + point3D[1][2] * point3D[1][2])
-                distances.append(distance)
-                pixel += 5
-            print(distances)
+            # distances = []
+            # pixel = 0
+            # while pixel <= 672:
+            #     point3D = point_cloud.get_value(pixel,
+            #                                     best_center_average_coords[1])
+            #     distance = math.sqrt(
+            #         point3D[1][0] * point3D[1][0] + point3D[1][1] * point3D[1][1] + point3D[1][2] * point3D[1][2])
+            #     distances.append(distance)
+            #     pixel += 5
+            # print(distances)
             index = 0
             yaw = math.degrees(math.atan((best_center_average_coords[0] - screen_c_x) / h_focal_length))
             pitch = math.degrees(math.atan((best_center_average_coords[1] - screen_c_y) / v_focal_length))
