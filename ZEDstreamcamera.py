@@ -67,14 +67,6 @@ def init_parser_vision():
     parser.add_argument('-nt', '--networktables',
                         action='store_true',
                         help='enable network tables')
-    parser.add_argument('--pi',
-                        action='store_true',
-                        default=False,
-                        help='must enable for the script to work the pi -- GVLogging USB must be plugged in')
-    parser.add_argument('--crash',
-                        action='store_true',
-                        default=False,
-                        help='enable to simulate a crash during vision loop')
 
 NetworkTables.initialize("10.18.16.2")
 camera_table = NetworkTables.getTable("CameraPublisher")
